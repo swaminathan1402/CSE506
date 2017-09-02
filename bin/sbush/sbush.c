@@ -116,23 +116,40 @@ void runBinary(char *command, char *arguments){
 		char final_command[1024];
 		strcpy(final_command, bin_string);
 		strcat(final_command, command);
-		//int ret = execv("/bin/ls", cmd);
 		int ret = execv(final_command, cmd);
 		exit(ret);
 	} else if(pid > 0){
-		pid_t wait_status = waitpid(pid, &status, 0);
-		//https://www.gnu.org/software/libc/manual/html_node/Exit-Status.html#Exit-Status
-		if(WIFEXITED(status) && wait_status){
-			if(WEXITSTATUS(status) == 255){
-				printf("sbush: %s: command not found...\n", command);
-				printf("%s \n", shell);
-			} else /*if(WEXITSTATUS(status) == 0)*/ {
-				
+		//pid_t wait_status = waitpid(pid, &status, 0);
+		if(waitpid(pid, &status, 0) > 0){
+			//https://www.gnu.org/software/libc/manual/html_node/Exit-Status.html#Exit-Status
+			if(WIFEXITED(status)){
+				if(WEXITSTATUS(status) == 255){
+					printf("sbush: %s: command not found...\n", command);
+					printf("%s \n", shell);
+				} else /*if(WEXITSTATUS(status) == 0)*/ {
+					
+					printf("\n%s \n", shell);
+				}
+			} else {
+				// didnt exit in a clean fashion
 				printf("\n%s \n", shell);
 			}
-		} else {
-			// didnt exit in a clean fashion
-			printf("\n%s \n", shell);
+		}
+	}
+}
+
+void runScripts(char *arguments[]){
+	//char *filename = arguments[1];
+	int status;
+	pid_t pid = fork();
+	//char *args[] = {"/bin/sh", filename, arguments+1};
+	if(pid == 0){
+		//int ret = execv("/bin/sh", args);
+		int ret = execv("/bin/sh", arguments);
+		exit(ret);
+	} else if(pid > 0){
+		if(waitpid(pid, &status, 0) > 0){
+			//printf("%s \n", shell);
 		}
 	}
 }
@@ -232,13 +249,18 @@ int main(int argc, char* argv[]) {
 	/*
       printf("sbush> %s\n", pwd);
 	*/
-	char basename[1024];
-	if(getcwd(basename, sizeof(basename)) != NULL){
-		modifyShellPrompt(basename, "cd");
+	if(argc >= 2){
+		runScripts(argv);
 	}
-	while(run_status){
-		char *command = commandParser();
-		interpretCommand(command);
+	else {
+		char basename[1024];
+		if(getcwd(basename, sizeof(basename)) != NULL){
+			modifyShellPrompt(basename, "cd");
+		}
+		while(run_status){
+			char *command = commandParser();
+			interpretCommand(command);
+		}
 	}
   return 0;
 }
