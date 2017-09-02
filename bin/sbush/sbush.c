@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
+#include <sys/wait.h>
 #define REL '~'
 #define CURRENT '.'
 
@@ -9,6 +10,7 @@ char shell[255] = "sbush>";
 char *shell_text = "sbush";
 char *shell_sign = ">";
 char *space = " ";
+char *bin_string = "/bin/";
 int run_status = 1;
 
 
@@ -100,6 +102,41 @@ void modifyShellPrompt(char directory[], char *type){
 	}
 }
 
+void runBinary(char *command, char *arguments){
+	int status;
+	pid_t pid;
+	// TODO: pass a signal for invalid command 
+	// sbush: blah: command not found... [have something like this]
+	pid = fork();
+	if(pid == 0){
+		// this is a child process
+		if(strlen(arguments) == 0)
+			arguments = NULL;
+		char *cmd[] = {command, arguments, (char *)0};
+		char final_command[1024];
+		strcpy(final_command, bin_string);
+		strcat(final_command, command);
+		//int ret = execv("/bin/ls", cmd);
+		int ret = execv(final_command, cmd);
+		exit(ret);
+	} else if(pid > 0){
+		pid_t wait_status = waitpid(pid, &status, 0);
+		//https://www.gnu.org/software/libc/manual/html_node/Exit-Status.html#Exit-Status
+		if(WIFEXITED(status) && wait_status){
+			if(WEXITSTATUS(status) == 255){
+				printf("sbush: %s: command not found...\n", command);
+				printf("%s \n", shell);
+			} else /*if(WEXITSTATUS(status) == 0)*/ {
+				
+				printf("\n%s \n", shell);
+			}
+		} else {
+			// didnt exit in a clean fashion
+			printf("\n%s \n", shell);
+		}
+	}
+}
+
 void interpretCommand(char *query){
 	// printf("query is %s\n", query);
 	char command[100];
@@ -163,6 +200,14 @@ void interpretCommand(char *query){
 			printf("sbush: cd: %s: No such file or directory\n", directory);
 			printf("%s \n", shell);
 		}
+	}/*
+	else if(strcmp(command, "ls") == 0 || strcmp(command, "cat") == 0 || strcmp(command, "grep") == 0){
+		runBinary(command, arguments);
+		printf("\n%s \n", shell);
+	}*/else {
+		runBinary(command, arguments);
+		//printf("sbush: %s: command not found...\n", command);
+		//printf("%s \n", shell);
 	}
 }
 
