@@ -3,6 +3,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/wait.h>
+#include <sys/types.h>
+#include <dirent.h>
 #define REL '~'
 #define CURRENT '.'
 
@@ -11,6 +13,7 @@ char *shell_text = "sbush";
 char *shell_sign = ">";
 char *space = " ";
 char *bin_string = "/bin/";
+char *dollar_PATH;
 int run_status = 1;
 
 
@@ -154,6 +157,77 @@ void runScripts(char *arguments[]){
 	}
 }
 
+int parseExportArguments(char *argument)
+{
+	char variable[100];//Shell variable which is to be exported.
+	char assignment[10][1024];// The assignment for the variable
+	int i=0 ;
+	int j=0;
+	int k=0;
+	while(argument[i] !='=' )
+	{
+		variable[i]= argument[i];
+		i++;
+	}
+	variable[i]='\0';
+	i++;
+	if(strcmp(variable ,"PATH")==0)	
+	{
+		while(argument[i]!='\0')
+		{
+			assignment[k][j] =argument[i];
+			i++;
+			j++;
+			if(argument[i]==':')
+			{
+				assignment[k][j]='\0';
+				if(strcmp(assignment[k],"$PATH" )!=0 )  			
+				{
+				 	DIR* dir =opendir(assignment[k]);
+				 	if(dir)
+					{	
+						strcat(dollar_PATH,":");
+						strcat(dollar_PATH ,assignment[k]);
+					}		
+					else
+					{
+						printf("\n Environment variable set to non-existent directory");
+						return 0;
+					}			
+				}			
+			j=0;k++;
+			i++;
+			}
+			else if(argument[i]=='\0')
+			{	
+				assignment[k][j]='\0';	
+				DIR* dir = opendir(assignment[k]);
+				if (dir)
+				{
+					if(k==0)
+					strcpy(dollar_PATH,assignment[0]);
+					else
+					{
+					strcat(dollar_PATH,":");
+					strcat(dollar_PATH,assignment[k]);
+					}
+					setenv	("PATH",dollar_PATH,1);
+					printf("%s",dollar_PATH);
+					return 1;
+				}
+				else
+				{
+				printf("\nEnvironment variable set to non-existent directory");
+				return 0;	
+				}	
+			}
+		}
+	}
+
+	return 0;			
+
+}
+
 void interpretCommand(char *query){
 	// printf("query is %s\n", query);
 	char command[100];
@@ -217,10 +291,18 @@ void interpretCommand(char *query){
 			printf("sbush: cd: %s: No such file or directory\n", directory);
 			printf("%s \n", shell);
 		}
-	}/*
+	}
+	else if(strcmp(command,"export" )==0){
+	 int result=parseExportArguments(arguments);	
+		if(result==0)
+		printf ("\nmEnvironment variable not set");
+		printf("%s \n", shell);
+	}
+
+/*
 	else if(strcmp(command, "ls") == 0 || strcmp(command, "cat") == 0 || strcmp(command, "grep") == 0){
 		runBinary(command, arguments);
-		printf("\n%s \n", shell);
+		printf("\n%s \n", shell)
 	}*/else {
 		runBinary(command, arguments);
 		//printf("sbush: %s: command not found...\n", command);
@@ -253,14 +335,22 @@ int main(int argc, char* argv[]) {
 		runScripts(argv);
 	}
 	else {
-		char basename[1024];
-		if(getcwd(basename, sizeof(basename)) != NULL){
-			modifyShellPrompt(basename, "cd");
+		dollar_PATH = (char *)malloc(sizeof(getenv("PATH")+1024));
+		strcpy(dollar_PATH, getenv("PATH")); 
+		char *envold =strdup(getenv("PATH"));//save old environment
+		printf("%s",dollar_PATH);
+		else {
+			char basename[1024];
+			if(getcwd(basename, sizeof(basename)) != NULL){
+				modifyShellPrompt(basename, "cd");
+			}
+			while(run_status){
+				char *command = commandParser();
+				interpretCommand(command);
+			}
 		}
-		while(run_status){
-			char *command = commandParser();
-			interpretCommand(command);
-		}
+		setenv("PATH",envold,1);
 	}
+
   return 0;
 }
