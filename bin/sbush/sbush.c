@@ -13,9 +13,9 @@ char *shell_text = "sbush";
 char *shell_sign = ">";
 char *space = " ";
 char *bin_string = "/bin/";
-char *dollar_PATH;
+char dollar_PATH[1024];
 int run_status = 1;
-
+int ps1_enabled= 0;
 
 char *_removeSpaces(char command[]){
 	// Removes unncessary spaces from the command. 
@@ -95,6 +95,11 @@ char *_getBaseName(char directory[]){
 void modifyShellPrompt(char directory[], char *type){
 	char *temp;
 	// printf("trying to change shell prompt %s\n", type);
+	if(ps1_enabled==1)
+	{
+		printf("%s\n", shell);
+		return ;
+	}
 	if(strcmp(type, "cd") == 0){
 		temp = _getBaseName(directory);
 		strcpy(shell, shell_text);
@@ -103,6 +108,7 @@ void modifyShellPrompt(char directory[], char *type){
 		strcat(shell, shell_sign);
 		printf("%s\n", shell);
 	}
+	
 }
 
 void runBinary(char *command, char *arguments){
@@ -174,7 +180,7 @@ int parseExportArguments(char *argument)
 					}		
 					else
 					{
-						printf("\n Environment variable set to non-existent directory");
+					//	printf("\n Environment variable set to non-existent directory");
 						return 0;
 					}			
 				}			
@@ -195,18 +201,31 @@ int parseExportArguments(char *argument)
 					strcat(dollar_PATH,assignment[k]);
 					}
 					setenv	("PATH",dollar_PATH,1);
-					printf("%s",dollar_PATH);
+				//	printf("%s",dollar_PATH);
 					return 1;
 				}
 				else
 				{
-				printf("\nEnvironment variable set to non-existent directory");
+			//	printf("\nEnvironment variable set to non-existent directory");
 				return 0;	
 				}	
 			}
 		}
 	}
+	else if(strcmp(variable,"PS1")==0)
+	{
+		ps1_enabled=1;
+		while(argument[i]!='\0')
+		{
+	      		assignment[0][j]=argument[i];
+			j++;
+			i++;
 
+		}
+		assignment[0][j]='\0';
+		strcpy(shell,assignment[0]);
+		return 1;	
+	}
 	return 0;			
 
 }
@@ -228,8 +247,17 @@ void interpretCommand(char *query){
 		arguments[i] = query[j];
 		j++;
 		i++;
+            
 	}
 	arguments[i] = '\0';
+	if (strcmp(arguments, "$PATH")==0)
+	{
+	strcpy (arguments, dollar_PATH);
+	}
+	if(strcmp(arguments, "$PS1")==0)
+	{
+	strcpy (arguments,shell);
+	}
 	// printf("the parsed command is %s\n", command);
 	// printf("the arguments are %s\n", arguments);	
 	if(strcmp(command, "pwd") == 0) {
@@ -316,10 +344,10 @@ int main(int argc, char* argv[]) {
 	*/
 
 	char basename[1024];
-	dollar_PATH = (char *)malloc(sizeof(getenv("PATH")+1024));
+	//dollar_PATH = //(char *)malloc(sizeof(getenv("PATH")+1024));
 	strcpy(dollar_PATH, getenv("PATH")); 
 	char *envold =strdup(getenv("PATH"));//save old environment
-	printf("%s",dollar_PATH);
+	printf("%s \n",dollar_PATH);
 	if(getcwd(basename, sizeof(basename)) != NULL){
 		modifyShellPrompt(basename, "cd");
 	}
