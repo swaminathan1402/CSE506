@@ -48,6 +48,7 @@ char *_removeSpaces(char command[]){
 		command[j-1] = '\0';
 	}
 	//printf("%d difference \n", j);
+
 	char *formatted_command = (char *)malloc(sizeof(char) * (j));
 	for(int i=0; i<j; i++){
 		formatted_command[i] = command[i];
@@ -56,6 +57,7 @@ char *_removeSpaces(char command[]){
 	//char *formatted_command = command;
 	return formatted_command;
 }
+
 
 
 char *_getBaseName(char directory[]){
@@ -111,7 +113,7 @@ void modifyShellPrompt(char directory[], char *type){
 	
 }
 
-void runBinary(char *command, char *arguments){
+void runBinary(char *command, char *arguments,int bg_process){
 	int status;
 	pid_t pid;
 	// TODO: pass a signal for invalid command 
@@ -129,6 +131,14 @@ void runBinary(char *command, char *arguments){
 		int ret = execv(final_command, cmd);
 		exit(ret);
 	} else if(pid > 0){
+		
+		if(bg_process ==1)
+		{	
+			printf("%d \n", pid);
+			printf("%s \n",shell);
+			return ;
+		}
+		
 		pid_t wait_status = waitpid(pid, &status, 0);
 		//https://www.gnu.org/software/libc/manual/html_node/Exit-Status.html#Exit-Status
 		if(WIFEXITED(status) && wait_status){
@@ -145,6 +155,7 @@ void runBinary(char *command, char *arguments){
 		}
 	}
 }
+
 
 int parseExportArguments(char *argument)
 {
@@ -236,6 +247,7 @@ void interpretCommand(char *query){
 	char arguments[1024];
 	int j=0;
 	int i=0;
+	int bg_process=0; 
 	while(query[j] != '\0' && query[j] != ' '){
 		command[j] = query[j];
 		j++;
@@ -249,14 +261,19 @@ void interpretCommand(char *query){
 		i++;
             
 	}
+	if(arguments[i-1]=='&')
+	{
+	bg_process=1;	
+	i--;
+	}
 	arguments[i] = '\0';
 	if (strcmp(arguments, "$PATH")==0)
 	{
-	strcpy (arguments, dollar_PATH);
+		strcpy (arguments, dollar_PATH);
 	}
 	if(strcmp(arguments, "$PS1")==0)
 	{
-	strcpy (arguments,shell);
+		strcpy (arguments,shell);
 	}
 	// printf("the parsed command is %s\n", command);
 	// printf("the arguments are %s\n", arguments);	
@@ -315,7 +332,7 @@ void interpretCommand(char *query){
 		runBinary(command, arguments);
 		printf("\n%s \n", shell)
 	}*/else {
-		runBinary(command, arguments);
+		runBinary(command, arguments,bg_process);
 		//printf("sbush: %s: command not found...\n", command);
 		//printf("%s \n", shell);
 	}
