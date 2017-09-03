@@ -3,6 +3,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/wait.h>
+#include <sys/types.h>
+#include <dirent.h>
 #define REL '~'
 #define CURRENT '.'
 
@@ -11,8 +13,9 @@ char *shell_text = "sbush";
 char *shell_sign = ">";
 char *space = " ";
 char *bin_string = "/bin/";
+char dollar_PATH[1024];
 int run_status = 1;
-
+int ps1_enabled= 0;
 
 char *_removeSpaces(char command[]){
 	// Removes unncessary spaces from the command. 
@@ -45,6 +48,7 @@ char *_removeSpaces(char command[]){
 		command[j-1] = '\0';
 	}
 	//printf("%d difference \n", j);
+
 	char *formatted_command = (char *)malloc(sizeof(char) * (j));
 	for(int i=0; i<j; i++){
 		formatted_command[i] = command[i];
@@ -53,6 +57,7 @@ char *_removeSpaces(char command[]){
 	//char *formatted_command = command;
 	return formatted_command;
 }
+
 
 
 char *_getBaseName(char directory[]){
@@ -92,6 +97,11 @@ char *_getBaseName(char directory[]){
 void modifyShellPrompt(char directory[], char *type){
 	char *temp;
 	// printf("trying to change shell prompt %s\n", type);
+	if(ps1_enabled==1)
+	{
+		printf("%s\n", shell);
+		return ;
+	}
 	if(strcmp(type, "cd") == 0){
 		temp = _getBaseName(directory);
 		strcpy(shell, shell_text);
@@ -100,9 +110,10 @@ void modifyShellPrompt(char directory[], char *type){
 		strcat(shell, shell_sign);
 		printf("%s\n", shell);
 	}
+	
 }
 
-void runBinary(char *command, char *arguments){
+void runBinary(char *command, char *arguments,int bg_process){
 	int status;
 	pid_t pid;
 	// TODO: pass a signal for invalid command 
@@ -119,19 +130,21 @@ void runBinary(char *command, char *arguments){
 		int ret = execv(final_command, cmd);
 		exit(ret);
 	} else if(pid > 0){
-		//pid_t wait_status = waitpid(pid, &status, 0);
-		if(waitpid(pid, &status, 0) > 0){
-			//https://www.gnu.org/software/libc/manual/html_node/Exit-Status.html#Exit-Status
-			if(WIFEXITED(status)){
-				if(WEXITSTATUS(status) == 255){
-					printf("sbush: %s: command not found...\n", command);
-					printf("%s \n", shell);
-				} else /*if(WEXITSTATUS(status) == 0)*/ {
-					
-					printf("\n%s \n", shell);
-				}
-			} else {
-				// didnt exit in a clean fashion
+		
+		if(bg_process ==1)
+		{	
+			printf("%d \n", pid);
+			printf("%s \n",shell);
+			return ;
+		}
+		
+		pid_t wait_status = waitpid(pid, &status, 0);
+		//https://www.gnu.org/software/libc/manual/html_node/Exit-Status.html#Exit-Status
+		if(WIFEXITED(status) && wait_status){
+			if(WEXITSTATUS(status) == 255){
+				printf("sbush: %s: command not found...\n", command);
+				printf("%s \n", shell);
+			} else /*if(WEXITSTATUS(status) == 0)*/ {
 				printf("\n%s \n", shell);
 			}
 		}
@@ -154,12 +167,98 @@ void runScripts(char *arguments[]){
 	}
 }
 
+
+int parseExportArguments(char *argument)
+{
+	char variable[100];//Shell variable which is to be exported.
+	char assignment[10][1024];// The assignment for the variable
+	int i=0 ;
+	int j=0;
+	int k=0;
+	while(argument[i] !='=' )
+	{
+		variable[i]= argument[i];
+		i++;
+	}
+	variable[i]='\0';
+	i++;
+	if(strcmp(variable ,"PATH")==0)	
+	{
+		while(argument[i]!='\0')
+		{
+			assignment[k][j] =argument[i];
+			i++;
+			j++;
+			if(argument[i]==':')
+			{
+				assignment[k][j]='\0';
+				if(strcmp(assignment[k],"$PATH" )!=0 )  			
+				{
+				 	DIR* dir =opendir(assignment[k]);
+				 	if(dir)
+					{	
+						strcat(dollar_PATH,":");
+						strcat(dollar_PATH ,assignment[k]);
+					}		
+					else
+					{
+					//	printf("\n Environment variable set to non-existent directory");
+						return 0;
+					}			
+				}			
+			j=0;k++;
+			i++;
+			}
+			else if(argument[i]=='\0')
+			{	
+				assignment[k][j]='\0';	
+				DIR* dir = opendir(assignment[k]);
+				if (dir)
+				{
+					if(k==0)
+					strcpy(dollar_PATH,assignment[0]);
+					else
+					{
+					strcat(dollar_PATH,":");
+					strcat(dollar_PATH,assignment[k]);
+					}
+					setenv	("PATH",dollar_PATH,1);
+				//	printf("%s",dollar_PATH);
+					return 1;
+				}
+				else
+				{
+			//	printf("\nEnvironment variable set to non-existent directory");
+				return 0;	
+				}	
+			}
+		}
+	}
+	else if(strcmp(variable,"PS1")==0)
+	{
+		ps1_enabled=1;
+		while(argument[i]!='\0')
+		{
+	      		assignment[0][j]=argument[i];
+			j++;
+			i++;
+
+		}
+		assignment[0][j]='\0';
+		strcpy(shell,assignment[0]);
+		return 1;	
+	}
+	return 0;			
+
+}
+
 void interpretCommand(char *query){
 	// printf("query is %s\n", query);
 	char command[100];
 	char arguments[1024];
 	int j=0;
 	int i=0;
+	int bg_process=0; 
 	while(query[j] != '\0' && query[j] != ' '){
 		command[j] = query[j];
 		j++;
@@ -171,8 +270,22 @@ void interpretCommand(char *query){
 		arguments[i] = query[j];
 		j++;
 		i++;
+            
+	}
+	if(arguments[i-1]=='&')
+	{
+	bg_process=1;	
+	i--;
 	}
 	arguments[i] = '\0';
+	if (strcmp(arguments, "$PATH")==0)
+	{
+		strcpy (arguments, dollar_PATH);
+	}
+	if(strcmp(arguments, "$PS1")==0)
+	{
+		strcpy (arguments,shell);
+	}
 	// printf("the parsed command is %s\n", command);
 	// printf("the arguments are %s\n", arguments);	
 	if(strcmp(command, "pwd") == 0) {
@@ -217,12 +330,20 @@ void interpretCommand(char *query){
 			printf("sbush: cd: %s: No such file or directory\n", directory);
 			printf("%s \n", shell);
 		}
-	}/*
+	}
+	else if(strcmp(command,"export" )==0){
+	 int result=parseExportArguments(arguments);	
+		if(result==0)
+		printf ("\nmEnvironment variable not set");
+		printf("%s \n", shell);
+	}
+
+/*
 	else if(strcmp(command, "ls") == 0 || strcmp(command, "cat") == 0 || strcmp(command, "grep") == 0){
 		runBinary(command, arguments);
-		printf("\n%s \n", shell);
+		printf("\n%s \n", shell)
 	}*/else {
-		runBinary(command, arguments);
+		runBinary(command, arguments,bg_process);
 		//printf("sbush: %s: command not found...\n", command);
 		//printf("%s \n", shell);
 	}
@@ -252,7 +373,11 @@ int main(int argc, char* argv[]) {
 	if(argc >= 2){
 		runScripts(argv);
 	}
+	//dollar_PATH = //(char *)malloc(sizeof(getenv("PATH")+1024));
 	else {
+		strcpy(dollar_PATH, getenv("PATH")); 
+		char *envold =strdup(getenv("PATH"));//save old environment
+		printf("%s \n",dollar_PATH);
 		char basename[1024];
 		if(getcwd(basename, sizeof(basename)) != NULL){
 			modifyShellPrompt(basename, "cd");
@@ -261,6 +386,8 @@ int main(int argc, char* argv[]) {
 			char *command = commandParser();
 			interpretCommand(command);
 		}
+		setenv("PATH",envold,1);
 	}
+
   return 0;
 }
