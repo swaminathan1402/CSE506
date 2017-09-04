@@ -5,4 +5,4 @@ exit: done
 
 when type cd and space: go to home directory
 execute binaries: done
-finish part
+finish part 2
