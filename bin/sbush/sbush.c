@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include<stdio.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
@@ -130,7 +130,6 @@ void runBinary(char *command, char *arguments,int bg_process){
 		int ret = execv(final_command, cmd);
 		exit(ret);
 	} else if(pid > 0){
-		
 		if(bg_process ==1)
 		{	
 			printf("%d \n", pid);
@@ -256,61 +255,99 @@ void interpretCommand(char *query){
 	// printf("query is %s\n", query);
 	char command[100];
 	char arguments[1024];
+	char inst_array[10][100];
+	int no_of_commands=1 ;
 	int j=0;
 	int i=0;
 	int bg_process=0; 
-	while(query[j] != '\0' && query[j] != ' '){
-		command[j] = query[j];
+	while (query[j]!='\0')
+	{
+	
+		if(query[j]=='|')
+		{ 
+			inst_array[no_of_commands-1][i]='\0';
+			no_of_commands++;
+			i=0;
+		}
+		else
+		{
+			inst_array[no_of_commands-1][i]=query[j];
+			i++;
+		}	
 		j++;
 	}
-	command[j] = '\0';
-	j++;  // point to the arguments if any
+	inst_array[no_of_commands-1][i]='\0';
+	j=0;
+	i=0;
+	if(no_of_commands>1)
+	{
+	//	runPipe(inst_array);Run the pipe function to handle multiple pipes.
+		for(int k=0;k<no_of_commands;k++)
+		{
+		printf("\n%s",inst_array[k]);
+		}
+		printf("\n%s",shell);
+		
+	}
+	else
+	{
+    
+		while(query[j] != '\0' && query[j] != ' ')
+		{
+			command[j] = query[j];
+			j++;
+		}
+		command[j] = '\0';
+		j++;  // point to the arguments if any
 
-	while(query[j] != '\0'){
-		arguments[i] = query[j];
-		j++;
-		i++;
-            
-	}
-	if(arguments[i-1]=='&')
-	{
-	bg_process=1;	
-	i--;
-	}
-	arguments[i] = '\0';
-	if (strcmp(arguments, "$PATH")==0)
-	{
-		strcpy (arguments, dollar_PATH);
-	}
-	if(strcmp(arguments, "$PS1")==0)
-	{
-		strcpy (arguments,shell);
-	}
-	// printf("the parsed command is %s\n", command);
-	// printf("the arguments are %s\n", arguments);	
-	if(strcmp(command, "pwd") == 0) {
-		char *buffer = NULL;
-		size_t size;
-		buffer = getcwd(buffer, size);
-		printf("%s %s \n", shell, buffer);
-	} else if(strcmp(command, "exit") == 0) {
-		run_status = 0;
-	}
-	else if(strcmp(command, "cd") == 0){
-		char *directory = arguments;
+		while(query[j] != '\0')
+		{
+			arguments[i] = query[j];
+			j++;
+			i++;
+		}
+		if(arguments[i-1]=='&')
+		{
+			bg_process=1;	
+			i--;
+		}
+		arguments[i] = '\0';
+		if (strcmp(arguments, "$PATH")==0)
+		{
+			strcpy (arguments, dollar_PATH);
+		}
+		if(strcmp(arguments, "$PS1")==0)
+		{
+			strcpy (arguments,shell);
+		}
+		// printf("the parsed command is %s\n", command);
+		// printf("the arguments are %s\n", arguments);	
+		if(strcmp(command, "pwd") == 0) {
+			char *buffer = NULL;
+			size_t size;
+			buffer = getcwd(buffer, size);
+
+			printf("%s %s \n", shell, buffer);
+		} else if(strcmp(command, "exit") == 0) {
+			run_status = 0;
+		}
+		else if(strcmp(command, "cd") == 0){
+			char *directory = arguments;
 		// If we find any wildcard entry like '~' or '.' 
-		if(directory[0] == REL /*|| 
-			(directory[0] == CURRENT && directory[1] == '\0') ||
+
+			if(directory[0] == REL /*|| 
+
+				(directory[0] == CURRENT && directory[1] == '\0') ||
 				(directory[0] == CURRENT && directory[1] != '\0' && directory[1] != CURRENT) */){
-			int j = 0;
-			char temp[255];
+				int j = 0;
+				char temp[255];
 			// copy the path name following the REL(~) sign
-			for(int i=1; i<strlen(directory); i++){
-				temp[j] = directory[i];
-				j++;
-			}
-			temp[j] = '\0';
-			if(directory[0] == REL) strcpy(directory, getenv("HOME"));
+				for(int i=1; i<strlen(directory); i++){
+					temp[j] = directory[i];
+					j++;
+				}
+				temp[j] = '\0';
+				if(directory[0] == REL) strcpy(directory, getenv("HOME"));
 			/*			
 			else {
 				// can ignore this 
@@ -319,33 +356,36 @@ void interpretCommand(char *query){
 				directory = getcwd(directory, size);
 			}
 			*/
-			strcat(directory, temp);
+				strcat(directory, temp);
 			// printf("Translated directory name: %s\n", directory);
+			}
+			int ret = chdir(directory);
+			if(ret == 0){
+
+			// printkf("directory changed \n");
+				modifyShellPrompt(directory, "cd");
+			} else {
+				printf("sbush: cd: %s: No such file or directory\n", directory);
+				printf("%s \n", shell);
+			}
 		}
-		int ret = chdir(directory);
-		if(ret == 0){
-			// printf("directory changed \n");
-			modifyShellPrompt(directory, "cd");
-		} else {
-			printf("sbush: cd: %s: No such file or directory\n", directory);
+		else if(strcmp(command,"export" )==0){
+		 	int result=parseExportArguments(arguments);	
+			if(result==0)
+				printf ("\nmEnvironment variable not set");
 			printf("%s \n", shell);
 		}
-	}
-	else if(strcmp(command,"export" )==0){
-	 int result=parseExportArguments(arguments);	
-		if(result==0)
-		printf ("\nmEnvironment variable not set");
-		printf("%s \n", shell);
-	}
-
+	
 /*
 	else if(strcmp(command, "ls") == 0 || strcmp(command, "cat") == 0 || strcmp(command, "grep") == 0){
 		runBinary(command, arguments);
 		printf("\n%s \n", shell)
-	}*/else {
-		runBinary(command, arguments,bg_process);
+		}*/else {
+			runBinary(command, arguments,bg_process);
 		//printf("sbush: %s: command not found...\n", command);
 		//printf("%s \n", shell);
+		} 
+
 	}
 }
 
@@ -375,9 +415,11 @@ int main(int argc, char* argv[]) {
 	}
 	//dollar_PATH = //(char *)malloc(sizeof(getenv("PATH")+1024));
 	else {
+		//dollar_PATH = (char *)malloc(sizeof(getenv("PATH")+1024));
 		strcpy(dollar_PATH, getenv("PATH")); 
 		char *envold =strdup(getenv("PATH"));//save old environment
-		printf("%s \n",dollar_PATH);
+		printf("%s",dollar_PATH);
+
 		char basename[1024];
 		if(getcwd(basename, sizeof(basename)) != NULL){
 			modifyShellPrompt(basename, "cd");
