@@ -99,7 +99,7 @@ void modifyShellPrompt(char directory[], char *type){
 	// printf("trying to change shell prompt %s\n", type);
 	if(ps1_enabled==1)
 	{
-		printf("%s\n", shell);
+		printf("\n%s", shell);
 		return ;
 	}
 	if(strcmp(type, "cd") == 0){
@@ -108,7 +108,7 @@ void modifyShellPrompt(char directory[], char *type){
 		strcat(shell, space);
 		strcat(shell, temp);
 		strcat(shell, shell_sign);
-		printf("%s\n", shell);
+		printf("\n%s", shell);
 	}
 	
 }
@@ -132,8 +132,8 @@ void runBinary(char *command, char *arguments,int bg_process){
 	} else if(pid > 0){
 		if(bg_process ==1)
 		{	
-			printf("%d \n", pid);
-			printf("%s \n",shell);
+			printf("%d", pid);
+			printf("\n%s ",shell);
 			return ;
 		}
 		
@@ -141,10 +141,10 @@ void runBinary(char *command, char *arguments,int bg_process){
 		//https://www.gnu.org/software/libc/manual/html_node/Exit-Status.html#Exit-Status
 		if(WIFEXITED(status) && wait_status){
 			if(WEXITSTATUS(status) == 255){
-				printf("sbush: %s: command not found...\n", command);
-				printf("%s \n", shell);
+				printf("sbush: %s: command not found...", command);
+				printf("\n%s ", shell);
 			} else /*if(WEXITSTATUS(status) == 0)*/ {
-				printf("\n%s \n", shell);
+				printf("\n%s ", shell);
 			}
 		}
 	}
@@ -251,8 +251,62 @@ int parseExportArguments(char *argument)
 
 }
 
+void runPipes(char commands[10][100], int no_of_commands){
+	// *commands[] = {ls -ltr, grep word, wc -l};
+	int fd[2];
+	int input = 0;
+	int status;
+	for(int i=0; i<no_of_commands; i++){
+		if(pipe(fd)){
+			printf("pipe creation failed \n");
+		}
+		//printf("%d", x);
+		pid_t pid;
+		pid = fork();
+		if(pid == 0){
+			if(input != 0) dup2(input, 0); // if there is some output present from previous command
+			if(i < no_of_commands-1) {// making sure only n-1 cmd outputs are written to the pipe. Last output will be written in the screen
+				dup2(fd[1], 1);
+			}
+			char arguments[1024];
+			char cmd[100];
+			char *clean_command = _removeSpaces(commands[i]); //removes all unnecessary spaces
+			int j=0, k=0;
+			while(clean_command[j] != '\0' && clean_command[j] != ' '){
+				cmd[j] = clean_command[j];
+				j++;
+			}
+			cmd[j] = '\0';
+			j+=1;
+			while(clean_command[j] != '\0'){
+				arguments[k] = clean_command[j];
+				j++;
+				k++;
+			}
+			arguments[k] = '\0';
+			char *args = arguments;
+			if(strlen(arguments) == 0)
+                        	args = NULL;
+                        char *cmd_arr[] = {cmd, args, (char *)0};
+                        char final_command[1024];
+                        strcpy(final_command, bin_string);
+                        strcat(final_command, cmd);
+                        execv(final_command, cmd_arr);
+		} else if(pid > 0){
+			if(waitpid(pid, &status, 0) > 0){
+				close(fd[1]); // close the write end of the pipe
+				input = fd[0]; // store the output for later references 
+			}
+		}
+	}
+}
+
 void interpretCommand(char *query){
 	// printf("query is %s\n", query);
+	if(strlen(query) == 0){
+		printf("\n%s ", shell);
+		return;
+	}
 	char command[100];
 	char arguments[1024];
 	char inst_array[10][100];
@@ -282,12 +336,15 @@ void interpretCommand(char *query){
 	if(no_of_commands>1)
 	{
 	//	runPipe(inst_array);Run the pipe function to handle multiple pipes.
+		/*	
 		for(int k=0;k<no_of_commands;k++)
 		{
 		printf("\n%s",inst_array[k]);
 		}
-		printf("\n%s",shell);
-		
+		printf("\n%s",shell);  // CURSOR IMPLEMENTATION
+		*/
+		runPipes(inst_array, no_of_commands);
+		printf("\n%s ", shell);
 	}
 	else
 	{
@@ -327,18 +384,18 @@ void interpretCommand(char *query){
 			size_t size;
 			buffer = getcwd(buffer, size);
 
-			printf("%s %s \n", shell, buffer);
+			printf("\n%s ", buffer);
+			printf("\n%s ", shell);
 		} else if(strcmp(command, "exit") == 0) {
 			run_status = 0;
 		}
 		else if(strcmp(command, "cd") == 0){
 			char *directory = arguments;
 		// If we find any wildcard entry like '~' or '.' 
-
-			if(directory[0] == REL /*|| 
-
-				(directory[0] == CURRENT && directory[1] == '\0') ||
-				(directory[0] == CURRENT && directory[1] != '\0' && directory[1] != CURRENT) */){
+			if(strlen(arguments) == 0){
+				strcpy(directory, getenv("HOME"));	
+			}
+			else if(directory[0] == REL){
 				int j = 0;
 				char temp[255];
 			// copy the path name following the REL(~) sign
@@ -365,15 +422,15 @@ void interpretCommand(char *query){
 			// printkf("directory changed \n");
 				modifyShellPrompt(directory, "cd");
 			} else {
-				printf("sbush: cd: %s: No such file or directory\n", directory);
-				printf("%s \n", shell);
+				printf("sbush: cd: %s: No such file or directory", directory);
+				printf("\n%s ", shell);
 			}
 		}
 		else if(strcmp(command,"export" )==0){
 		 	int result=parseExportArguments(arguments);	
 			if(result==0)
-				printf ("\nmEnvironment variable not set");
-			printf("%s \n", shell);
+				printf ("\nEnvironment variable not set");
+			printf("\n%s ", shell);
 		}
 	
 /*
