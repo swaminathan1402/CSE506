@@ -1,4 +1,4 @@
-#include <sys/syscall.h>
+#include <unistd.h>
 
 int open(const char *pathname, int flags){
 	int status = syscall(2, pathname, flags, 0);  // Might Erro
@@ -50,14 +50,15 @@ int execv(const char *file, char *const argv[]){
 	return status;
 }
 
+/*
 pid_t wait(int *status) {
-	int status = syscall(61, -1, status, 0, NULL);
-	return status;
+	int status_wait = syscall(61, -1, status, 0, NULL);
+	eturn status_wait;
 }
-
+*/
 int waitpid(int pid, int *status) {
-	int status = syscall(61, pid, status, 0, NULL);
-	return status;
+	int status_wait = syscall(61, pid, status, 0, NULL);
+	return status_wait;
 }
 
 unsigned int sleep(unsigned int seconds) {

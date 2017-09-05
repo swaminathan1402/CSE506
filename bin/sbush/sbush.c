@@ -1,9 +1,9 @@
-#include<stdio.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
-#include <sys/wait.h>
-#include <sys/types.h>
+//#include <sys/wait.h>
+//#include <sys/types.h>
 #include <dirent.h>
 #define REL '~'
 #define CURRENT '.'
@@ -137,7 +137,7 @@ void runBinary(char *command, char *arguments,int bg_process){
 			return ;
 		}
 		
-		pid_t wait_status = waitpid(pid, &status, 0);
+		pid_t wait_status = waitpid(pid, &status);//waitpid(pid, &status, 0);
 		//https://www.gnu.org/software/libc/manual/html_node/Exit-Status.html#Exit-Status
 		if(WIFEXITED(status) && wait_status){
 			if(WEXITSTATUS(status) == 255){
@@ -160,7 +160,8 @@ void runScripts(char *arguments[]){
 		int ret = execv("/bin/sh", arguments);
 		exit(ret);
 	} else if(pid > 0){
-		if(waitpid(pid, &status, 0) > 0){
+		//if(waitpid(pid, &status, 0) > 0){
+		if(waitpid(pid, &status) > 0){
 			//printf("%s \n", shell);
 		}
 	}
@@ -293,7 +294,8 @@ void runPipes(char commands[10][100], int no_of_commands){
                         strcat(final_command, cmd);
                         execv(final_command, cmd_arr);
 		} else if(pid > 0){
-			if(waitpid(pid, &status, 0) > 0){
+			//if(waitpid(pid, &status, 0) > 0){
+			if(waitpid(pid, &status) > 0){
 				close(fd[1]); // close the write end of the pipe
 				input = fd[0]; // store the output for later references 
 			}
@@ -463,7 +465,7 @@ char* commandParser(){
 	return cmd;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[], char *envp[]) {
 	/*
       printf("sbush> %s\n", pwd);
 	*/
@@ -474,7 +476,9 @@ int main(int argc, char* argv[]) {
 	else {
 		//dollar_PATH = (char *)malloc(sizeof(getenv("PATH")+1024));
 		strcpy(dollar_PATH, getenv("PATH")); 
-		char *envold =strdup(getenv("PATH"));//save old environment
+		//char *envold =strdup(getenv("PATH"));//save old environment
+		char envold[1024];
+		strcpy(envold, getenv("PATH"));
 		printf("%s",dollar_PATH);
 
 		char basename[1024];
