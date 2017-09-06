@@ -94,6 +94,23 @@ char* syscall_getcwd ( char *buf , size_t size)
 	);
 }
 
+void* syscall_mmap ( unsigned lond addr, unsigned long len, unsigned long prot, unsigned long flags, unsigned long fd, unsigned long offset){
+    
+        asm (
+        "movl $9, %%eax;"
+        "movl %0, %%ebx;"
+        "movl %1, %%ecx;"
+        "movl %2, %%edx",
+        "movl %3, %%r10",
+        "movl %4, %%r8",
+        "movl %5, %%r9",
+        "syscall;"
+        :
+        :"m" (addr), "m"(len), "m"(prot), "m"(flags), "m"(fd), "m"(offset)
+        :
+        );
+}
+
 pid_t syscall_fork()
 {
 	asm(
@@ -135,7 +152,6 @@ pid_t syscall_waitpid(pid_t pid, int *status, int options) {
 		: "m"(pid), "m"(status), "m"(options)
 		:
 	);
-	return 0;
 }
 
 
@@ -225,7 +241,7 @@ int syscall_dup2(unsigned int old_fd, unsigned int new_fd){
 int main ()
 {
 	// pid works: verified
-	pid_t pidOne = syscall_getpid();
+	//pid_t pidOne = syscall_getpid();
 	printf("pid: %d\n", pidOne);
 
 	// cwd works: verified
@@ -287,5 +303,6 @@ int main ()
 		*/
 		printf("%d\n", syscall_waitpid(pid, &status, 0));
 	}
+    
 return 0;
 }
