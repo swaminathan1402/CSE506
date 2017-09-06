@@ -5,8 +5,3 @@ exit: done
 
 when type cd and space: go to home directory
 execute binaries: done
-<<<<<<< HEAD
-comeon
-=======
-finish part 2
->>>>>>> working_code

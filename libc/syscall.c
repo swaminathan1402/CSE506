@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
+#include <sys/syscall.h>
 // works
 int SYSCALL_write(int fd, const void *msg , size_t size)
 {
@@ -123,7 +123,7 @@ int SYSCALL_execvpe( const char *filename , char *const argv[], char *const envp
 
 
 //TODO
-pid_t waitpid(pid_t pid, int *status, int options) {
+pid_t SYSCALL_waitpid(pid_t pid, int *status, int options) {
 	asm(
 		"movl $61,%%eax;"
 		"movl %0,%%ebx;"
@@ -210,6 +210,19 @@ int SYSCALL_exit(int status){
 	);
 }
 
+int SYSCALL_dup2(unsigned int old_fd, unsigned int new_fd){
+	asm(
+		"movl $33, %%eax;"
+		"movl %0, %%ebx;"
+		"movl %1, %%ecx;"
+		"movl %2, %%edx;"
+		"syscall;"
+		:
+		: "m"(old_fd), "m"(new_fd)
+		:
+	);
+}
+
 int main ()
 {
 	// pid works: verified
@@ -266,7 +279,7 @@ int main ()
 		SYSCALL_exit(ret);
 	} else if(pid > 0){
 		printf("%d\n", pid);
-		if(waitpid(pid, &status, 0) > 0){
+		if(SYSCALL_waitpid(pid, &status, 0) > 0){
 			SYSCALL_write(1, "it worked\n", 10);
 		} else {
 			SYSCALL_write(1, "it didnt\n", 10);
