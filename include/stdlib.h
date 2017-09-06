@@ -2,6 +2,7 @@
 #define _STDLIB_H
 
 #include <sys/defs.h>
+#include <sys/mman.h>
 
 int main(int argc, char *argv[], char *envp[]);
 void exit(int status);

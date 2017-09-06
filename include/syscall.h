@@ -19,5 +19,9 @@ int syscall_mkdir(const char *pathname, int mode);
 int syscall_pipe(int *filedes);
 int syscall_exit(int status);
 int syscall_dup2(unsigned int old_fd, unsigned int new_fd);
+void *syscall_malloc(size_t size);
+void syscall_free(void *ptr);
+void *syscall_mmap(unsigned long addr, unsigned long len, unsigned long prot, unsigned long flags, unsigned long fd, unsigned long offset);
+int syscall_munmap(unsigned long addr, size_t len);
 
 #endif
