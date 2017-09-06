@@ -215,10 +215,9 @@ int SYSCALL_dup2(unsigned int old_fd, unsigned int new_fd){
 		"movl $33, %%eax;"
 		"movl %0, %%ebx;"
 		"movl %1, %%ecx;"
-		"movl %2, %%edx;"
 		"syscall;"
 		:
-		: "m"(old_fd), "m"(new_fd)
+			: "m"(old_fd), "m"(new_fd)
 		:
 	);
 }
@@ -279,11 +278,14 @@ int main ()
 		SYSCALL_exit(ret);
 	} else if(pid > 0){
 		printf("%d\n", pid);
+		/*
 		if(SYSCALL_waitpid(pid, &status, 0) > 0){
 			SYSCALL_write(1, "it worked\n", 10);
 		} else {
 			SYSCALL_write(1, "it didnt\n", 10);
 		}
+		*/
+		printf("%d\n", SYSCALL_waitpid(pid, &status, 0));
 	}
 return 0;
 }
