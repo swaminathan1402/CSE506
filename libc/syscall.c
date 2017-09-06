@@ -107,6 +107,38 @@ char* syscall_getcwd ( char *buf , size_t size)
 	return buf;
 }
 
+void* syscall_mmap ( unsigned long addr, unsigned long len, unsigned long prot, unsigned long flags, unsigned long fd, unsigned long offset){
+    
+        asm (
+        "movl $9, %%eax;"
+        "movl %0, %%ebx;"
+        "movl %1, %%ecx;"
+        "movl %2, %%edx;"
+        "mov %3, %%r10;"
+        "mov %4, %%r8;"
+        "mov %5, %%r9;"
+        "syscall;"
+        :
+        :"m" (addr), "m"(len), "m"(prot), "m"(flags), "m"(fd), "m"(offset)
+        :
+        );
+}
+
+
+//wrong
+int syscall_munmap( unsigned long addr, size_t len)
+{
+    asm(
+    "movl $11, %%eax;"
+    "movl %0, %%ebx;"
+    "movl %1, %%ecx;"
+    "syscall;"
+    :
+    :"m"(addr), "m"(len)
+    :
+    );
+}
+
 pid_t syscall_fork()
 {
 	pid_t ret;
@@ -138,7 +170,7 @@ int syscall_execvpe( const char *filename , char *const argv[], char *const envp
 }
 
 
-//TODO
+//TODO pid_t issue
 pid_t syscall_waitpid(pid_t pid, int *status, int options) {
 	pid_t ret;
 	__asm__(
@@ -156,7 +188,7 @@ pid_t syscall_waitpid(pid_t pid, int *status, int options) {
 }
 
 
-// works
+
 pid_t syscall_getpid()
 {
 	pid_t ret;
@@ -212,7 +244,7 @@ int syscall_mkdir(const char *pathname,int mode)
 	return ret;
 }
 
-// works
+
 int syscall_pipe(int *filedes)
 {
 	int ret;
@@ -304,5 +336,35 @@ int main ()
 		//printf("%d\n", syscall_waitpid(pid, &status, 0));
 	}
 return 0;
+*/
+
+/*
+void* malloc (size_t size){
+    size_t *mem_pointer;
+    mem_pointer = syscall_mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
+
+    *mem_pointer = size;
+    return (void*)(&mem_pointer[1]);
+}
+*/
+/*
+void free (void* mem_pointer){
+    int *pointer_length = (int*)mem_pointer;
+    size_t size;
+
+    size = *pointer_length;
+    syscall_munmap((void*)pointer_length, size);
+    printf("Custom Free Call\n");
+}
+*/
+
+/*
+int main ()
+{
+    char* test = (char*)malloc(1024*sizeof(char*));
+    char* tester = "Copy This sjnc d noidcjcn ca jnocnvobuabdvubqubvaubvobjbvbjavb bub";
+    strcpy(test, tester);
+    printf("Test: %s\n", test);
+    return 0;
 }
 */
