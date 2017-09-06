@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <sys/syscall.h>
 // works
-int SYSCALL_write(int fd, const void *msg , size_t size)
+int syscall_write(int fd, const void *msg , size_t size)
 {
 	asm("movl $1,%%eax;"
 	    "movl %0,%%ebx;"
@@ -17,7 +17,7 @@ int SYSCALL_write(int fd, const void *msg , size_t size)
 
 }
 
-int SYSCALL_open (const char *filename, int flags,int mode)
+int syscall_open (const char *filename, int flags,int mode)
 {
   asm(
 	"movl $2, %%eax;"
@@ -32,7 +32,7 @@ int SYSCALL_open (const char *filename, int flags,int mode)
 }
 
 
-int SYSCALL_close(unsigned int fd)
+int syscall_close(unsigned int fd)
 {
      asm("movl $3,%%eax;"
 	"movl %0,%%edi;"
@@ -43,7 +43,7 @@ int SYSCALL_close(unsigned int fd)
 	);
 }
 
-size_t SYSCALL_read(int fd, void *msg ,size_t size)
+size_t syscall_read(int fd, void *msg ,size_t size)
 {
 	asm(
 	"movl $0, %%eax;"
@@ -57,7 +57,7 @@ size_t SYSCALL_read(int fd, void *msg ,size_t size)
 	);
 }
 
-int SYSCALL_unlink( const char *pathname)
+int syscall_unlink( const char *pathname)
 {
 
      asm("movl $87, %%eax;"
@@ -69,7 +69,7 @@ int SYSCALL_unlink( const char *pathname)
 	);
 }
 
-int SYSCALL_chdir(const char *filename)
+int syscall_chdir(const char *filename)
 {
 	asm (
 	"movl $80, %%eax;"
@@ -81,7 +81,7 @@ int SYSCALL_chdir(const char *filename)
 	);
 }
 
-char* SYSCALL_getcwd ( char *buf , size_t size)
+char* syscall_getcwd ( char *buf , size_t size)
 {
 	asm (
 	"movl $79, %%eax;"
@@ -94,7 +94,7 @@ char* SYSCALL_getcwd ( char *buf , size_t size)
 	);
 }
 
-pid_t SYSCALL_fork()
+pid_t syscall_fork()
 {
 	asm(
 	"movl $57, %%eax;"
@@ -106,7 +106,7 @@ pid_t SYSCALL_fork()
 }
 
 // doesnt work
-int SYSCALL_execvpe( const char *filename , char *const argv[], char *const envp[]  )
+int syscall_execvpe( const char *filename , char *const argv[], char *const envp[]  )
 {
 
 	asm (
@@ -123,7 +123,7 @@ int SYSCALL_execvpe( const char *filename , char *const argv[], char *const envp
 
 
 //TODO
-pid_t SYSCALL_waitpid(pid_t pid, int *status, int options) {
+pid_t syscall_waitpid(pid_t pid, int *status, int options) {
 	asm(
 		"movl $61,%%eax;"
 		"movl %0,%%ebx;"
@@ -140,7 +140,7 @@ pid_t SYSCALL_waitpid(pid_t pid, int *status, int options) {
 
 
 // works
-pid_t SYSCALL_getpid()
+pid_t syscall_getpid()
 {
 	asm ("movl $39, %%eax;"
 	"syscall;"
@@ -150,7 +150,7 @@ pid_t SYSCALL_getpid()
 	);
 }
 
-pid_t SYSCALL_getppid()
+pid_t syscall_getppid()
 {
 	asm ("movl $110, %%eax;"
 	"syscall;"
@@ -161,7 +161,7 @@ pid_t SYSCALL_getppid()
 }
 
 
-int SYSCALL_lseek(unsigned int fd , int offset,unsigned int origin)
+int syscall_lseek(unsigned int fd , int offset,unsigned int origin)
 {
 	asm("movl $8 ,%%eax;" 
 	"movl %0,%%edi;"
@@ -174,7 +174,7 @@ int SYSCALL_lseek(unsigned int fd , int offset,unsigned int origin)
 	);
 }
 
-int SYSCALL_mkdir(const char *pathname,int mode)
+int syscall_mkdir(const char *pathname,int mode)
 {
 	asm(
 	"movl $83, %%eax;"
@@ -188,7 +188,7 @@ int SYSCALL_mkdir(const char *pathname,int mode)
 }
 
 // works
-int SYSCALL_pipe(int *filedes)
+int syscall_pipe(int *filedes)
 {
 	asm ("movl $22 , %%eax;"
 	"movl %0,%%ebx;"
@@ -198,7 +198,7 @@ int SYSCALL_pipe(int *filedes)
 	);
 }
 
-int SYSCALL_exit(int status){
+int syscall_exit(int status){
 	
 	asm(
 	"movl $60, %%eax;"
@@ -210,7 +210,7 @@ int SYSCALL_exit(int status){
 	);
 }
 
-int SYSCALL_dup2(unsigned int old_fd, unsigned int new_fd){
+int syscall_dup2(unsigned int old_fd, unsigned int new_fd){
 	asm(
 		"movl $33, %%eax;"
 		"movl %0, %%ebx;"
@@ -225,67 +225,67 @@ int SYSCALL_dup2(unsigned int old_fd, unsigned int new_fd){
 int main ()
 {
 	// pid works: verified
-	pid_t pidOne = SYSCALL_getpid();
+	pid_t pidOne = syscall_getpid();
 	printf("pid: %d\n", pidOne);
 
 	// cwd works: verified
 	/*
 	char *buffer = (char *)malloc(1024);
-	int cwd = SYSCALL_getcwd(buffer, 1024);
+	int cwd = syscall_getcwd(buffer, 1024);
 	printf("getcwd: %s %d\n", buffer, cwd);
 	*/
 	// execvpe works: verified
 	/*
 	char *ls[] = {"ls", "-ltr", NULL};
 	char *cmd = "/bin/ls";
-	int ok = SYSCALL_execvpe(cmd, ls, NULL);
+	int ok = syscall_execvpe(cmd, ls, NULL);
 	printf("\n execvpe: %d", ok);
 	*/
 
 	// pipe works: verified
 	/*
 	int fd[2];
-	int p = SYSCALL_pipe(fd);
+	int p = syscall_pipe(fd);
 	printf("\npipe: %d", p);
 	*/
 
 	// write: working: verfied
 	/* 
 	char *q = "hello world\n";
-	SYSCALL_write(1, q, strlen(q));
+	syscall_write(1, q, strlen(q));
 	*/
 
 	// chdir: Works: verified
 	/* 
 	const char *filename = "/home";
-	int s = SYSCALL_chdir(filename);
+	int s = syscall_chdir(filename);
 	printf("\nchdir: %d", s);
 	*/ 
 	// read: not working 
 	/*
 	char msg[1024] = "can you read me ?";
-	int o = SYSCALL_read(1, msg, strlen(msg));
+	int o = syscall_read(1, msg, strlen(msg));
 	printf("%d \n", o);
 	*/
 
-	pid_t pid = SYSCALL_fork();
+	pid_t pid = syscall_fork();
 	printf("%d is generated\n", pid);
 	int status;
 	if(pid == 0){
 		char *ls[] = {"ls", "-ltr", NULL};
 		char *cmd = "/bin/ls";
-		int ret = SYSCALL_execvpe(cmd, ls, NULL);
-		SYSCALL_exit(ret);
+		int ret = syscall_execvpe(cmd, ls, NULL);
+		syscall_exit(ret);
 	} else if(pid > 0){
 		printf("%d\n", pid);
 		/*
-		if(SYSCALL_waitpid(pid, &status, 0) > 0){
-			SYSCALL_write(1, "it worked\n", 10);
+		if(syscall_waitpid(pid, &status, 0) > 0){
+			syscall_write(1, "it worked\n", 10);
 		} else {
-			SYSCALL_write(1, "it didnt\n", 10);
+			syscall_write(1, "it didnt\n", 10);
 		}
 		*/
-		printf("%d\n", SYSCALL_waitpid(pid, &status, 0));
+		printf("%d\n", syscall_waitpid(pid, &status, 0));
 	}
 return 0;
 }
