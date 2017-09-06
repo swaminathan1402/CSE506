@@ -1,89 +1,101 @@
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
-#include <sys/syscall.h>
+#include <syscall.h>
+
 // works
 int syscall_write(int fd, const void *msg , size_t size)
 {
-	asm("movl $1,%%eax;"
-	    "movl %0,%%ebx;"
-	    "movl %1,%%ecx;"
-	    "movl %2,%%edx;"
+	int ret;
+	  __asm__("movl $1,%%eax;"
+	    "movl %1,%%ebx;"
+	    "movl %2,%%ecx;"
+	    "movl %3,%%edx;"
 	    "syscall;"
-	    :
+	    :"=m"(ret)
    	    :"ir"(fd),"m"(msg) ,"m"(size)
 	    :
 		);
-
+	return ret;
 }
 
-int syscall_open (const char *filename, int flags,int mode)
+int syscall_open (const char *filename, int flags, int mode)
 {
-  asm(
-	"movl $2, %%eax;"
-       	"movl %0,%%edi;"
-        "movl %1,%%esi;"
-        "movl %2,%%edx;"
-        "syscall;"
-	:
-	:"m"(filename),"m"(flags),"m"(mode)
-	:
-	);
+	int ret;	
+	__asm__(
+		"movl $2, %%eax;"
+		"movl %1,%%ebx;"
+		"movl %2,%%ecx;"
+		"movl %3,%%edx;"
+		"syscall;"
+		:"=m"(ret)
+		:"m"(filename),"m"(flags),"m"(mode)
+		:
+		);
+	return ret;
 }
 
 
 int syscall_close(unsigned int fd)
 {
-     asm("movl $3,%%eax;"
-	"movl %0,%%edi;"
+	int ret;
+     __asm__("movl $3,%%eax;"
+	"movl %1,%%ebx;"
         "syscall;"
-	:
+	:"=m"(ret)
 	:"ir"(fd)
 	:
 	);
+	return ret;
 }
 
 size_t syscall_read(int fd, void *msg ,size_t size)
 {
-	asm(
+	size_t ret;
+	__asm__(
 	"movl $0, %%eax;"
-       	"movl %0, %%ebx;"
-	"movl %1,%%ecx;"
-	"movl %2,%%edx;"
+	"movl %0, %%edi;"
+       	"movl %1, %%ebx;"
+	"movl %2,%%ecx;"
+	"movl %3,%%edx;"
 	"syscall;"
-	:
+	:"m="(ret)
 	:"ir"(fd),"m"(msg),"m"(size)
 	:
 	);
+	return ret;
 }
 
 int syscall_unlink( const char *pathname)
 {
 
-     asm("movl $87, %%eax;"
-	"movl %0,%%edi;"
+	int ret;
+     __asm__("movl $87, %%eax;"
+	"movl %1,%%ebx;"
 	"syscall;"
-	:
+	: "=m"(ret)
 	: "m"(pathname)
 	:
 	);
+	return ret;
 }
 
 int syscall_chdir(const char *filename)
 {
-	asm (
+	int ret;
+	__asm__ (
 	"movl $80, %%eax;"
-	"movl %0,%%ebx;"
+	"movl %1,%%ebx;"
 	"syscall;"
-	:
+	:"=m"(ret)
 	:"m"(filename)
 	:
 	);
+	return ret;
 }
 
 char* syscall_getcwd ( char *buf , size_t size)
 {
-	asm (
+	__asm__ (
 	"movl $79, %%eax;"
 	"movl %0,%%ebx;"
 	"movl %1,%%ecx;"
@@ -92,30 +104,34 @@ char* syscall_getcwd ( char *buf , size_t size)
 	:"m"(buf), "m"(size)
 	:
 	);
+	return buf;
 }
 
 pid_t syscall_fork()
 {
-	asm(
+	pid_t ret;
+	__asm__(
 	"movl $57, %%eax;"
 	"syscall;"
-	:
+	:"=m"(ret)
 	:
 	:
 	);
+	return ret;
 }
 
 // doesnt work
 int syscall_execvpe( const char *filename , char *const argv[], char *const envp[]  )
 {
 
-	asm (
+	int ret;
+	__asm__ (
 	"movl $59, %%eax;"
 	"movl %0,%%ebx;"
 	"movl %1,%%ecx;"
 	"movl %2,%%edx;"
 	"syscall;"
-	:
+	:"=m" (ret)
 	:"m" (filename), "m"(argv), "m" (envp)
 	:
 	);
@@ -124,103 +140,118 @@ int syscall_execvpe( const char *filename , char *const argv[], char *const envp
 
 //TODO
 pid_t syscall_waitpid(pid_t pid, int *status, int options) {
-	asm(
+	pid_t ret;
+	__asm__(
 		"movl $61,%%eax;"
-		"movl %0,%%ebx;"
-		"movl %1,%%ecx;"
-		"movl %2, %%edx;"
+		"movl %1,%%ebx;"
+		"movl %2,%%ecx;"
+		"movl %3, %%edx;"
 		"mov $0, %%r10;"
 		"syscall;"
-		: 
+		: "=m" (ret)
 		: "m"(pid), "m"(status), "m"(options)
 		:
 	);
+	return ret;
 }
 
 
 // works
 pid_t syscall_getpid()
 {
-	asm ("movl $39, %%eax;"
+	pid_t ret;
+	__asm__ ("movl $39, %%eax;"
 	"syscall;"
-	:
+	:"=m"(ret)
 	:
 	:
 	);
+	return ret;
 }
 
 pid_t syscall_getppid()
 {
-	asm ("movl $110, %%eax;"
+	pid_t ret;
+	__asm__ ("movl $110, %%eax;"
 	"syscall;"
-	:
+	:"=m"(ret)
 	:
 	:
 	);
+	return ret;
 }
 
 
 int syscall_lseek(unsigned int fd , int offset,unsigned int origin)
 {
-	asm("movl $8 ,%%eax;" 
-	"movl %0,%%edi;"
-	"movl %1,%%esi;"
-	"movl %2,%%edx;"
+	int ret;
+	__asm__("movl $8 ,%%eax;" 
+	"movl %1,%%ebx;"
+	"movl %2,%%ecx;"
+	"movl %3,%%edx;"
 	"syscall;"
-	:
+	:"=m"(ret)
 	:"ir"(fd),"m" (offset),"m" (origin)
 	:
 	);
+	return ret;
 }
 
 int syscall_mkdir(const char *pathname,int mode)
 {
-	asm(
+	int ret;
+	__asm__(
 	"movl $83, %%eax;"
-	"movl %0,%%edi;"
-	"movl %1,%%esi;"
+	"movl %1,%%ebx;"
+	"movl %2,%%ecx;"
 	"syscall;"
-	:
+	:"=m"(ret)
 	:"m"(pathname), "m"(mode)
 	:
 	);
+	return ret;
 }
 
 // works
 int syscall_pipe(int *filedes)
 {
-	asm ("movl $22 , %%eax;"
-	"movl %0,%%ebx;"
-	:
+	int ret;
+	__asm__ ("movl $22 , %%eax;"
+	"movl %1,%%ebx;"
+	:"=m"(ret)
 	:"m"(filedes)
 	:
 	);
+	return ret;
 }
 
 int syscall_exit(int status){
-	printf("Exit status %d", status);	
-	asm(
+	int ret;
+	__asm__(
 	"movl $60, %%eax;"
-	"movl %0, %%ebx;"
+	"movl %1, %%ebx;"
 	"syscall;"
-	:
+	: "=m"(ret)
 	: "m"(status)
 	:
 	);
+	return ret;
 }
 
 int syscall_dup2(unsigned int old_fd, unsigned int new_fd){
-	asm(
+	int ret;
+	__asm__(
 		"movl $33, %%eax;"
 		"movl %0, %%ebx;"
 		"movl %1, %%ecx;"
 		"syscall;"
-		:
-			: "m"(old_fd), "m"(new_fd)
+		: "=m"(ret)
+		: "m"(old_fd), "m"(new_fd)
 		:
 	);
+	return ret;
 }
-
+/*
 int main ()
 {
 	// pid works: verified
@@ -228,44 +259,32 @@ int main ()
 	printf("pid: %d\n", pidOne);
 
 	// cwd works: verified
-	/*
 	char *buffer = (char *)malloc(1024);
 	int cwd = syscall_getcwd(buffer, 1024);
 	printf("getcwd: %s %d\n", buffer, cwd);
-	*/
 	// execvpe works: verified
-	/*
 	char *ls[] = {"ls", "-ltr", NULL};
 	char *cmd = "/bin/ls";
 	int ok = syscall_execvpe(cmd, ls, NULL);
 	printf("\n execvpe: %d", ok);
-	*/
 
 	// pipe works: verified
-	/*
 	int fd[2];
 	int p = syscall_pipe(fd);
 	printf("\npipe: %d", p);
-	*/
 
 	// write: working: verfied
-	/* 
 	char *q = "hello world\n";
 	syscall_write(1, q, strlen(q));
-	*/
 
 	// chdir: Works: verified
-	/* 
 	const char *filename = "/home";
 	int s = syscall_chdir(filename);
 	printf("\nchdir: %d", s);
-	*/ 
 	// read: not working 
-	/*
 	char msg[1024] = "can you read me ?";
 	int o = syscall_read(1, msg, strlen(msg));
 	printf("%d \n", o);
-	*/
 
 	pid_t pid = syscall_fork();
 	printf("%d is generated\n", pid);
@@ -286,3 +305,4 @@ int main ()
 	}
 return 0;
 }
+*/
