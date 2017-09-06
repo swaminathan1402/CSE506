@@ -58,7 +58,7 @@ size_t syscall_read(int fd, void *msg ,size_t size)
 	"movl %2,%%ecx;"
 	"movl %3,%%edx;"
 	"syscall;"
-	:"m="(ret)
+	:"=m"(ret)
 	:"ir"(fd),"m"(msg),"m"(size)
 	:
 	);
@@ -108,35 +108,38 @@ char* syscall_getcwd ( char *buf , size_t size)
 }
 
 void* syscall_mmap ( unsigned long addr, unsigned long len, unsigned long prot, unsigned long flags, unsigned long fd, unsigned long offset){
-    
-        asm (
+	void *ret;    
+        __asm__ (
         "movl $9, %%eax;"
-        "movl %0, %%ebx;"
-        "movl %1, %%ecx;"
-        "movl %2, %%edx;"
-        "mov %3, %%r10;"
-        "mov %4, %%r8;"
-        "mov %5, %%r9;"
+        "movl %1, %%ebx;"
+        "movl %2, %%ecx;"
+        "movl %3, %%edx;"
+        "mov %4, %%r10;"
+        "mov %5, %%r8;"
+        "mov %6, %%r9;"
         "syscall;"
-        :
+        :"=m" (ret)
         :"m" (addr), "m"(len), "m"(prot), "m"(flags), "m"(fd), "m"(offset)
         :
         );
+	return ret;
 }
 
 
 //wrong
 int syscall_munmap( unsigned long addr, size_t len)
 {
-    asm(
+    int ret;
+    __asm__(
     "movl $11, %%eax;"
-    "movl %0, %%ebx;"
-    "movl %1, %%ecx;"
+    "movl %1, %%ebx;"
+    "movl %2, %%ecx;"
     "syscall;"
-    :
+    :"=m"(ret)
     :"m"(addr), "m"(len)
     :
     );
+    return ret;
 }
 
 pid_t syscall_fork()
@@ -167,6 +170,7 @@ int syscall_execvpe( const char *filename , char *const argv[], char *const envp
 	:"m" (filename), "m"(argv), "m" (envp)
 	:
 	);
+	return ret;
 }
 
 
