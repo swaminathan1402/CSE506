@@ -49,12 +49,14 @@ char *_removeSpaces(char command[]){
 	}
 	//printf("%d difference \n", j);
 
-	char *formatted_command = (char *)malloc(sizeof(char) * (j));
+	//char *formatted_command = (char *)malloc(sizeof(char) * (j));
+	/*
+	char formatted_command[1024];
 	for(int i=0; i<j; i++){
 		formatted_command[i] = command[i];
-		//printf("%s\n", &command[i]);
 	}
-	//char *formatted_command = command;
+	*/
+	char *formatted_command = command;
 	return formatted_command;
 }
 
@@ -395,7 +397,8 @@ void interpretCommand(char *query){
 			char *directory = arguments;
 		// If we find any wildcard entry like '~' or '.' 
 			if(strlen(arguments) == 0){
-				strcpy(directory, getenv("HOME"));	
+				char *home = getenv("HOME");
+				strcpy(directory, home);	
 			}
 			else if(directory[0] == REL){
 				int j = 0;

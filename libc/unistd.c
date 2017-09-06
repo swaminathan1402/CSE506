@@ -1,4 +1,5 @@
 #include <unistd.h>
+#include <stdio.h>
 
 int open(const char *pathname, int flags){
 	int status = syscall(2, pathname, flags, 0);  // Might Erro
@@ -91,4 +92,19 @@ int pipe(int pipefd[2]) {
 	int status;
 	status = syscall(22, pipefd);
 	return status;
+}
+
+int main(){
+	/*
+	const char buff[] = "hello world\n";
+	int ret = write(1, buff, 10);
+	*/
+	char buffer[1024];
+	getcwd(buffer, 1024);
+	printf("%s \n", buffer);
+
+	char *ls[] = {"ls", "-ltr", NULL};
+	char *cmd = "/bin/ls";
+	execv(cmd, ls);
+	return 0;
 }
