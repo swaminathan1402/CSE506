@@ -148,7 +148,7 @@ pid_t syscall_waitpid(pid_t pid, int *status, int options) {
 		"movl %2, %%edx;"
 		"mov $0, %%r10;"
 		"syscall;"
-		:
+		: 
 		: "m"(pid), "m"(status), "m"(options)
 		:
 	);
@@ -215,7 +215,7 @@ int syscall_pipe(int *filedes)
 }
 
 int syscall_exit(int status){
-	
+	printf("Exit status %d", status);	
 	asm(
 	"movl $60, %%eax;"
 	"movl %0, %%ebx;"
@@ -294,14 +294,12 @@ int main ()
 		syscall_exit(ret);
 	} else if(pid > 0){
 		printf("%d\n", pid);
-		/*
 		if(syscall_waitpid(pid, &status, 0) > 0){
 			syscall_write(1, "it worked\n", 10);
 		} else {
 			syscall_write(1, "it didnt\n", 10);
 		}
-		*/
-		printf("%d\n", syscall_waitpid(pid, &status, 0));
+		//printf("%d\n", syscall_waitpid(pid, &status, 0));
 	}
     
 return 0;
