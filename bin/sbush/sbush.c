@@ -268,17 +268,22 @@ int parseExportArguments(char *argument)
 void runPipes(char commands[10][100], int no_of_commands){
 	// *commands[] = {ls -ltr, grep word, wc -l};
 	int fd[2];
-	int input = 0;
+	int input = 0,t;
 	int status;
 	for(int i=0; i<no_of_commands; i++){
-		if(pipe(fd)){
+		//if(syscall_pipe(fd)){
 			//printf("pipe creation failed \n");
-			char *pipe_fail_msg = "pipe creation failed\n";
-			syscall_write(1, pipe_fail_msg, strlen(pipe_fail_msg));
-		}
+		//	char *pipe_fail_msg = "pipe creation failed\n";
+		//	syscall_write(1, pipe_fail_msg, strlen(pipe_fail_msg));
+		//}
 		//printf("%d", x);
+		syscall_write(1, "oh man\n", 8);
+		if((t==syscall_pipe(fd)) == -1){
+		syscall_write(1, (char *)t, 2);	
+		return;
+		}
 		pid_t pid;
-		pid = fork();
+		pid = syscall_fork();
 		if(pid == 0){
 			if(input != 0) syscall_dup2(input, 0); // if there is some output present from previous command
 			if(i < no_of_commands-1) {// making sure only n-1 cmd outputs are written to the pipe. Last output will be written in the screen
@@ -307,11 +312,14 @@ void runPipes(char commands[10][100], int no_of_commands){
                         char final_command[1024];
                         strcpy(final_command, bin_string);
                         strcat(final_command, cmd);
-                        execv(final_command, cmd_arr);
+			syscall_write(1, final_command, strlen(final_command));
+                        int ret = execv(final_command, cmd_arr);
+			syscall_exit(ret);
 		} else if(pid > 0){
 			//if(waitpid(pid, &status, 0) > 0){
 			if(waitpid(pid, &status) > 0){
-				close(fd[1]); // close the write end of the pipe
+				syscall_write(1, "parent is done waiting\n", 24);
+				syscall_close(fd[1]); // close the write end of the pipe
 				input = fd[0]; // store the output for later references 
 			}
 		}
@@ -322,7 +330,8 @@ void interpretCommand(char *query){
 	// printf("query is %s\n", query);
 	if(strlen(query) == 0){
 		//printf("\n%s ", shell);
-		syscall_write(1, shell, strlen(shell));
+	syscall_write(1, query, strlen(query));	
+	syscall_write(1, shell, strlen(shell));
 		return;
 	}
 	char command[100];
@@ -477,21 +486,15 @@ void interpretCommand(char *query){
 }
 
 char* commandParser(){
-	char ch = ' ';
-	int i=0;
+	char ch = '\0';
 	char command[1024];
-	//ch = '\0';
-	//while(ch != '\n'){
+	int i=0;
 	while((ch=getchar()) != '\n'){
-		//ch = getchar();
 		command[i] = ch;
 		i++;
 	}
-
-	command[i] = '\0';
-	command[i-1] = '\0';
-	char *cmd = _removeSpaces(command);
-	return cmd;
+	char* command_ptr = command;
+	return command_ptr;
 }
 
 
@@ -535,10 +538,21 @@ int main(int argc, char* argv[], char *envp[]) {
 		if(getcwd(basename, sizeof(basename)) != NULL){
 			modifyShellPrompt(basename, "cd");
 		}
+		/*
 		while(run_status){
 			char *command = commandParser();
+			syscall_write(1, command, strlen(command));
 			interpretCommand(command);
 		}
+		*/
+
+	//	char* command = commandParser();
+	//	interpretCommand(command);
+		//runBinary("ls",NULL, 0);  --works
+		char command[10][100] = {
+			"ls", "grep include"
+		};
+		runPipes(command, 2);
 	}
 
   return 0;

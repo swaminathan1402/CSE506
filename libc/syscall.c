@@ -148,6 +148,7 @@ pid_t syscall_fork()
 	__asm__(
 	"movl $57, %%eax;"
 	"syscall;"
+	"movl %%eax, %0;"
 	:"=a"(ret)
 	:
 	:
@@ -183,7 +184,8 @@ pid_t syscall_waitpid(pid_t pid, int *status, int options) {
 		"movl %2,%%ecx;"
 		"movl %3, %%edx;"
 		"syscall;"
-		: "=a" (ret)
+		"movl %%eax, %0;"
+		: "=m" (ret)
 		: "m"(pid), "m"(status), "m"(options)
 		:
 	);
@@ -253,7 +255,9 @@ int syscall_pipe(int *filedes)
 	int ret;
 	__asm__ ("movl $22 , %%eax;"
 	"movl %1,%%ebx;"
-	:"=a"(ret)
+	"syscall;"
+	"movl %%eax, %0;"
+	:"=m"(ret)
 	:"m"(filedes)
 	:
 	);
@@ -280,6 +284,7 @@ int syscall_dup2(unsigned int old_fd, unsigned int new_fd){
 		"movl %1, %%ebx;"
 		"movl %2, %%ecx;"
 		"syscall;"
+		"movl %%eax, %0;"
 		: "=a"(ret)
 		: "m"(old_fd), "m"(new_fd)
 		:
