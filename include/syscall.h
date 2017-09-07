@@ -4,10 +4,10 @@
 #include <dirent.h>
 
 
-int syscall_write(int fd, const void *msg, size_t size);
+int syscall_write(int fd, char *msg, size_t size);
 int syscall_open(const char *filename, int flags, int mode);
 int syscall_close(unsigned int fd);
-size_t syscall_read(int fd, void *msg, size_t size);
+char* syscall_read(int fd, char *msg, size_t size);
 int syscall_unlink(const char *pathname);
 int syscall_chdir(const char *filename);
 char *syscall_getcwd(char *buf, size_t size);

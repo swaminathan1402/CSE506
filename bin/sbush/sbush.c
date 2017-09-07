@@ -268,7 +268,7 @@ int parseExportArguments(char *argument)
 void runPipes(char commands[10][100], int no_of_commands){
 	// *commands[] = {ls -ltr, grep word, wc -l};
 	int fd[2];
-	int input = 0,t;
+	int input = 0;
 	int status;
 	for(int i=0; i<no_of_commands; i++){
 		//if(syscall_pipe(fd)){
@@ -277,11 +277,7 @@ void runPipes(char commands[10][100], int no_of_commands){
 		//	syscall_write(1, pipe_fail_msg, strlen(pipe_fail_msg));
 		//}
 		//printf("%d", x);
-		syscall_write(1, "oh man\n", 8);
-		if((t==syscall_pipe(fd)) == -1){
-		syscall_write(1, (char *)t, 2);	
-		return;
-		}
+		syscall_pipe(fd);
 		pid_t pid;
 		pid = syscall_fork();
 		if(pid == 0){
@@ -289,6 +285,7 @@ void runPipes(char commands[10][100], int no_of_commands){
 			if(i < no_of_commands-1) {// making sure only n-1 cmd outputs are written to the pipe. Last output will be written in the screen
 				syscall_dup2(fd[1], 1);
 			}
+			 
 			char arguments[1024];
 			char cmd[100];
 			char *clean_command = _removeSpaces(commands[i]); //removes all unnecessary spaces
@@ -313,11 +310,11 @@ void runPipes(char commands[10][100], int no_of_commands){
                         strcpy(final_command, bin_string);
                         strcat(final_command, cmd);
 			syscall_write(1, final_command, strlen(final_command));
-                        int ret = execv(final_command, cmd_arr);
+                        int ret = syscall_execvpe(final_command, cmd_arr, NULL);
 			syscall_exit(ret);
 		} else if(pid > 0){
 			//if(waitpid(pid, &status, 0) > 0){
-			if(waitpid(pid, &status) > 0){
+			if(syscall_waitpid(pid, &status, 0) > 0){
 				syscall_write(1, "parent is done waiting\n", 24);
 				syscall_close(fd[1]); // close the write end of the pipe
 				input = fd[0]; // store the output for later references 
@@ -330,8 +327,8 @@ void interpretCommand(char *query){
 	// printf("query is %s\n", query);
 	if(strlen(query) == 0){
 		//printf("\n%s ", shell);
-	syscall_write(1, query, strlen(query));	
-	syscall_write(1, shell, strlen(shell));
+		syscall_write(1, query, strlen(query));	
+		syscall_write(1, shell, strlen(shell));
 		return;
 	}
 	char command[100];
@@ -471,15 +468,8 @@ void interpretCommand(char *query){
 			//printf("\n%s ", shell);
 			syscall_write(1, shell, strlen(shell));
 		}
-	
-/*
-	else if(strcmp(command, "ls") == 0 || strcmp(command, "cat") == 0 || strcmp(command, "grep") == 0){
-		runBinary(command, arguments);
-		printf("\n%s \n", shell)
-		}*/else {
+		else {
 			runBinary(command, arguments,bg_process);
-		//printf("sbush: %s: command not found...\n", command);
-		//printf("%s \n", shell);
 		} 
 
 	}
@@ -525,34 +515,32 @@ int main(int argc, char* argv[], char *envp[]) {
 	}
 	//dollar_PATH = //(char *)malloc(sizeof(getenv("PATH")+1024));
 	else {
-		//dollar_PATH = (char *)malloc(sizeof(getenv("PATH")+1024));
-		//strcpy(dollar_PATH, getenv("PATH")); 
 		char *pathVariable = envParser(envp[9]);
 		strcpy(dollar_PATH, pathVariable); 
 		char *homeVariable = envParser(envp[12]);
 		strcpy(HOME, homeVariable);
-		//printf("%s",dollar_PATH);
-		//syscall_write(1, dollar_PATH, strlen(dollar_PATH));
 		syscall_write(1, shell, strlen(shell));
 		char basename[1024];
 		if(getcwd(basename, sizeof(basename)) != NULL){
 			modifyShellPrompt(basename, "cd");
 		}
-		/*
 		while(run_status){
-			char *command = commandParser();
-			syscall_write(1, command, strlen(command));
-			interpretCommand(command);
+			//char *command = commandParser();
+			char ok[1024];
+			char *w = syscall_read(0, ok, 1024);
+			interpretCommand(w);
 		}
-		*/
 
 	//	char* command = commandParser();
 	//	interpretCommand(command);
-		//runBinary("ls",NULL, 0);  --works
+		runBinary("ls",NULL, 0);
+
+		/*
 		char command[10][100] = {
 			"ls", "grep include"
 		};
 		runPipes(command, 2);
+		*/
 	}
 
   return 0;

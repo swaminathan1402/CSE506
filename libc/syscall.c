@@ -4,16 +4,18 @@
 
 
 // works
-int syscall_write(int fd, const void *msg , size_t size)
+int syscall_write(int fd, char* msg , size_t size)  // works
 {
 	int ret;
-	  __asm__("movl $1,%%eax;"
+	  __asm__(
+	    "movl $1,%%eax;"
 	    "movl %1,%%ebx;"
 	    "movl %2,%%ecx;"
 	    "movl %3,%%edx;"
 	    "syscall;"
-	    :"=a"(ret)
-   	    :"ir"(fd),"m"(msg) ,"m"(size)
+	    "movl %%eax, %0;"
+	    :"=m"(ret)
+   	    :"m"(fd),"m"(msg) ,"m"(size)
 	    :
 		);
 	return ret;
@@ -28,7 +30,8 @@ int syscall_open (const char *filename, int flags, int mode)
 		"movl %2,%%ecx;"
 		"movl %3,%%edx;"
 		"syscall;"
-		:"=a"(ret)
+		"movl %%eax, %0;"
+		:"=m"(ret)
 		:"m"(filename),"m"(flags),"m"(mode)
 		:
 		);
@@ -42,14 +45,15 @@ int syscall_close(unsigned int fd)
      __asm__("movl $3,%%eax;"
 	"movl %1,%%ebx;"
         "syscall;"
-	:"=a"(ret)
-	:"ir"(fd)
+	"movl %%eax, %0;"
+	:"=m"(ret)
+	:"m"(fd)
 	:
 	);
 	return ret;
 }
 
-size_t syscall_read(int fd, void *msg ,size_t size)
+char* syscall_read(int fd, char *msg ,size_t size)  // done 
 {
 	size_t ret;
 	__asm__(
@@ -58,11 +62,15 @@ size_t syscall_read(int fd, void *msg ,size_t size)
 	"movl %2,%%ecx;"
 	"movl %3,%%edx;"
 	"syscall;"
-	:"=a"(ret)
-	:"ir"(fd),"m"(msg),"m"(size)
+	"movl %%eax, %0;"
+	:"=m"(ret)
+	:"m"(fd),"m"(msg),"m"(size)
 	:
 	);
-	return ret;
+	int i =0;
+	while(msg[i] != '\n') i++;
+	msg[i] = '\0';
+	return msg;
 }
 
 int syscall_unlink( const char *pathname)
@@ -72,7 +80,8 @@ int syscall_unlink( const char *pathname)
      __asm__("movl $87, %%eax;"
 	"movl %1,%%ebx;"
 	"syscall;"
-	: "=a"(ret)
+	"movl %%eax, %0;"
+	: "=m"(ret)
 	: "m"(pathname)
 	:
 	);
@@ -86,7 +95,8 @@ int syscall_chdir(const char *filename)
 	"movl $80, %%eax;"
 	"movl %1,%%ebx;"
 	"syscall;"
-	:"=a"(ret)
+	"movl %%eax, %0;"
+	:"=m"(ret)
 	:"m"(filename)
 	:
 	);
@@ -118,7 +128,8 @@ void* syscall_mmap ( unsigned long addr, unsigned long len, unsigned long prot, 
         "mov %5, %%r8;"
         "mov %6, %%r9;"
         "syscall;"
-        :"=a" (ret)
+	"movl %%eax, %0;"
+        :"=m" (ret)
         :"m" (addr), "m"(len), "m"(prot), "m"(flags), "m"(fd), "m"(offset)
         :
         );
@@ -135,14 +146,15 @@ int syscall_munmap( unsigned long addr, size_t len)
     "movl %1, %%ebx;"
     "movl %2, %%ecx;"
     "syscall;"
-    :"=a"(ret)
+    "movl %%eax, %0;"
+    :"=m"(ret)
     :"m"(addr), "m"(len)
     :
     );
     return ret;
 }
 
-pid_t syscall_fork()
+pid_t syscall_fork()  // works
 {
 	pid_t ret;
 	__asm__(
@@ -156,8 +168,7 @@ pid_t syscall_fork()
 	return ret;
 }
 
-// doesnt work
-int syscall_execvpe( const char *filename , char *const argv[], char *const envp[]  )
+int syscall_execvpe( const char *filename , char *const argv[], char *const envp[]  ) // works
 {
 
 	int ret;
@@ -167,7 +178,8 @@ int syscall_execvpe( const char *filename , char *const argv[], char *const envp
 	"movl %2,%%ecx;"
 	"movl %3,%%edx;"
 	"syscall;"
-	:"=a" (ret)
+	"movl %%eax, %0;"
+	:"=m" (ret)
 	:"m" (filename), "m"(argv), "m" (envp)
 	:
 	);
@@ -175,8 +187,7 @@ int syscall_execvpe( const char *filename , char *const argv[], char *const envp
 }
 
 
-//TODO pid_t issue
-pid_t syscall_waitpid(pid_t pid, int *status, int options) {
+pid_t syscall_waitpid(pid_t pid, int *status, int options) {  //works
 	pid_t ret;
 	__asm__(
 		"movl $61,%%eax;"
@@ -189,7 +200,7 @@ pid_t syscall_waitpid(pid_t pid, int *status, int options) {
 		: "m"(pid), "m"(status), "m"(options)
 		:
 	);
-	return ret;
+	return pid;
 }
 
 
@@ -199,7 +210,8 @@ pid_t syscall_getpid()
 	pid_t ret;
 	__asm__ ("movl $39, %%eax;"
 	"syscall;"
-	:"=a"(ret)
+	"movl %%eax, %0;"
+	:"=m"(ret)
 	:
 	:
 	);
@@ -211,7 +223,8 @@ pid_t syscall_getppid()
 	pid_t ret;
 	__asm__ ("movl $110, %%eax;"
 	"syscall;"
-	:"=a"(ret)
+	"movl %%eax, %0;"
+	:"=m"(ret)
 	:
 	:
 	);
@@ -227,8 +240,9 @@ int syscall_lseek(unsigned int fd , int offset,unsigned int origin)
 	"movl %2,%%ecx;"
 	"movl %3,%%edx;"
 	"syscall;"
-	:"=a"(ret)
-	:"ir"(fd),"m" (offset),"m" (origin)
+	"movl %%eax, %0;"
+	:"=m"(ret)
+	:"m"(fd),"m" (offset),"m" (origin)
 	:
 	);
 	return ret;
@@ -242,7 +256,8 @@ int syscall_mkdir(const char *pathname,int mode)
 	"movl %1,%%ebx;"
 	"movl %2,%%ecx;"
 	"syscall;"
-	:"=a"(ret)
+	"movl %%eax, %0;"
+	:"=m"(ret)
 	:"m"(pathname), "m"(mode)
 	:
 	);
@@ -250,10 +265,11 @@ int syscall_mkdir(const char *pathname,int mode)
 }
 
 
-int syscall_pipe(int *filedes)
+int syscall_pipe(int *filedes) // works
 {
 	int ret;
-	__asm__ ("movl $22 , %%eax;"
+	__asm__ (
+	"movl $22 , %%eax;"
 	"movl %1,%%ebx;"
 	"syscall;"
 	"movl %%eax, %0;"
@@ -264,20 +280,21 @@ int syscall_pipe(int *filedes)
 	return ret;
 }
 
-int syscall_exit(int status){
+int syscall_exit(int status){  //works
 	int ret;
 	__asm__(
 	"movl $60, %%eax;"
 	"movl %1, %%ebx;"
 	"syscall;"
-	: "=a"(ret)
+	"movl %%eax, %0;"
+	: "=m"(ret)
 	: "m"(status)
 	:
 	);
 	return ret;
 }
 
-int syscall_dup2(unsigned int old_fd, unsigned int new_fd){
+int syscall_dup2(unsigned int old_fd, unsigned int new_fd){  //works
 	int ret;
 	__asm__(
 		"movl $33, %%eax;"
@@ -285,7 +302,7 @@ int syscall_dup2(unsigned int old_fd, unsigned int new_fd){
 		"movl %2, %%ecx;"
 		"syscall;"
 		"movl %%eax, %0;"
-		: "=a"(ret)
+		: "=m"(ret)
 		: "m"(old_fd), "m"(new_fd)
 		:
 	);
@@ -300,7 +317,8 @@ int syscall_getdents(int fd, char *buffer, unsigned int count){
 		"movl %2, %%ecx;"
 		"movl %3, %%edx;"
 		"syscall;"
-		:"=a"(ret)
+		"movl %%eax, %0;"
+		:"=m"(ret)
 		: "m"(fd), "m"(buffer), "m"(count)
 		:
 		);

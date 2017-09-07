@@ -20,7 +20,7 @@ int close(int fd){
 	return status;
 }
 
-ssize_t read(int fd, void *buf, size_t count){
+ssize_t read(int fd, char *buf, size_t count){
 	/*
 	int status = syscall(0, fd, buf, count);
 	return status;
@@ -29,7 +29,7 @@ ssize_t read(int fd, void *buf, size_t count){
 	return status;
 }
 
-ssize_t write(int fd, const void *buf, size_t count){
+ssize_t write(int fd, char *buf, size_t count){
 	/*
 	int status = syscall(1, fd, buf, count);
 	return status;
