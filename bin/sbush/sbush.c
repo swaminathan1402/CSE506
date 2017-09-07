@@ -477,12 +477,13 @@ void interpretCommand(char *query){
 }
 
 char* commandParser(){
-	char ch;
+	char ch = ' ';
 	int i=0;
 	char command[1024];
-	ch = '\0';
-	while(ch != '\n'){
-		ch = getchar();
+	//ch = '\0';
+	//while(ch != '\n'){
+	while((ch=getchar()) != '\n'){
+		//ch = getchar();
 		command[i] = ch;
 		i++;
 	}
