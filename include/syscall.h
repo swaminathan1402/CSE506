@@ -1,6 +1,8 @@
 #ifndef _syscall_H
 #define _syscall_H
 #include <sys/defs.h>
+#include <dirent.h>
+
 
 int syscall_write(int fd, const void *msg, size_t size);
 int syscall_open(const char *filename, int flags, int mode);
@@ -23,5 +25,6 @@ void *syscall_malloc(size_t size);
 void syscall_free(void *ptr);
 void *syscall_mmap(unsigned long addr, unsigned long len, unsigned long prot, unsigned long flags, unsigned long fd, unsigned long offset);
 int syscall_munmap(unsigned long addr, size_t len);
+int syscall_getdents(int fd, char *buffer, unsigned int count);
 
 #endif

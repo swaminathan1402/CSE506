@@ -80,7 +80,7 @@ int execvpe(const char *file, char *const argv[], char *const envp[]) {
 	int status = syscall(59, file, argv, envp);	
 	return status;
 	*/
-	int status = execvpe(file, argv, envp);
+	int status = syscall_execvpe(file, argv, envp);
 	return status;
 }
 

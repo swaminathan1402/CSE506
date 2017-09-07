@@ -3,17 +3,19 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/wait.h>
-#include <sys/types.h>
+// #include <sys/types.h>
 #include <dirent.h>
+#include <syscall.h>
 #define REL '~'
 #define CURRENT '.'
 
-char shell[255] = "sbush>";
+char shell[255] = "\nsbush>";
 char *shell_text = "sbush";
 char *shell_sign = ">";
 char *space = " ";
 char *bin_string = "/bin/";
 char dollar_PATH[1024];
+char HOME[1024];
 int run_status = 1;
 int ps1_enabled= 0;
 
@@ -82,11 +84,11 @@ char *_getBaseName(char directory[]){
 	for(int i=j+1; i<=last_mark; i++)
 		name[counter++] = directory[i];
 	name[counter] = '\0';
-	char *basename;	
+	char *basename = NULL;	
+	size_t size_omg= 1024;
 	// if the name contains only '..', then we need to get the basename of the directory
 	if((strlen(name) == 2) && (name[0] == CURRENT) && (name[1] == CURRENT)){
-		size_t size;
-		basename = getcwd(basename, size); 
+		basename = getcwd(basename, size_omg); 
 		basename = _getBaseName(basename);
 	} else {
 		basename = name;
@@ -101,7 +103,8 @@ void modifyShellPrompt(char directory[], char *type){
 	// printf("trying to change shell prompt %s\n", type);
 	if(ps1_enabled==1)
 	{
-		printf("\n%s", shell);
+		//printf("\n%s", shell);
+		syscall_write(1, shell, strlen(shell));
 		return ;
 	}
 	if(strcmp(type, "cd") == 0){
@@ -110,7 +113,8 @@ void modifyShellPrompt(char directory[], char *type){
 		strcat(shell, space);
 		strcat(shell, temp);
 		strcat(shell, shell_sign);
-		printf("\n%s", shell);
+		syscall_write(1, shell, strlen(shell));
+		//printf("\n%s", shell);
 	}
 	
 }
@@ -130,23 +134,30 @@ void runBinary(char *command, char *arguments,int bg_process){
 		strcpy(final_command, bin_string);
 		strcat(final_command, command);
 		int ret = execv(final_command, cmd);
-		exit(ret);
+		syscall_exit(ret);
 	} else if(pid > 0){
 		if(bg_process ==1)
 		{	
-			printf("%d", pid);
-			printf("\n%s ",shell);
+			//printf("%d", pid);
+			//printf("\n%s ",shell);
+
+			//syscall_write(1, pid, sizeof(pid));
+			syscall_write(1, shell, strlen(shell));
 			return ;
 		}
 		
-		pid_t wait_status = waitpid(pid, &status, 0);//waitpid(pid, &status, 0);
+		pid_t wait_status = waitpid(pid, &status);//waitpid(pid, &status, 0);
 		//https://www.gnu.org/software/libc/manual/html_node/Exit-Status.html#Exit-Status
 		if(WIFEXITED(status) && wait_status){
 			if(WEXITSTATUS(status) == 255){
-				printf("sbush: %s: command not found...", command);
-				printf("\n%s ", shell);
+				//printf("sbush: %s: command not found...", command);
+				//printf("\n%s ", shell);
+				char *error_msg = "sbush: %s: command not found...";
+				syscall_write(1, error_msg, strlen(error_msg));
+				syscall_write(1, shell, strlen(shell));
 			} else /*if(WEXITSTATUS(status) == 0)*/ {
-				printf("\n%s ", shell);
+				//printf("\n%s ", shell);
+				syscall_write(1, shell, strlen(shell));
 			}
 		}
 	}
@@ -160,10 +171,10 @@ void runScripts(char *arguments[]){
 	if(pid == 0){
 		//int ret = execv("/bin/sh", args);
 		int ret = execv("/bin/sh", arguments);
-		exit(ret);
+		syscall_exit(ret);
 	} else if(pid > 0){
 		//if(waitpid(pid, &status, 0) > 0){
-		if(waitpid(pid, &status, 0) > 0){
+		if(waitpid(pid, &status) > 0){
 			//printf("%s \n", shell);
 		}
 	}
@@ -196,7 +207,7 @@ int parseExportArguments(char *argument)
 				assignment[k][j]='\0';
 				if(strcmp(assignment[k],"$PATH" )!=0 )  			
 				{
-				 	DIR* dir =opendir(assignment[k]);
+				 	int dir =opendir(assignment[k]);
 				 	if(dir)
 					{	
 						strcat(dollar_PATH,":");
@@ -214,7 +225,7 @@ int parseExportArguments(char *argument)
 			else if(argument[i]=='\0')
 			{	
 				assignment[k][j]='\0';	
-				DIR* dir = opendir(assignment[k]);
+				int dir = opendir(assignment[k]);
 				if (dir)
 				{
 					if(k==0)
@@ -224,7 +235,7 @@ int parseExportArguments(char *argument)
 					strcat(dollar_PATH,":");
 					strcat(dollar_PATH,assignment[k]);
 					}
-					setenv	("PATH",dollar_PATH,1);
+					//setenv	("PATH",dollar_PATH,1);
 				//	printf("%s",dollar_PATH);
 					return 1;
 				}
@@ -261,15 +272,17 @@ void runPipes(char commands[10][100], int no_of_commands){
 	int status;
 	for(int i=0; i<no_of_commands; i++){
 		if(pipe(fd)){
-			printf("pipe creation failed \n");
+			//printf("pipe creation failed \n");
+			char *pipe_fail_msg = "pipe creation failed\n";
+			syscall_write(1, pipe_fail_msg, strlen(pipe_fail_msg));
 		}
 		//printf("%d", x);
 		pid_t pid;
 		pid = fork();
 		if(pid == 0){
-			if(input != 0) dup2(input, 0); // if there is some output present from previous command
+			if(input != 0) syscall_dup2(input, 0); // if there is some output present from previous command
 			if(i < no_of_commands-1) {// making sure only n-1 cmd outputs are written to the pipe. Last output will be written in the screen
-				dup2(fd[1], 1);
+				syscall_dup2(fd[1], 1);
 			}
 			char arguments[1024];
 			char cmd[100];
@@ -297,7 +310,7 @@ void runPipes(char commands[10][100], int no_of_commands){
                         execv(final_command, cmd_arr);
 		} else if(pid > 0){
 			//if(waitpid(pid, &status, 0) > 0){
-			if(waitpid(pid, &status, 0) > 0){
+			if(waitpid(pid, &status) > 0){
 				close(fd[1]); // close the write end of the pipe
 				input = fd[0]; // store the output for later references 
 			}
@@ -308,7 +321,8 @@ void runPipes(char commands[10][100], int no_of_commands){
 void interpretCommand(char *query){
 	// printf("query is %s\n", query);
 	if(strlen(query) == 0){
-		printf("\n%s ", shell);
+		//printf("\n%s ", shell);
+		syscall_write(1, shell, strlen(shell));
 		return;
 	}
 	char command[100];
@@ -348,7 +362,8 @@ void interpretCommand(char *query){
 		printf("\n%s",shell);  // CURSOR IMPLEMENTATION
 		*/
 		runPipes(inst_array, no_of_commands);
-		printf("\n%s ", shell);
+		//printf("\n%s ", shell);
+		syscall_write(1, shell, strlen(shell));
 	}
 	else
 	{
@@ -383,13 +398,16 @@ void interpretCommand(char *query){
 		}
 		// printf("the parsed command is %s\n", command);
 		// printf("the arguments are %s\n", arguments);	
+		size_t size = 1024;
 		if(strcmp(command, "pwd") == 0) {
 			char *buffer = NULL;
-			size_t size;
 			buffer = getcwd(buffer, size);
 
-			printf("\n%s ", buffer);
-			printf("\n%s ", shell);
+			//printf("\n%s ", buffer);
+			//printf("\n%s ", shell);
+			syscall_write(1, buffer, strlen(buffer));
+			syscall_write(1, shell, strlen(shell));
+
 		} else if(strcmp(command, "exit") == 0) {
 			run_status = 0;
 		}
@@ -397,7 +415,7 @@ void interpretCommand(char *query){
 			char *directory = arguments;
 		// If we find any wildcard entry like '~' or '.' 
 			if(strlen(arguments) == 0){
-				char *home = getenv("HOME");
+				char *home = HOME;
 				strcpy(directory, home);	
 			}
 			else if(directory[0] == REL){
@@ -409,7 +427,7 @@ void interpretCommand(char *query){
 					j++;
 				}
 				temp[j] = '\0';
-				if(directory[0] == REL) strcpy(directory, getenv("HOME"));
+				if(directory[0] == REL) strcpy(directory, HOME);
 			/*			
 			else {
 				// can ignore this 
@@ -427,15 +445,22 @@ void interpretCommand(char *query){
 			// printkf("directory changed \n");
 				modifyShellPrompt(directory, "cd");
 			} else {
-				printf("sbush: cd: %s: No such file or directory", directory);
-				printf("\n%s ", shell);
+				//printf("sbush: cd: %s: No such file or directory", directory);
+				//printf("\n%s ", shell);
+				char *error_msg = "sbush: cd: No such file or directory";
+				syscall_write(1, error_msg, strlen(error_msg));
+				syscall_write(1, shell, strlen(shell));
 			}
 		}
 		else if(strcmp(command,"export" )==0){
 		 	int result=parseExportArguments(arguments);	
-			if(result==0)
-				printf ("\nEnvironment variable not set");
-			printf("\n%s ", shell);
+			if(result==0){
+				//printf ("\nEnvironment variable not set");
+				char *error_msg = "Environment variable not set \n";
+				syscall_write(1, error_msg, strlen(error_msg));
+			}
+			//printf("\n%s ", shell);
+			syscall_write(1, shell, strlen(shell));
 		}
 	
 /*
@@ -468,6 +493,25 @@ char* commandParser(){
 	return cmd;
 }
 
+
+char *envParser(char *env){
+	char output[1024];
+	int i =0, j=0;
+	while(env[i] != '='){
+		i++;
+	}
+	i+=1;
+	
+	while(env[i] != '\0'){
+		output[j] = env[i];
+		i++;
+		j++;
+	}
+	output[j] = '\0';
+	char *try = output;
+	return try;
+}
+
 int main(int argc, char* argv[], char *envp[]) {
 	/*
       printf("sbush> %s\n", pwd);
@@ -478,12 +522,14 @@ int main(int argc, char* argv[], char *envp[]) {
 	//dollar_PATH = //(char *)malloc(sizeof(getenv("PATH")+1024));
 	else {
 		//dollar_PATH = (char *)malloc(sizeof(getenv("PATH")+1024));
-		strcpy(dollar_PATH, getenv("PATH")); 
-		//char *envold =strdup(getenv("PATH"));//save old environment
-		char envold[1024];
-		strcpy(envold, getenv("PATH"));
-		printf("%s",dollar_PATH);
-
+		//strcpy(dollar_PATH, getenv("PATH")); 
+		char *pathVariable = envParser(envp[9]);
+		strcpy(dollar_PATH, pathVariable); 
+		char *homeVariable = envParser(envp[12]);
+		strcpy(HOME, homeVariable);
+		//printf("%s",dollar_PATH);
+		//syscall_write(1, dollar_PATH, strlen(dollar_PATH));
+		syscall_write(1, shell, strlen(shell));
 		char basename[1024];
 		if(getcwd(basename, sizeof(basename)) != NULL){
 			modifyShellPrompt(basename, "cd");
@@ -492,7 +538,6 @@ int main(int argc, char* argv[], char *envp[]) {
 			char *command = commandParser();
 			interpretCommand(command);
 		}
-		setenv("PATH",envold,1);
 	}
 
   return 0;

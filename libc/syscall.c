@@ -2,6 +2,7 @@
 #include <string.h>
 #include <syscall.h>
 
+
 // works
 int syscall_write(int fd, const void *msg , size_t size)
 {
@@ -11,7 +12,7 @@ int syscall_write(int fd, const void *msg , size_t size)
 	    "movl %2,%%ecx;"
 	    "movl %3,%%edx;"
 	    "syscall;"
-	    :"=m"(ret)
+	    :"=a"(ret)
    	    :"ir"(fd),"m"(msg) ,"m"(size)
 	    :
 		);
@@ -27,7 +28,7 @@ int syscall_open (const char *filename, int flags, int mode)
 		"movl %2,%%ecx;"
 		"movl %3,%%edx;"
 		"syscall;"
-		:"=m"(ret)
+		:"=a"(ret)
 		:"m"(filename),"m"(flags),"m"(mode)
 		:
 		);
@@ -41,7 +42,7 @@ int syscall_close(unsigned int fd)
      __asm__("movl $3,%%eax;"
 	"movl %1,%%ebx;"
         "syscall;"
-	:"=m"(ret)
+	:"=a"(ret)
 	:"ir"(fd)
 	:
 	);
@@ -53,12 +54,11 @@ size_t syscall_read(int fd, void *msg ,size_t size)
 	size_t ret;
 	__asm__(
 	"movl $0, %%eax;"
-	"movl %0, %%edi;"
        	"movl %1, %%ebx;"
 	"movl %2,%%ecx;"
 	"movl %3,%%edx;"
 	"syscall;"
-	:"=m"(ret)
+	:"=a"(ret)
 	:"ir"(fd),"m"(msg),"m"(size)
 	:
 	);
@@ -72,7 +72,7 @@ int syscall_unlink( const char *pathname)
      __asm__("movl $87, %%eax;"
 	"movl %1,%%ebx;"
 	"syscall;"
-	: "=m"(ret)
+	: "=a"(ret)
 	: "m"(pathname)
 	:
 	);
@@ -86,7 +86,7 @@ int syscall_chdir(const char *filename)
 	"movl $80, %%eax;"
 	"movl %1,%%ebx;"
 	"syscall;"
-	:"=m"(ret)
+	:"=a"(ret)
 	:"m"(filename)
 	:
 	);
@@ -118,7 +118,7 @@ void* syscall_mmap ( unsigned long addr, unsigned long len, unsigned long prot, 
         "mov %5, %%r8;"
         "mov %6, %%r9;"
         "syscall;"
-        :"=m" (ret)
+        :"=a" (ret)
         :"m" (addr), "m"(len), "m"(prot), "m"(flags), "m"(fd), "m"(offset)
         :
         );
@@ -135,7 +135,7 @@ int syscall_munmap( unsigned long addr, size_t len)
     "movl %1, %%ebx;"
     "movl %2, %%ecx;"
     "syscall;"
-    :"=m"(ret)
+    :"=a"(ret)
     :"m"(addr), "m"(len)
     :
     );
@@ -148,7 +148,7 @@ pid_t syscall_fork()
 	__asm__(
 	"movl $57, %%eax;"
 	"syscall;"
-	:"=m"(ret)
+	:"=a"(ret)
 	:
 	:
 	);
@@ -162,11 +162,11 @@ int syscall_execvpe( const char *filename , char *const argv[], char *const envp
 	int ret;
 	__asm__ (
 	"movl $59, %%eax;"
-	"movl %0,%%ebx;"
-	"movl %1,%%ecx;"
-	"movl %2,%%edx;"
+	"movl %1,%%ebx;"
+	"movl %2,%%ecx;"
+	"movl %3,%%edx;"
 	"syscall;"
-	:"=m" (ret)
+	:"=a" (ret)
 	:"m" (filename), "m"(argv), "m" (envp)
 	:
 	);
@@ -182,9 +182,8 @@ pid_t syscall_waitpid(pid_t pid, int *status, int options) {
 		"movl %1,%%ebx;"
 		"movl %2,%%ecx;"
 		"movl %3, %%edx;"
-		"mov $0, %%r10;"
 		"syscall;"
-		: "=m" (ret)
+		: "=a" (ret)
 		: "m"(pid), "m"(status), "m"(options)
 		:
 	);
@@ -198,7 +197,7 @@ pid_t syscall_getpid()
 	pid_t ret;
 	__asm__ ("movl $39, %%eax;"
 	"syscall;"
-	:"=m"(ret)
+	:"=a"(ret)
 	:
 	:
 	);
@@ -210,7 +209,7 @@ pid_t syscall_getppid()
 	pid_t ret;
 	__asm__ ("movl $110, %%eax;"
 	"syscall;"
-	:"=m"(ret)
+	:"=a"(ret)
 	:
 	:
 	);
@@ -226,7 +225,7 @@ int syscall_lseek(unsigned int fd , int offset,unsigned int origin)
 	"movl %2,%%ecx;"
 	"movl %3,%%edx;"
 	"syscall;"
-	:"=m"(ret)
+	:"=a"(ret)
 	:"ir"(fd),"m" (offset),"m" (origin)
 	:
 	);
@@ -241,7 +240,7 @@ int syscall_mkdir(const char *pathname,int mode)
 	"movl %1,%%ebx;"
 	"movl %2,%%ecx;"
 	"syscall;"
-	:"=m"(ret)
+	:"=a"(ret)
 	:"m"(pathname), "m"(mode)
 	:
 	);
@@ -254,7 +253,7 @@ int syscall_pipe(int *filedes)
 	int ret;
 	__asm__ ("movl $22 , %%eax;"
 	"movl %1,%%ebx;"
-	:"=m"(ret)
+	:"=a"(ret)
 	:"m"(filedes)
 	:
 	);
@@ -267,7 +266,7 @@ int syscall_exit(int status){
 	"movl $60, %%eax;"
 	"movl %1, %%ebx;"
 	"syscall;"
-	: "=m"(ret)
+	: "=a"(ret)
 	: "m"(status)
 	:
 	);
@@ -278,15 +277,31 @@ int syscall_dup2(unsigned int old_fd, unsigned int new_fd){
 	int ret;
 	__asm__(
 		"movl $33, %%eax;"
-		"movl %0, %%ebx;"
-		"movl %1, %%ecx;"
+		"movl %1, %%ebx;"
+		"movl %2, %%ecx;"
 		"syscall;"
-		: "=m"(ret)
+		: "=a"(ret)
 		: "m"(old_fd), "m"(new_fd)
 		:
 	);
 	return ret;
 }
+
+int syscall_getdents(int fd, char *buffer, unsigned int count){
+	int ret;
+	__asm__(
+		"movl $78, %%eax;"
+		"movl %1, %%ebx;"
+		"movl %2, %%ecx;"
+		"movl %3, %%edx;"
+		"syscall;"
+		:"=a"(ret)
+		: "m"(fd), "m"(buffer), "m"(count)
+		:
+		);
+	return ret;
+}
+
 /*
 int main ()
 {
