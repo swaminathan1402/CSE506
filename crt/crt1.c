@@ -4,14 +4,21 @@ void _start(void) {
   // call main() and exit() here
   //char *env[] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL, "PATH=/home/nghosh/bin:/home/nghosh/.local/bin:/shared/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games", NULL, NULL, "HOME=/home/nghosh", NULL};
   int argc = -7;
-  __asm__(
-    "movq 3(%%rsp), %%rdi;"
+  char* argv[] = {"None"};
+  char* envp[] = {"None"};
+
+__asm__(
+    "addq $0x28, %%rsp;"
+    "popq %%rdi;"
+    "movq 8(%%rsp), %%rsi;"
     "movq %%rdi, %0;"
-    :"=m"(argc)
+    "movq %%rsi, %1;"
+    "movq %%rdx, %2;"
+    :"=m"(argc), "=m"(argv), "=m"(envp)
     :
     :
   );
-  main(argc, NULL, NULL);
+  main(argc, argv, envp);
 
   __asm__(
      "movl $60, %%eax;"
