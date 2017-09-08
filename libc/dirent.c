@@ -2,16 +2,21 @@
 #include <syscall.h>
 
 int opendir(const char *name){
+	/*
 	int fd = syscall_open(name, 0, 0);
 	return fd;
+	*/
 }
 
 int closedir(int fd) {
+	/*
 	int status = syscall_close(fd);
 	return status;
+	*/
 }
 
 void readdir(int fd){
+	/*
 	char buffer[1024];
 	int total_bytes, i;
 	DIR* dirp;
@@ -27,6 +32,7 @@ void readdir(int fd){
 		
 	}
 	return;
+	*/
 }
 /*
 int main(){

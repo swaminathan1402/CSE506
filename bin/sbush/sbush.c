@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #define DOT '.'
+#define TEST '1'
 #define	_W_INT(i)	(i)
 #define	_WSTATUS(x)	(_W_INT(x) & 0177)
 #define WIFEXITED(x)	(_WSTATUS(x) == 0)
@@ -15,8 +16,9 @@ char *shell_text = "\nsbush";
 char *shell_sign = ">";
 char *space = " ";
 char *bin_string = "/bin/";
-char dollar_PATH[1024];
+char dollar_PATH[100] = "\0";
 char HOME[1024] = "/home/nghosh/";
+char ROOTFS_BIN_PATH[50] = "/home/nghosh/workdir/rootfs/bin/"; // TODO
 int run_status = 1;
 int ps1_enabled= 0;
 
@@ -26,33 +28,9 @@ char *getArguments(char *);
 int isPiped(char *);
 void modifyShellPrompt(char *, char *);
 char *getBaseName(char *);
-/*
-void* syscall_mmap ( unsigned long addr, unsigned long len, unsigned long prot, unsigned long flags, unsigned long fd, unsigned long offset){
-	long long int addr1 = (long long int) addr;
-	long long int len1 = (long long int) len;
-	long long int prot1 = (long long int) prot;
-	long long int flags1 = (long long int) flags;
-	long long int fd1 = (long long int) fd;
-	long long int offset1 = (long long int) offset;
-	void *ret;;
+void runScripts(char *arguments[]);
+void parseExportArguments(char *);
 
-        __asm__ __volatile__(
-        "movl $9, %%eax;"
-        "movl %1, %%ebx;"
-        "movl %2, %%ecx;"
-        "movl %3, %%edx;"
-        "mov %4, %%r10;"
-        "mov %5, %%r8;"
-        "mov %6, %%r9;"
-        "syscall;"
-	"movl %%eax, %0;"
-        :"=r" (ret)
-        :"r" (addr), "r"(len), "r"(prot), "r"(flags), "r"(fd), "r"(offset)
-        :"rax", "rbx", "rcx", "rdx", "r8", "r9"
-        );
-	return ret;
-}
-*/
 int syscall_chdir(const char *filename){
 	long long int filename1 = (long long int) filename;
 	long long int ret;
@@ -87,9 +65,11 @@ size_t syscall_read(int fd, char *buffer, size_t count){
         :"r"(fd1), "r"(buffer1), "r"(count1)
         :"rax", "rbx", "rcx", "rdx"
     );
-    int i = 0;
-    while(buffer[i] != '\n') i++;
-    buffer[i] = '\0';
+    if(fd == 0){
+	    int i = 0;
+	    while(buffer[i] != '\n') i++;
+	    buffer[i] = '\0';
+    }
     return ret;
 }
 
@@ -258,6 +238,27 @@ int syscall_close(unsigned int fd)
 	);
 	return ret;
 }
+
+int syscall_open (const char* file, int flags) {
+	// returns the file descriptor
+	long long int file1 =(long long int) file;
+	long long int flags1 = (long long int)flags;
+	long long int ret;
+	
+	__asm__ __volatile__(
+		"movq $2, %%rax;"
+		"movq %1 ,%%rbx;"
+		"movq %2, %%rcx;"
+		"movq $0 ,%%rdx;"
+		"syscall;"
+		"movq %%rax, %0;"
+		:"=r"(ret)
+		:"r" (file1), "r"(flags1)
+		:"rax","rbx","rcx","rdx"
+	);
+	return ret;
+}
+
 /*
 void* malloc (size_t size){
 	size_t *mem_pointer;
@@ -266,11 +267,11 @@ void* malloc (size_t size){
 	return (void*)(&mem_pointer[1]);
 }
 */
-void parseExportArguments(char *);
+
 
 char *commandParser(){
-	char buffer[100] = "\0";
-	syscall_read(0, buffer, 100);
+	char buffer[200] = "\0";
+	syscall_read(0, buffer, 200); // 100
 	char *cmd = sanitize(buffer);
 	return cmd;
 }
@@ -330,7 +331,11 @@ void handle_pipes(char *command, int numberOfCommands){
 				args = NULL;
 			char *command_args[] = {function, args, (char *)0};
 			char final_command[1024];
-			strcpy(final_command, bin_string);
+			if(strcmp(function, "ls") == 1 || strcmp(function, "cat")) {
+				strcpy(final_command, ROOTFS_BIN_PATH);
+			} else {
+				strcpy(final_command, bin_string);
+			}
 			strcat(final_command, function);
 			int ret = syscall_execvpe(final_command, command_args, NULL); // TODO
 			syscall_exit(ret);  // TODO
@@ -359,7 +364,11 @@ void runBinary(char *command, char *args, int bgprocess){
 		}
 		char *cmd_arr[] = {command, arguments, NULL};
 		char final_command[1024] = "\0";
-		strcpy(final_command, bin_string);
+		if(strcmp(command, "ls") == 1 || strcmp(command, "cat")) {
+			strcpy(final_command, ROOTFS_BIN_PATH);
+		} else {
+			strcpy(final_command, bin_string);
+		}
 		strcat(final_command, command);
 		int ret = syscall_execvpe(final_command, cmd_arr, NULL);
 		syscall_exit(ret);
@@ -384,8 +393,8 @@ void interpretCommand(char *command){
 	//char *tempCommand = command;
 	//strcpy(tempCommand, command);
 	char tempCommand[40] = "\0";
-	char function[20] = "\0";
-	char arguments[20] = "\0";
+	char function[40] = "\0";
+	char arguments[40] = "\0";
 	strcpy(tempCommand, command);
 	if(strlen(command) == 0){
 		//syscall_write(1, shell, strlen(shell));
@@ -442,9 +451,11 @@ void interpretCommand(char *command){
 	if(strcmp(function, "cd") == 1) {
 		//handle_cd(arguments); TODO
 		int ret = syscall_chdir(arguments);  // TODO: implement syscall_chdir
+		/*
 		if(ret == 0){
-			modifyShellPrompt(arguments, "cd"); // modify shell prompt 
-		} else {
+			//modifyShellPrompt(arguments, "cd"); // modify shell prompt 
+		}*/
+		if(ret != 0) {
 			char *error_msg = "sbush: cd: No such file or directory\n";
 			syscall_write(1, error_msg, strlen(error_msg));
 			//syscall_write(1, shell, strlen(shell));
@@ -470,6 +481,11 @@ void interpretCommand(char *command){
 }
 
 int main(int argc, char* argv[], char* envp[]){
+	if(1) {
+		char *args[] = {"/home/nghosh/workdir/rootfs/bin/sbush", "/home/nghosh/test.sbush", NULL};
+		runScripts(args);
+		return 0;
+	}
 	syscall_write(1, shell, strlen(shell));
 //	strcpy(dollar_PATH ,envp[9]);  //PATH is in envp[9]
 	while(run_status){
@@ -606,13 +622,12 @@ char *getBaseName(char *directory){
 	return basename;	
 }
 
-void parseExportArguments ( char * arguments)
-{
-int i=0;
-int j=0;
-int k=0;
-char envivariable[20];
-char attribute[10][100];	
+void parseExportArguments ( char * arguments) {
+	int i=0;
+	int j=0;
+	int k=0;
+	char envivariable[40] = "\0";
+	char attribute[10][100];	
 	while (arguments[i]!='=')
 	{
 		envivariable[i]= arguments[i];
@@ -623,18 +638,19 @@ char attribute[10][100];
 	if(strcmp(envivariable , "PATH")==1)	
 	{
 		while (arguments[i]!='\0')
-		{attribute[k][j]=arguments[i];
-		i++;j++;
-		if(arguments[i]==':')
+		{
+			attribute[k][j]=arguments[i];  // separate by colon
+			i++;j++;
+			if(arguments[i]==':')
 			{
-			attribute[k][j]='\0';
-			if(strcmp(attribute[k],"$PATH")!=0)
+				attribute[k][j]='\0';
+				if(strcmp(attribute[k],"$PATH")!=1) 
 				{
 					strcat(dollar_PATH,":");
 					strcat(dollar_PATH, attribute[k]);
 				}
-			j=0;k++;
-			i++;
+				j=0;k++;
+				i++;
 			}
 		else if(arguments[i]=='\0')
 			{	
@@ -652,13 +668,11 @@ char attribute[10][100];
 			}
 
 		}	
-	
-
 	}
 	if(strcmp (envivariable, "PS1")==1)
 	{
-	ps1_enabled =1;
-	while (arguments!='\0')
+		ps1_enabled =1;
+		while (arguments[i]!='\0')
 		{
 
 			attribute[0][j]=arguments[i];
@@ -667,4 +681,52 @@ char attribute[10][100];
 	   attribute[0][j]='\0';
 	   strcpy(shell, attribute[0]);
 	}
+}
+
+void runScripts(char *arguments[]){
+	char *filename = arguments[1];
+	int fd = syscall_open(filename, 0);
+	char bigBuffer[10240];
+	int i = 0;
+	int line_number = 0;
+	int size = syscall_read(fd, bigBuffer, 1024); // read 1KB each time 
+	char temp[1024] = "\0";
+	int j = 0;
+	while(size > 0){
+		while(bigBuffer[i]!='\0' && bigBuffer[i] != '\n'){
+			if(line_number > 0){
+				temp[j] = bigBuffer[i];
+				j++;
+			}
+			i++;
+		}
+		if(bigBuffer[i] == '\0'){
+			size = syscall_read(fd, bigBuffer, 1024);
+			i=0;
+		} 
+		if(bigBuffer[i] == '\n'){
+			if(line_number > 0) {
+				temp[j] = '\0';
+				char *generated_command = sanitize(temp);
+				interpretCommand(generated_command);
+				syscall_write(1, "\n", strlen("\n"));
+				//syscall_write(1, generated_command, strlen(generated_command));
+			}
+			j = 0;
+			line_number++;
+			i++;
+		}
+	}
+
+	/*
+	int status;
+	pid_t pid = syscall_fork();
+	if(pid == 0){
+		int ret = syscall_execvpe("/bin/sh", arguments, NULL);
+		syscall_exit(ret);
+	} else if(pid > 0){
+		if(syscall_waitpid(pid, &status, 0) > 0){
+		}
+	}
+	*/
 }
