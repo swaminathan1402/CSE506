@@ -2,17 +2,13 @@
 #include <syscall.h>
 
 int opendir(const char *name){
-	/*
 	int fd = syscall_open(name, 0, 0);
 	return fd;
-	*/
 }
 
 int closedir(int fd) {
-	/*
 	int status = syscall_close(fd);
 	return status;
-	*/
 }
 
 void readdir(int fd){

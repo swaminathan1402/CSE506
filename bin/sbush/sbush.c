@@ -481,11 +481,12 @@ void interpretCommand(char *command){
 }
 
 int main(int argc, char* argv[], char* envp[]){
-	if(1) {
-		char *args[] = {"/home/nghosh/workdir/rootfs/bin/sbush", "/home/nghosh/test.sbush", NULL};
-		runScripts(args);
+	if(argc > 1){
+		syscall_write(1, argv[0], 45);
+		runScripts(argv);
 		return 0;
 	}
+	
 	syscall_write(1, shell, strlen(shell));
 //	strcpy(dollar_PATH ,envp[9]);  //PATH is in envp[9]
 	while(run_status){
