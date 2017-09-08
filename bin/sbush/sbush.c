@@ -17,8 +17,8 @@ char *shell_sign = ">";
 char *space = " ";
 char *bin_string = "/bin/";
 char dollar_PATH[100] = "\0";
-char HOME[1024] = "/home/nghosh/";
-char ROOTFS_BIN_PATH[50] = "/home/nghosh/workdir/rootfs/bin/"; // TODO
+char HOME[1024];
+char ROOTFS_BIN_PATH[50] = "/home/nharish/CSE506/rootfs/bin/"; // TODO
 int run_status = 1;
 int ps1_enabled= 0;
 
@@ -481,11 +481,30 @@ void interpretCommand(char *command){
 }
 
 int main(int argc, char* argv[], char* envp[]){
-	if(1) {
-		char *args[] = {"/home/nghosh/workdir/rootfs/bin/sbush", "/home/nghosh/test.sbush", NULL};
-		runScripts(args);
+	if(argc > 1){
+	        int char_counter_argv = 0;
+	        int char_counter_args = 0;
+	        char args[10][100];
+	        for(int i=0; i<argc; i++){
+                    while(argv[char_counter_argv] == '\0'){
+                        char_counter_argv++;
+                    }
+                    while(argv[char_counter_argv] != '\0'){
+                        args[i][char_counter_args] = argv[0][char_counter_argv];
+                        char_counter_args++;
+                        char_counter_argv++;
+                    }
+                    char_counter_argv++;
+                    char_counter_args = 0;
+                    syscall_write(1, args[i], strlen(args[i]));
+                    syscall_write(1, space, 1);
+	        }
+	        
+		//syscall_write(1, argv[0], 45);
+		//runScripts(argv);
 		return 0;
 	}
+	
 	syscall_write(1, shell, strlen(shell));
 //	strcpy(dollar_PATH ,envp[9]);  //PATH is in envp[9]
 	while(run_status){
