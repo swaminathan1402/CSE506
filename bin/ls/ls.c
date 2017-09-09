@@ -123,11 +123,12 @@ int closeDir(int fd)
 int main (int argc , char *argv[], char *envp[])
 {
         long long int fd;
-        const char *filename ="/home/";
-	argc = 1;
+        const char *filename =".";
         if(argc == 1) {
                 fd = openDir(filename,0);// O_RDONLY | O_DIRECTORY);
         } else {
+		syscall_write(1,"ls works\n", 9);
+		syscall_write(1, argv[1], strlen(argv[1]));
                 fd = openDir(argv[1],0);// O_RDONLY | O_DIRECTORY);
         }
 	if(fd == -1){

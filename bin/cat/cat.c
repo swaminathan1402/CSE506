@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <string.h>
 size_t syscall_read(int fd, char *buffer, size_t count){
    
     long long int fd1 = (long long int) fd;
@@ -86,26 +86,27 @@ int syscall_close(unsigned int fd)
 	return ret;
 }
 
-int main (int argc, char*argv[], char *envp[])
+int main (int argc, char *argv[], char *envp[])
 {
 	int temp=1;
 	char str[10240];
 	char *strin = str;
 	long long int filename ;
 	size_t size;
-	argc = 3;
-	char *reads[] = {"/home/nghosh/workdir/todo","/home/nghosh/workdir/README"};
+	//argc = 3;
+	//char *reads[] = {"/home/nghosh/workdir/todo","/home/nghosh/workdir/README"};
 	while (temp<argc)
 	{
-		filename = syscall_open(reads[temp-1],0,0);
-		//filename = syscall_open("/home/nghosh/workdir/todo",0,0);
+		syscall_write(1, argv[temp], strlen(argv[temp]));
+		//filename = syscall_open(reads[temp-1],0,0);
+		filename = syscall_open(argv[temp], 0, 0);
 		size=syscall_read(filename,strin,10240);
 		syscall_write(1,strin, size);
 		temp++;
 		syscall_close(filename);
 	}
 
-	
+	return 0;	
 }
 
 
