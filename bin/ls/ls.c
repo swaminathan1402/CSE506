@@ -124,17 +124,32 @@ int main (int argc , char *argv[], char *envp[])
 {
         long long int fd;
         const char *filename =".";
+	char parameter_list[argc][1024];
         if(argc == 1) {
                 fd = openDir(filename,0);// O_RDONLY | O_DIRECTORY);
+		if(fd == -1) return 0;
+	       readDir(fd);
+	       closeDir(fd);
         } else {
-		syscall_write(1,"ls works\n", 9);
-		syscall_write(1, argv[1], strlen(argv[1]));
-                fd = openDir(argv[1],0);// O_RDONLY | O_DIRECTORY);
+		int i=0;                                                            	
+                int argv_c = 0;
+                for(i=0; i<argc; i++){
+	            int argv_p = 0;
+                    while(argv[0][argv_c] != '\0'){
+                    	parameter_list[i][argv_p] = argv[0][argv_c];
+                    	argv_c++;
+                    	argv_p++;
+                                                                                    
+                    }
+                    parameter_list[i][argv_c] = argv[0][argv_c];
+                    argv_c++;
+                }	
+
+
+		fd = openDir(parameter_list[1],0);// O_RDONLY | O_DIRECTORY);
+		if(fd == -1) return 0;
+	        readDir(fd);
+	        closeDir(fd);
         }
-	if(fd == -1){
-		return 0;
-	}
-       readDir(fd);
-       closeDir(fd);
         return 0;
 }

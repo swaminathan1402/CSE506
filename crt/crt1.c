@@ -1,7 +1,6 @@
 #include <stdlib.h>
 void _start(void) {
-  // call main() and exit() here
-  int argc = -7;
+ int argc = -7;
   char* argv[] = {"None"};
   char* envp[] = {"None"};
 
@@ -17,8 +16,8 @@ __asm__(
     :
     :"memory"
   );
+	
   main(argc, argv, envp);
-
   __asm__(
      "movl $60, %%eax;"
 	"movl $1, %%ebx;"

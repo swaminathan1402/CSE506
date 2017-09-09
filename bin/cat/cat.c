@@ -95,11 +95,25 @@ int main (int argc, char *argv[], char *envp[])
 	size_t size;
 	//argc = 3;
 	//char *reads[] = {"/home/nghosh/workdir/todo","/home/nghosh/workdir/README"};
+	int i=0;
+        int argv_c = 0;
+        char parameter_list[argc][1024];
+        for(i=0; i<argc; i++){
+            int argv_p = 0;
+            while(argv[0][argv_c] != '\0'){
+            	parameter_list[i][argv_p] = argv[0][argv_c];
+            	argv_c++;
+            	argv_p++;
+                                                                            
+            }
+            parameter_list[i][argv_c] = argv[0][argv_c];
+            argv_c++;
+        }	
 	while (temp<argc)
 	{
-		syscall_write(1, argv[temp], strlen(argv[temp]));
+		syscall_write(1, parameter_list[temp], strlen(parameter_list[temp]));
 		//filename = syscall_open(reads[temp-1],0,0);
-		filename = syscall_open(argv[temp], 0, 0);
+		filename = syscall_open(parameter_list[temp], 0, 0);
 		size=syscall_read(filename,strin,10240);
 		syscall_write(1,strin, size);
 		temp++;

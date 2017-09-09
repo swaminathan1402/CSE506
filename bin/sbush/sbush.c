@@ -16,9 +16,9 @@ char *shell_text = "\nsbush";
 char *shell_sign = ">";
 char *space = " ";
 char *bin_string = "/bin/";
-char dollar_PATH[100] = "\0";
-char HOME[1024] = "/home/nghosh/";
-char ROOTFS_BIN_PATH[50] = "/home/nghosh/workdir/rootfs/bin/"; // TODO
+char dollar_PATH[1024];
+char HOME[1024];
+char ROOTFS_BIN_PATH[50];
 int run_status = 1;
 int ps1_enabled= 0;
 
@@ -28,7 +28,7 @@ char *getArguments(char *);
 int isPiped(char *);
 void modifyShellPrompt(char *, char *);
 char *getBaseName(char *);
-void runScripts(char *arguments[]);
+void runScripts(char arguments[10][1024]);
 void parseExportArguments(char *);
 
 int syscall_chdir(const char *filename){
@@ -331,7 +331,7 @@ void handle_pipes(char *command, int numberOfCommands){
 				args = NULL;
 			char *command_args[] = {function, args, (char *)0};
 			char final_command[1024];
-			if(strcmp(function, "ls") == 1 || strcmp(function, "cat")) {
+			if(strcmp(function, "ls") == 1 || strcmp(function, "cat") == 1) {
 				strcpy(final_command, ROOTFS_BIN_PATH);
 			} else {
 				strcpy(final_command, bin_string);
@@ -479,14 +479,92 @@ void interpretCommand(char *command){
 		runBinary(function, arguments, runAsBackgroundProcess);
 	}
 }
+void aggregateEnvVariables(char *home_env){
+	/*
+	char temp_path[1024] = "\0";
+	int i=0, j=0;
+	while(path_env[i] != '='){
+		i++;
+	}
+	i+=1;
+	while(path_env[i] != '\0'){
+		temp_path[j] = path_env[i];
+		i++;
+		j++;
+	}
+	temp_path[j] = '\0';
+	*/
+	char temp_home[1024] = "\0";
+	int i=0;
+	int j=0;
+	while(home_env[i] != '='){
+		i++;
+	}
+	i++;
+	while(home_env[i] != '\0'){
+		temp_home[j] = home_env[i];
+		i++;
+		j++;
+	}
+	temp_home[j] = '\0';
 
+	//strcpy(dollar_PATH, temp_path);
+	strcpy(HOME, temp_home);
+	strcpy(ROOTFS_BIN_PATH, HOME);
+	char *bpath = "/workdir/rootfs/bin/";
+	strcat(ROOTFS_BIN_PATH, bpath);
+	//syscall_write(1, ROOTFS_BIN_PATH, strlen(ROOTFS_BIN_PATH));
+	//syscall_write(1, "\n", 1);
+	//syscall_write(1, dollar_PATH, strlen(dollar_PATH));
+}
 int main(int argc, char* argv[], char* envp[]){
+	int envp_c = 0;
+        char env_parameter_list[15][1024];
+        for(int i=0; i<15; i++){
+        	int envp_p = 0;
+        	while(envp[0][envp_c] != '\0'){
+        	    env_parameter_list[i][envp_p] = envp[0][envp_c];
+        	    envp_c++;
+        	    envp_p++;
+                                                                                          
+        	}  
+        	env_parameter_list[i][envp_c] = envp[0][envp_c];
+        	envp_c++;
+        }
+	char *h = env_parameter_list[13];
+        aggregateEnvVariables(h);
+
 	if(argc > 1){
-		syscall_write(1, argv[0], 45);
-		runScripts(argv);
+		int i=0;
+	        int argv_c = 0;
+		char parameter_list[argc][1024];	
+		for(i=0; i<argc; i++){
+			int argv_p = 0;
+			while(argv[0][argv_c] != '\0'){
+			    parameter_list[i][argv_p] = argv[0][argv_c];
+			    argv_c++;
+			    argv_p++;
+ 
+			}
+			parameter_list[i][argv_c] = argv[0][argv_c];
+			argv_c++;
+		}
+		
+		syscall_write(1, parameter_list[1], strlen(parameter_list[1]));
+		runScripts(parameter_list);
 		return 0;
 	}
 	
+	//strcpy(HOME, parameter_list[13]);
+	//strcpy(dollar_PATH, parameter_list[9]);
+	//char *b = "/workdir/rootfs/bin/";
+	//strcpy(ROOTFS_BIN_PATH, HOME);
+	//strcat(ROOTFS_BIN_PATH, b);
+
+	//syscall_write(1, HOME, strlen(HOME));
+	//syscall_write(1, dollar_PATH, strlen(dollar_PATH));
+	//syscall_write(1, ROOTFS_BIN_PATH, strlen(ROOTFS_BIN_PATH));
+
 	syscall_write(1, shell, strlen(shell));
 //	strcpy(dollar_PATH ,envp[9]);  //PATH is in envp[9]
 	while(run_status){
@@ -684,7 +762,7 @@ void parseExportArguments ( char * arguments) {
 	}
 }
 
-void runScripts(char *arguments[]){
+void runScripts(char arguments[10][1024]){
 	char *filename = arguments[1];
 	int fd = syscall_open(filename, 0);
 	char bigBuffer[10240];
