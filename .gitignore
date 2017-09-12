@@ -1,2 +1,5 @@
 *.swp
 *.o
+*.img
+*.iso
+obj/
