@@ -1,4 +1,4 @@
-#include<kprintf.h>
+#include<sys/kprintf.h>
 #include<sys/defs.h>
 
 extern void timer_handler()
@@ -9,7 +9,7 @@ timetick++;
 if(timetick%18==0)
 {
 	seconds_from_boot++;
-	kprintf1("%d seconds from boot",seconds_from_boot ,100,20);
+	kprintf("%d seconds from boot",seconds_from_boot);
 }
 return;
 }
