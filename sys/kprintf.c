@@ -137,7 +137,10 @@ void kprintf(const char *fmt, ...)
                     numberOfParams++;
                     i++;
                 }
-            } 
+            }
+	    else if(fmt[i] == '\n' || fmt[i] == '\t'){
+		numberOfParams++;
+	    } 
         }
 	va_start(ap, fmt);
 	//register char *temp2 = (char *)0xb8000;
