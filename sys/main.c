@@ -22,16 +22,17 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
       //kprintf("Available Physical Memory [%p-%p]\n", smap->base, smap->base + smap->length);
     }
   }
-//  kprintf("physfree %p\n", (uint64_t)physfree);
  // kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
 
 //for (int i=0 ;i <1 ;i++ )
 //{
+ //__asm__ ("popq %rax");
  __asm__ ("int $32");
 //}
+kprintf("physfree %p\n", (uint64_t)physfree);
 
 
- // while(1);
+ while(1);
 }
 
 void boot(void)
@@ -49,8 +50,8 @@ void boot(void)
     :"r"(&initial_stack[INITIAL_STACK_SIZE])
   );
   init_gdt(); 
-  initScreen();  
   init_idt();  
+  initScreen();  
 //  init_pic();
   start(
     (uint32_t*)((char*)(uint64_t)loader_stack[3] + (uint64_t)&kernmem - (uint64_t)&physbase),

@@ -19,15 +19,16 @@ struct idt_entry
 
 struct idtr_t
 {
-	uint16_t size;
-	uint64_t base; 
-};
+	uint16_t size:16;
+	uint64_t base:64; 
+}__attribute__((packed));
 
 extern void timer_wrapper();
-
+/*
 void sample_handler() {
 	kprintf("holla do you hear me ? ");
 }
+*/
 
 //void _x86_64_asm_lidt(struct idtr_t *idtr)
 
@@ -49,11 +50,9 @@ void init_idt() {
 		idt_entry_table(i, (uint64_t)timer_wrapper);
 	}
 
-	//idt_entry_table(32,(uint64_t)timer_wrapper);
 	struct idtr_t idtr;
 	idtr.size=sizeof(struct idt_entry)*IDT_MAX-1;
 	idtr.base=(uint64_t)idt; 
-
 	//LIDT instruction arguments??
 	//_x86_64_asm_lidt(idtr);
 	__asm__(
