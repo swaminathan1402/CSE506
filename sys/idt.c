@@ -56,13 +56,12 @@ void init_idt() {
 	//LIDT instruction arguments??
 	//_x86_64_asm_lidt(idtr);
 	
-	idt_lidt(&idtr);
-	/*__asm__(
+	__asm__(
 		"lidt %0"
 		:
 		:"m"(idtr)
 		:"memory"
-	);*/
+	);
 }
 
 

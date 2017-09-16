@@ -57,7 +57,6 @@ void boot(void)
     (uint64_t*)&physbase,
     (uint64_t*)(uint64_t)loader_stack[4]
   );
-__asm__("int $32");
   /*for(
     temp1 = "!!!!! start() returned !!!!!", temp2 = (char*)0xb8000;
     *temp1;
