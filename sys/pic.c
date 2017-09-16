@@ -10,6 +10,12 @@ void outb(uint16_t port, unsigned char irq){
 	);
 }
 
+void end_of_interrupt(unsigned char irq){
+	if(irq >= 8)
+		outb(PIC_SLAVE, PIC_EOI);
+	outb(PIC_MASTER, PIC_EOI);
+}
+
 void inb(uint16_t port){
 	/*
 	__asm__ __volatile__ (

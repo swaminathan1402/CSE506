@@ -24,7 +24,6 @@
 #define ICW4_8086		0x01
 
 
-
 void outb(uint16_t port, unsigned char irq);
 void inb(uint16_t port);
 void end_of_interrupt(unsigned char irq);

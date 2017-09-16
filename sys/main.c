@@ -12,6 +12,7 @@ extern char kernmem, physbase;
 
 void start(uint32_t *modulep, void *physbase, void *physfree)
 {
+  __asm__("sti;");
   struct smap_t {
     uint64_t base, length;
     uint32_t type;
@@ -19,18 +20,15 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   while(modulep[0] != 0x9001) modulep += modulep[1]+2;
   for(smap = (struct smap_t*)(modulep+2); smap < (struct smap_t*)((char*)modulep+modulep[1]+2*4); ++smap) {
     if (smap->type == 1 /* memory */ && smap->length != 0) {
-      //kprintf("Available Physical Memory [%p-%p]\n", smap->base, smap->base + smap->length);
+      kprintf("Available Physical Memory [%p-%p]\n", smap->base, smap->base + smap->length);
     }
   }
- // kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
-
-//for (int i=0 ;i <1 ;i++ )
-//{
+ kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
+ /*
+for (int i=0 ;i < 90 ;i++ ){
  __asm__ ("int $32");
-//}
-kprintf("physfree %p\n", (uint64_t)physfree);
-
-
+}
+*/
  while(1);
 }
 
@@ -51,7 +49,7 @@ void boot(void)
   init_gdt(); 
   init_idt();  
   initScreen();  
-//  init_pic();
+  init_pic();
   start(
     (uint32_t*)((char*)(uint64_t)loader_stack[3] + (uint64_t)&kernmem - (uint64_t)&physbase),
     (uint64_t*)&physbase,
