@@ -1,6 +1,6 @@
 .global timer_wrapper
+/*
 .align 8
-
 timer_wrapper:
 	cli 
 	push %rax
@@ -21,4 +21,6 @@ timer_wrapper:
 	pop %rax
 	sti
 	iretq
-
+*/
+timer_wrapper:
+	iretq

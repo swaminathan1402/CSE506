@@ -25,10 +25,10 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
 //  kprintf("physfree %p\n", (uint64_t)physfree);
  // kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
 
-for (int i=0 ;i <90 ;i++ )
-{
-__asm__ ("int $0x20");
-}
+//for (int i=0 ;i <1 ;i++ )
+//{
+ __asm__ ("int $32");
+//}
 
 
  // while(1);
@@ -50,8 +50,8 @@ void boot(void)
   );
   init_gdt(); 
   initScreen();  
-  init_pic();
   init_idt();  
+//  init_pic();
   start(
     (uint32_t*)((char*)(uint64_t)loader_stack[3] + (uint64_t)&kernmem - (uint64_t)&physbase),
     (uint64_t*)&physbase,
