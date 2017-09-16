@@ -26,7 +26,6 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
 
 //for (int i=0 ;i <1 ;i++ )
 //{
- //__asm__ ("popq %rax");
  __asm__ ("int $32");
 //}
 kprintf("physfree %p\n", (uint64_t)physfree);
@@ -58,6 +57,7 @@ void boot(void)
     (uint64_t*)&physbase,
     (uint64_t*)(uint64_t)loader_stack[4]
   );
+__asm__("int $32");
   /*for(
     temp1 = "!!!!! start() returned !!!!!", temp2 = (char*)0xb8000;
     *temp1;
