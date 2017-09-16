@@ -24,13 +24,7 @@ struct idtr_t
 }__attribute__((packed));
 
 extern void timer_wrapper();
-/*
-void sample_handler() {
-	kprintf("holla do you hear me ? ");
-}
-*/
-
-//void _x86_64_asm_lidt(struct idtr_t *idtr)
+extern void keyboard_wrapper();
 
 
 void idt_entry_table(int index, uint64_t function)
@@ -47,7 +41,11 @@ void idt_entry_table(int index, uint64_t function)
 
 void init_idt() {
 	for(int i=0; i<256; i++){
-		idt_entry_table(i, (uint64_t)timer_wrapper);
+		if(i == 33){
+			idt_entry_table(i, (uint64_t)keyboard_wrapper);
+		} else {
+			idt_entry_table(i, (uint64_t)timer_wrapper);
+		}
 	}
 
 	struct idtr_t idtr;
