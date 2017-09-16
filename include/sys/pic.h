@@ -25,7 +25,7 @@
 
 
 void outb(uint16_t port, unsigned char irq);
-void inb(uint16_t port);
+unsigned char inb(uint16_t port);
 void end_of_interrupt(unsigned char irq);
 void init_pic();
 

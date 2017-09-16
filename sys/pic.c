@@ -16,7 +16,7 @@ void end_of_interrupt(unsigned char irq){
 	outb(PIC_MASTER, PIC_EOI);
 }
 
-void inb(uint16_t port){
+unsigned char inb(uint16_t port){
 	/*
 	__asm__ __volatile__ (
 		"inb %0, %;" // dump the value arrived on port to eax
@@ -25,6 +25,14 @@ void inb(uint16_t port){
 		:
 	);
 	*/
+	unsigned char ret;
+	__asm__(
+		"inb %1, %0;"
+		: "=a"(ret)
+		: "Nd"(port)
+		:
+	);
+	return ret;
 }
 
 void init_pic() {
