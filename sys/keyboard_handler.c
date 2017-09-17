@@ -12,6 +12,16 @@ int getCharfromCode(unsigned char scan_code1)
 		offset = 32;
 		return -1;
 	}
+
+	else if(scan_code1 == 0x1D){ //left control is pressed
+		ctrlFlag = 1;
+		offset   = 32;
+	}
+
+	else if(scan_code1 == 0x9D){ //left control has been released
+		ctrlFlag = 0;
+		offset   = 0;
+	}
 	/*
 	else if(scan_code1 == 0x1e){ // left ctrl
 		ctrlFlag = 1;
@@ -161,12 +171,22 @@ int getCharfromCode(unsigned char scan_code1)
 
 void keyboard_handler(){
 	unsigned char scan = inb(0x60);
-	//inb(0x60);
 	char map;
 	int code = getCharfromCode(scan);
 	if(code > 0) {
-	  map = (char)code;
-	  kprintf("%c ", map);
+		map = (char)code;
+		//kprintf("%c ", map);
+		char *glyph = (char *)0xb8000+160*25-20;
+		if(ctrlFlag){
+			*glyph = map;
+			glyph-=2;
+			*glyph = '^';
+		} else {
+		
+		*glyph = map;
+		glyph -=2;
+		*glyph ='\0';		
+		}
 	}
 	end_of_interrupt(0x0);	
 }
