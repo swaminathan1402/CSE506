@@ -1,15 +1,6 @@
 #include <sys/kprintf.h>
 #include <sys/pic.h>
 
-/*
-int Shiftflag=0;
-int Controlflag=0;
-struct scan_code_entry
-{
-int scan_code;
-char mapping;
-}sct[100]; 
-*/
 int shiftFlag = 0;
 int ctrlFlag = 0;
 int offset = 0;
@@ -41,33 +32,43 @@ int getCharfromCode(unsigned char scan_code1)
 		return 0;
         }
 	else if(scan_code1 == 0x02){ // 1
+		if(shiftFlag) return 33;
 		return 49;
 	}
-	else if(scan_code1 == 0x03){
+	else if(scan_code1 == 0x03){ // 2
+		if(shiftFlag) return 64;
 		return 50;
 	}
-	else if(scan_code1 == 0x04){
+	else if(scan_code1 == 0x04){ // 3
+		if(shiftFlag) return 35;
 		return 51;
 	}
-	else if(scan_code1 == 0x05){
+	else if(scan_code1 == 0x05){ // 4
+		if(shiftFlag) return 36;
 		return 52;
 	}
-	else if(scan_code1 == 0x06){
+	else if(scan_code1 == 0x06){ // 5
+		if(shiftFlag) return 37;
 		return 53;
 	}
-	else if(scan_code1 == 0x07){
+	else if(scan_code1 == 0x07){  // 6
+		if(shiftFlag) return 94;
 		return 54;
 	}
-	else if(scan_code1 == 0x08){
+	else if(scan_code1 == 0x08){ // 7
+		if(shiftFlag) return 38;
 		return 55;
 	}
-	else if(scan_code1 == 0x09){
+	else if(scan_code1 == 0x09){ // 8
+		if(shiftFlag) return 42;
 		return 56;
 	}
-	else if(scan_code1 == 0x0A){
+	else if(scan_code1 == 0x0A){ // 9
+		if(shiftFlag) return 40;
 		return 57;
 	}
-	else if(scan_code1 == 0x0B){
+	else if(scan_code1 == 0x0B){ // 0
+		if(shiftFlag) return 41;
 		return 48;
 	}
 	else if(scan_code1 == 0x10){
@@ -79,10 +80,10 @@ int getCharfromCode(unsigned char scan_code1)
 	else if(scan_code1 == 0x30){
 		return 98- offset;
 	}
-	else if(scan_code1 == 0x20){
+	else if(scan_code1 == 0x2E){
 		return 99 - offset;
 	}
-	else if(scan_code1 == 0x2E){
+	else if(scan_code1 == 0x20){
 		return 100- offset;
 	}
 	else if(scan_code1 == 0x12){
