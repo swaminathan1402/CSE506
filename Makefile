@@ -1,8 +1,8 @@
 include Makefile.config
 
 CC=gcc
-#CFLAGS=-O1 -std=c99 -Wall -Werror -fPIC -march=amdfam10 -g3 -Wno-deprecated-declarations -D_XOPEN_SOURCE=600
-CFLAGS=-O1 -std=c99 -Wall -fPIC -march=amdfam10 -g3 -Wno-deprecated-declarations -D_XOPEN_SOURCE=600
+CFLAGS=-O1 -std=c99 -Wall -Werror -fPIC -march=amdfam10 -g3 -Wno-deprecated-declarations -D_XOPEN_SOURCE=600
+#CFLAGS=-O1 -std=c99 -Wall -fPIC -march=amdfam10 -g3 -Wno-deprecated-declarations -D_XOPEN_SOURCE=600
 CFLAGS_FULL=-nostdinc -Iinclude -msoft-float -mno-sse -mno-red-zone -fno-builtin -fno-stack-protector
 LD=ld
 LDLAGS=-nostdlib
@@ -23,7 +23,7 @@ BINS:=$(addprefix $(ROOTFS)/,$(wildcard bin/*))
 
 all: $(ASSIGNMENT)
 
-project: $(USER).iso $(USER)-data.img
+project: $(USER).img $(USER)-data.img
 
 wp1p1:
 	@$(MAKE) --no-print-directory BIN=rootfs/bin/sbush binary
@@ -37,16 +37,18 @@ wp2: project
 
 wp3: project
 
-$(USER).iso: $(USER).img kernel
+$(USER).iso: kernel $(ROOTBOOT)/large-file-padding
 	cp kernel $(ROOTBOOT)/kernel/kernel
 	mkisofs -r -no-emul-boot -input-charset utf-8 -b boot/cdboot -o $@ $(ROOTFS)/
-	mcopy -o -i $(USER).img $@ ::sbunix.iso
-	touch $@
 
-$(USER).img: 
-	mkfs.vfat -n SBUNIX -I -C $@ 16384
-	mcopy -i $@ /usr/lib/syslinux/memdisk $(ROOTBOOT)/syslinux.cfg ::
+$(USER).img: $(USER).iso
+	mkfs.vfat -n SBUNIX -I -C $@ 65536
 	syslinux -i $@
+	mcopy -i $@ /usr/lib/syslinux/memdisk $(ROOTBOOT)/syslinux.cfg ::
+	mcopy -i $@ $(USER).iso ::sbunix.iso
+
+$(ROOTBOOT)/large-file-padding:
+	dd if=/dev/zero of=$(ROOTBOOT)/large-file-padding seek=30 bs=1M count=0
 
 $(USER)-data.img:
 	qemu-img create -f raw $@ 16M

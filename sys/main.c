@@ -36,10 +36,10 @@ void boot(void)
 {
    
   // note: function changes rsp, local stack variables can't be practically used
-  register char  *temp2;
+  register char  *temp2, *temp1;
 
-  for(temp2 = (char*)0xb8001; temp2 < (char*)0xb8000+160*25; temp2 += 2) *temp2 = 7 /* white: TODO: how does this help at all ?  */;
-  __asm__(
+  for(temp2 = (char*)0xb8001; temp2 < (char*)0xb8000+160*25; temp2 += 2) *temp2 = 7 /* white */;
+  __asm__ volatile (
     "cli;"
     "movq %%rsp, %0;"
     "movq %1, %%rsp;"
@@ -55,10 +55,10 @@ void boot(void)
     (uint64_t*)&physbase,
     (uint64_t*)(uint64_t)loader_stack[4]
   );
-  /*for(
+  for(
     temp1 = "!!!!! start() returned !!!!!", temp2 = (char*)0xb8000;
     *temp1;
     temp1 += 1, temp2 += 2
-  ) *temp2 = *temp1;*/
-  while(1);
+  ) *temp2 = *temp1;
+  while(1) __asm__ volatile ("hlt");
 }
