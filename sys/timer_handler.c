@@ -8,13 +8,14 @@ int temp , t;
 static int volatile seconds_from_boot=0;
 static int volatile timetick=0;
 timetick+=1;
-char *timer =(char*) (0xb8000+160*25-10);	
 if(timetick%18==0)
 {
 	seconds_from_boot++;
 //	kprintf("%d seconds from boot", seconds_from_boot);
 }
 temp=seconds_from_boot;
+
+char *timer =(char*) (0xb8000+160*25-10);	
 if(temp==0 )
 {
 	*timer ='0';
