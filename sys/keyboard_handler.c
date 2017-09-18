@@ -175,7 +175,7 @@ void keyboard_handler(){
 	int code = getCharfromCode(scan);
 	if(code > 0) {
 		map = (char)code;
-		//kprintf("%c ", map);
+		//kprintf(" hello %c ", map);
 		char *glyph = (char *)0xb8000+160*25-20;
 		if(ctrlFlag){
 			*glyph = map;

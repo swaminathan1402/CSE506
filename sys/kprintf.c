@@ -91,6 +91,15 @@ int findCursorY(){
 	return pos/160;
 }
 
+void scroll(){
+	register char *flusher = (char *)0xb8000;
+	while(*flusher){
+		*flusher = '\0';
+		flusher+=2;
+	}
+	return;
+}
+
 void kprintf(const char *fmt, ...)
 {
 	/*
@@ -103,7 +112,13 @@ void kprintf(const char *fmt, ...)
 	*/
 	int pos_x = findCursorX();
 	int pos_y = findCursorY();
-	register char *temp2 = (char *)0xb8000 + pos_y*160 + pos_x;
+	register char *temp2;
+	if(pos_y >= 20){
+		scroll();
+		pos_x = 0;
+		pos_y = 0;
+	}
+	temp2 = (char *)0xb8000 + pos_y*160 + pos_x;
 	
 	va_list ap;
         int numberOfParams = 0;
@@ -190,28 +205,20 @@ void kprintf(const char *fmt, ...)
 		    } else if(*temp1 == '\n'){
 			*temp2 = '\0';
 			pos_x=findCursorX();
-			pos_y=findCursorY();
 			for (int i= pos_x; i<160; i=i+2)
 			{
 				*temp2= ' ';
 				temp2= temp2+2;
 			}
-			pos_x=0;
-			pos_y++;
-			temp1+=2;
+			temp1+=1;
 		    } else if(*temp1=='\t'){
-			*temp2 = '\0';
-			pos_x=findCursorX();
-			pos_y=findCursorY();
 			for(int i =0; i<4;i++)
 			{
 				*temp2=' ';
 				temp2 =temp2+2;
 
 			}	
-			pos_y=pos_y+(pos_x+8)/160;
-			pos_x=(pos_x+8)%160;
-			temp1+=2;
+			temp1+=1;
 		    } else {
 			*temp2 = *temp1;
 			temp1+=1;
