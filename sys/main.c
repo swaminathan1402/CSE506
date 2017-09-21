@@ -5,6 +5,7 @@
 #include <sys/ahci.h>
 #include <sys/pic.h>
 #include <sys/idt.h>
+#include <sys/pci.h>
 #define INITIAL_STACK_SIZE 4096
 uint8_t initial_stack[INITIAL_STACK_SIZE]__attribute__((aligned(16)));
 uint32_t* loader_stack;
@@ -29,6 +30,7 @@ for (int i=0 ;i < 90 ;i++ ){
  __asm__ ("int $32");
 }
 */
+bruteforcePCIcheckAHCI();
  while(1);
 }
 
