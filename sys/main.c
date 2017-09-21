@@ -30,7 +30,7 @@ for (int i=0 ;i < 90 ;i++ ){
  __asm__ ("int $32");
 }
 */
-bruteforcePCIcheckAHCI();
+bruteForcePCIcheckAHCI();
  while(1);
 }
 

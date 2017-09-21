@@ -1,7 +1,8 @@
+#include<sys/defs.h>
 #include<sys/pci.h>
 #include <sys/kprintf.h>
 
-void outl(uint32_t port ,uint32_t val)
+void outl(uint16_t port ,uint32_t val)
 {
 __asm__ __volatile__(
  "outl %0 , %1 " 
@@ -12,11 +13,11 @@ __asm__ __volatile__(
 );
 }
 
-uint32_t  inl(uint32_t port)
+uint32_t  inl(uint16_t port)
 {
 uint32_t ret;
 __asm__ __volatile__(
-"inl %0 , %1 "
+"inl %1 , %0 "
 :"=a"(ret)
 :"d"(port)
 :	
@@ -79,13 +80,14 @@ for (bus= 0; bus<256; bus++)
 			if (pciCheckVendor(bus,device)!=0xffff)
 			{
 			 if (pciCheckBaseClass(bus,device)==0x01 && pciCheckSubClass(bus,device)==0x06 )
-			 kprintf("\nAHCI Controller discovered , VendorID:%d", pciCheckVendor(bus,device));	
-		         kprintf("\nAHCI present at bus no: %d ,device %d", bus, device);
+			 {
+				kprintf("\nAHCI Controller discovered , VendorID:%d", pciCheckVendor(bus,device));	
+				 kprintf("\nAHCI present at bus no: %d ,device %d", bus, device);
+			 }
 			}
 		}
 
 	}
 
 }
-
 
