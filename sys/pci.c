@@ -56,7 +56,7 @@ uint8_t pciCheckBaseClass(uint8_t bus, uint8_t slot,uint8_t func)
 	uint8_t class;
 	uint16_t classinfo;
 	classinfo =pciConfigReadWord(bus,slot,func,0x0A); 
-	class =(uint8_t)((classinfo & 0xff00)>>16);
+	class =(uint8_t)((classinfo & 0xff00)>>8);
 	return class;
 }
 
@@ -64,19 +64,19 @@ uint8_t pciCheckSubClass(uint8_t bus, uint8_t slot ,uint8_t func)
 {
 	uint8_t subclass;
 	uint16_t classinfo;
-	classinfo =pciConfigReadWord(bus,slot,func,0xA); 
+	classinfo =pciConfigReadWord(bus,slot,func,0x0A); 
 	subclass =(uint8_t)((classinfo & 0x00ff));
 	return subclass;
 }
 
 void pciCheckFunction (uint8_t bus, uint8_t device, uint8_t function)
 {
-kprintf( "\t%d\t%d" ,pciCheckBaseClass(bus, device, function), pciCheckSubClass(bus,device,function));
-if(pciCheckBaseClass(bus, device, function)==0x1 &&  pciCheckSubClass(bus,device,function)==0x6)
+//kprintf( "\t%d\t%d" ,pciCheckBaseClass(bus, device, function), pciCheckSubClass(bus,device,function));
+if(pciCheckBaseClass(bus, device, function)==0x01 &&  pciCheckSubClass(bus,device,function)==0x06)
 {
 
-	kprintf("\n AHCI discovered");
-	kprintf("\n %d, %d", bus, device);
+	kprintf("\n AHCI discovered at:");
+	kprintf("\t Bus: %d ,Device:%d",bus,device);
 }
 
 }
@@ -84,7 +84,7 @@ if(pciCheckBaseClass(bus, device, function)==0x1 &&  pciCheckSubClass(bus,device
 uint8_t pciCheckHeader(uint8_t bus, uint8_t device)
 {
 uint8_t head;
-uint16_t word =pciConfigReadWord(bus, device,0, 0x0C);
+uint16_t word =pciConfigReadWord(bus, device,0, 0x0E);
 head = (uint8_t)(word & 0x00FF);
 return head;
 
@@ -112,7 +112,7 @@ for (bus= 0; bus<256; bus++)
 					for(function =1 ;function <8 ;function++)
 					{	
 						if(pciCheckVendor(bus,device,function)!=0xFFFF)
-						pciCheckFunction(bus, device,function);		
+					 		pciCheckFunction(bus, device,function);		
 					}
 				}
 			}	
