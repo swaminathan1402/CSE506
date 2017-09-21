@@ -16,6 +16,7 @@ __asm__ __volatile__(
 uint32_t  inl(uint16_t port)
 {
 uint32_t ret;
+
 __asm__ __volatile__(
 "inl %1 , %0 "
 :"=a"(ret)
@@ -23,6 +24,7 @@ __asm__ __volatile__(
 :	
 
 );
+
 return ret;
 }
 
@@ -42,52 +44,81 @@ uint16_t pciConfigReadWord(uint8_t bus, uint8_t slot, uint8_t func , uint8_t off
 }
 
 
-uint16_t pciCheckVendor(uint8_t bus, uint8_t slot)
+uint16_t pciCheckVendor(uint8_t bus, uint8_t slot,uint8_t function)
 {
 	uint16_t vendor;
-	vendor =pciConfigReadWord(bus,slot,0,0);
+	vendor =pciConfigReadWord(bus,slot,function,0);
 	return vendor;
 }
 
-uint8_t pciCheckBaseClass(uint8_t bus, uint8_t slot)
+uint8_t pciCheckBaseClass(uint8_t bus, uint8_t slot,uint8_t func)
 {
 	uint8_t class;
 	uint16_t classinfo;
-	classinfo =pciConfigReadWord(bus,slot,0,6); 
+	classinfo =pciConfigReadWord(bus,slot,func,0x0A); 
 	class =(uint8_t)((classinfo & 0xff00)>>16);
 	return class;
 }
 
-uint8_t pciCheckSubClass(uint8_t bus, uint8_t slot)
+uint8_t pciCheckSubClass(uint8_t bus, uint8_t slot ,uint8_t func)
 {
 	uint8_t subclass;
 	uint16_t classinfo;
-	classinfo =pciConfigReadWord(bus,slot,0,6); 
+	classinfo =pciConfigReadWord(bus,slot,func,0xA); 
 	subclass =(uint8_t)((classinfo & 0x00ff));
 	return subclass;
 }
+
+void pciCheckFunction (uint8_t bus, uint8_t device, uint8_t function)
+{
+kprintf( "\t%d\t%d" ,pciCheckBaseClass(bus, device, function), pciCheckSubClass(bus,device,function));
+if(pciCheckBaseClass(bus, device, function)==0x1 &&  pciCheckSubClass(bus,device,function)==0x6)
+{
+
+	kprintf("\n AHCI discovered");
+	kprintf("\n %d, %d", bus, device);
+}
+
+}
+
+uint8_t pciCheckHeader(uint8_t bus, uint8_t device)
+{
+uint8_t head;
+uint16_t word =pciConfigReadWord(bus, device,0, 0x0C);
+head = (uint8_t)(word & 0x00FF);
+return head;
+
+}
+
 
 void bruteForcePCIcheckAHCI()
 {
 uint8_t bus ;
 uint8_t device;
+uint8_t header;
+kprintf("Brute force started!!\n");
 for (bus= 0; bus<256; bus++)
 	{
 
 		for(device=0; device<32;device++)
 		{
-		
-			if (pciCheckVendor(bus,device)!=0xffff)
+			uint8_t function=0;
+			if (pciCheckVendor(bus,device,function)!=0xffff)
 			{
-			 if (pciCheckBaseClass(bus,device)==0x01 && pciCheckSubClass(bus,device)==0x06 )
-			 {
-				kprintf("\nAHCI Controller discovered , VendorID:%d", pciCheckVendor(bus,device));	
-				 kprintf("\nAHCI present at bus no: %d ,device %d", bus, device);
-			 }
-			}
-		}
+				pciCheckFunction (bus, device,function);
+				header=pciCheckHeader(bus, device);
+				if((header & 0x80)==1)	
+				{
+					for(function =1 ;function <8 ;function++)
+					{	
+						if(pciCheckVendor(bus,device,function)!=0xFFFF)
+						pciCheckFunction(bus, device,function);		
+					}
+				}
+			}	
 
+		}		
 	}
-
+kprintf("Brute Force ended\n");
 }
 
