@@ -101,8 +101,8 @@ if(function==0)
 			uint16_t deviceID= pciCheckDevice(bus,device);
 			kprintf("\nHelloAHCI :%d",(int)deviceID);
 		//kprintf("\n AHCI discovered at:");
-	 	//	kprintf("\nBus: %d",(int)bus);
-		//	kprintf("\nDevice: %d",(int)device);
+	 	kprintf("\nBus: %d",(int)bus);
+		kprintf("\nDevice: %d",(int)device);
 		}
 	}
 }
@@ -121,7 +121,7 @@ return head;
 
 void bruteForcePCIcheckAHCI()
 {
-uint8_t bus ;
+uint32_t bus ;
 uint8_t device;
 uint8_t header;
 //kprintf("Brute force started!!\n");
@@ -131,7 +131,7 @@ for (bus=0; bus<256; bus++)
 		for(device=0; device<32;device++)
 		{
 			uint8_t function=0;
-			kprintf("\nBus:%d ,Device:%d" ,bus,device);
+			//kprintf("%d,%d\t" ,bus+1,device+1);
 			if (pciCheckVendor(bus,device,function)!=0xffff)
 			{
 				pciCheckFunction (bus, device,function);

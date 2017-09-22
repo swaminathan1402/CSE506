@@ -37,6 +37,13 @@ char volatile *itoa(int value, int base){
 	char base16[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 	int volatile index = 0;
 	int volatile final, temp, store, limit;
+	if(value==0)
+	{
+	buffer[0]='0';
+	buffer[1]='\0';
+	char volatile *p = buffer;
+	return p;
+	}	
 	if(value < 0){
 		buffer[index] = '-';
 		value *= -1;
@@ -44,6 +51,7 @@ char volatile *itoa(int value, int base){
 	temp = value;
 	while(temp != 0){
 		temp = temp / base;
+		index++;
 	}
 	limit = (buffer[0] == '-')? 1 : 0;
 	if(limit == 0) index-=1;
@@ -58,9 +66,6 @@ char volatile *itoa(int value, int base){
 		}
 		value = value / base;
 		index--;
-	}
-	if(value == 0) {
-		buffer[index] = '0';
 	}
 	buffer[final] = '\0';
 	char volatile *p = buffer;

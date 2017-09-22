@@ -26,10 +26,10 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   }
  kprintf("physfree %p\n", (uint64_t)physfree);
  kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
- int value =7;
-  kprintf("%d", value);
+//  int value =7;
+ // kprintf(" Hello :%d", value);
 
-// bruteForcePCIcheckAHCI();
+ bruteForcePCIcheckAHCI();
 
  /*
 for (int i=0 ;i < 90 ;i++ ){
