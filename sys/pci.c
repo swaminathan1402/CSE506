@@ -44,27 +44,27 @@ uint16_t pciConfigReadWord(uint8_t bus, uint8_t slot, uint8_t func , uint8_t off
 }
 
 
-uint16_t pciCheckVendor(uint8_t bus, uint8_t slot,uint8_t function)
+uint16_t pciCheckVendor(uint8_t bus, uint8_t slot)
 {
 	uint16_t vendor;
-	vendor =pciConfigReadWord(bus,slot,function,0);
+	vendor =pciConfigReadWord(bus,slot,0,0);
 	return vendor;
 }
 
-uint8_t pciCheckBaseClass(uint8_t bus, uint8_t slot,uint8_t func)
+uint8_t pciCheckBaseClass(uint8_t bus, uint8_t slot)
 {
 	uint8_t class;
 	uint16_t classinfo;
-	classinfo =pciConfigReadWord(bus,slot,func,0x0A); 
+	classinfo =pciConfigReadWord(bus,slot,0x0,0x0A); 
 	class =(uint8_t)((classinfo & 0xff00)>>8);
 	return class;
 }
 
-uint8_t pciCheckSubClass(uint8_t bus, uint8_t slot ,uint8_t func)
+uint8_t pciCheckSubClass(uint8_t bus, uint8_t slot )
 {
 	uint8_t subclass;
 	uint16_t classinfo;
-	classinfo =pciConfigReadWord(bus,slot,func,0x0A); 
+	classinfo =pciConfigReadWord(bus,slot,0,0x0A); 
 	subclass =(uint8_t)((classinfo & 0x00ff));
 	return subclass;
 }
@@ -72,13 +72,18 @@ uint8_t pciCheckSubClass(uint8_t bus, uint8_t slot ,uint8_t func)
 void pciCheckFunction (uint8_t bus, uint8_t device, uint8_t function)
 {
 //kprintf( "\t%d\t%d" ,pciCheckBaseClass(bus, device, function), pciCheckSubClass(bus,device,function));
-if(pciCheckBaseClass(bus, device, function)==0x01 &&  pciCheckSubClass(bus,device,function)==0x06)
-{
 
-	kprintf("\n AHCI discovered at:");
-	kprintf("\t Bus: %d ,Device:%d",bus,device);
+//kprintf("%d\t ",bus);
+//kprintf("%d \t", device);
+if(function==0)	
+{	if(pciCheckBaseClass(bus, device)==0x01 &&  pciCheckSubClass(bus,device)==0x06)
+	{
+             kprintf("\nHello AHCI");
+		//kprintf("\n AHCI discovered at:");
+	 //	kprintf("\t Bus: %d ,Device:%d",bus,device);
+	}
 }
-
+return;
 }
 
 uint8_t pciCheckHeader(uint8_t bus, uint8_t device)
@@ -96,14 +101,15 @@ void bruteForcePCIcheckAHCI()
 uint8_t bus ;
 uint8_t device;
 uint8_t header;
-kprintf("Brute force started!!\n");
-for (bus= 0; bus<256; bus++)
+//kprintf("Brute force started!!\n");
+for (bus=0; bus<256; bus++)
 	{
 
 		for(device=0; device<32;device++)
 		{
 			uint8_t function=0;
-			if (pciCheckVendor(bus,device,function)!=0xffff)
+			kprintf(" Bus:%d ,Device:%d\n" ,bus,device);
+			if (pciCheckVendor(bus,device)!=0xffff)
 			{
 				pciCheckFunction (bus, device,function);
 				header=pciCheckHeader(bus, device);
@@ -111,7 +117,7 @@ for (bus= 0; bus<256; bus++)
 				{
 					for(function =1 ;function <8 ;function++)
 					{	
-						if(pciCheckVendor(bus,device,function)!=0xFFFF)
+					//	if(pciCheckVendor(bus,device,function)!=0xFFFF)
 					 		pciCheckFunction(bus, device,function);		
 					}
 				}
@@ -119,6 +125,7 @@ for (bus= 0; bus<256; bus++)
 
 		}		
 	}
-kprintf("Brute Force ended\n");
+//kprintf("Brute Force ended\n");
+return;
 }
 

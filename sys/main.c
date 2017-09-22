@@ -25,12 +25,14 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
     }
   }
  kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
+ bruteForcePCIcheckAHCI();
+
  /*
 for (int i=0 ;i < 90 ;i++ ){
  __asm__ ("int $32");
 }
 */
-bruteForcePCIcheckAHCI();
+
  while(1);
 }
 
@@ -52,11 +54,13 @@ void boot(void)
   init_idt();  
   initScreen();  
   init_pic();
+//  bruteForcePCIcheckAHCI(); 
   start(
     (uint32_t*)((char*)(uint64_t)loader_stack[3] + (uint64_t)&kernmem - (uint64_t)&physbase),
     (uint64_t*)&physbase,
     (uint64_t*)(uint64_t)loader_stack[4]
   );
+ //bruteForcePCIcheckAHCI();
   for(
     temp1 = "!!!!! start() returned !!!!!", temp2 = (char*)0xb8000;
     *temp1;
