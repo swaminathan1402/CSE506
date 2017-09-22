@@ -44,7 +44,6 @@ char volatile *itoa(int value, int base){
 	temp = value;
 	while(temp != 0){
 		temp = temp / base;
-		index++;
 	}
 	limit = (buffer[0] == '-')? 1 : 0;
 	if(limit == 0) index-=1;
@@ -59,6 +58,9 @@ char volatile *itoa(int value, int base){
 		}
 		value = value / base;
 		index--;
+	}
+	if(value == 0) {
+		buffer[index] = '0';
 	}
 	buffer[final] = '\0';
 	char volatile *p = buffer;
@@ -218,6 +220,7 @@ void kprintf(const char *fmt, ...)
 				temp2 =temp2+2;
 
 			}	
+
 			temp1+=1;
 		    } else {
 			*temp2 = *temp1;
