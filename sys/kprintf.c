@@ -200,7 +200,7 @@ void kprintf(const char *fmt, ...)
 			}
 			pos_x=0;
 			pos_y++;
-			temp1+=2;
+			temp1+=1;
 		    } else if(*temp1=='\t'){
 			*temp2 = '\0';
 			pos_x=findCursorX();
@@ -213,7 +213,7 @@ void kprintf(const char *fmt, ...)
 			}	
 			pos_y=pos_y+(pos_x+8)/160;
 			pos_x=(pos_x+8)%160;
-			temp1+=2;
+			temp1+=1;
 		    } else {
 			*temp2 = *temp1;
 			temp1+=1;
