@@ -4,7 +4,6 @@
 #define HBA_GHC_AE     (1U << 31)
 #define HBA_GHC_IE     (1U << 1)
 #define HBA_GHC_HR     (1U)
-
 #define HBA_PxCMD_ST   (1U)
 #define HBA_PxCMD_CLO  (1U << 3)
 #define HBA_PxCMD_FRE  (1U << 4)
@@ -16,6 +15,8 @@
 #define AHCI_DEV_SATAPI 0xEB140101  // SATAPI drive
 #define AHCI_DEV_SEMB   0xC33C0101  // Enclosure management bridge
 #define AHCI_DEV_PM     0x96690101  // Port multiplier
+
+
 
 #define ATA_STATUS_ERR  0x01 // Indicates an error occurred. Send a new command to clear it (or nuke it with a Software Reset).
 #define ATA_STATUS_DRQ  0x08 // Set when the drive has PIO data to transfer, or is ready to accept PIO data.
@@ -246,7 +247,7 @@ typedef struct {
   uint8_t p:1;               // Prefetchable
 
   uint8_t r:1;               // Reset
-  uint8_t b:1;               // BIST
+  uint8_t b:1;               // BISTk
   uint8_t c:1;               // Clear busy upon R_OK
   uint8_t rsv0:1;            // Reserved
   uint8_t pmp:4;             // Port multiplier port
@@ -318,7 +319,7 @@ typedef volatile struct {
   uint32_t pi;               // 0x0C, Port implemented
   uint32_t vs;               // 0x10, Version
   uint32_t ccc_ctl;          // 0x14, Command completion coalescing control
-  uint32_t ccc_pts;          // 0x18, Command completion coalescing ports
+  uint32_t ccc_pts;          // 0x18, Command compl'etion coalescing ports
   uint32_t em_loc;           // 0x1C, Enclosure management location
   uint32_t em_ctl;           // 0x20, Enclosure management control
   uint32_t cap2;             // 0x24, Host capabilities extended
@@ -333,5 +334,7 @@ typedef volatile struct {
   // 0x100 - 0x10FF, Port control registers
   hba_port_t ports[MAX_PORT_CNT]; // 1 ~ 32
 }__attribute__((__packed__)) hba_mem_t;
+
+void probe_AHCI(hba_mem_t * abar);
 
 #endif

@@ -1,7 +1,7 @@
 #include<sys/defs.h>
 #include<sys/pci.h>
 #include <sys/kprintf.h>
-
+#include<sys/ahci.h>
 void outl(uint16_t port ,uint32_t val)
 {
 __asm__ __volatile__(
@@ -24,7 +24,6 @@ __asm__ __volatile__(
 :	
 
 );
-
 return ret;
 }
 
@@ -35,7 +34,6 @@ uint16_t pciConfigReadWord(uint8_t bus, uint8_t slot, uint8_t func , uint8_t off
 	uint32_t lslot =(uint32_t)slot;
 	uint32_t lfunc =(uint32_t)func; 
 	uint16_t tmp=0; 
-
 	address=(uint32_t)((lbus<<16)|(lslot<<11)|(lfunc<<8)|(offset&0xfc)|((uint32_t)0x80000000));
 
 	outl (0xCF8, address);
@@ -87,6 +85,16 @@ uint8_t pciCheckSubClass(uint8_t bus, uint8_t slot )
 	return subclass;
 }
 
+uint32_t pciCheckBarFive(uint8_t bus, uint8_t device)
+{
+	uint32_t lbarfive_hi,lbarfive_lo;
+	uint32_t barfive;
+	lbarfive_lo=pciConfigReadWord(bus, device,0,0x24);
+	lbarfive_hi= pciConfigReadWord(bus,device,0,0x26);
+	barfive = (uint32_t)(lbarfive_lo |(lbarfive_hi<<16)); 	
+	return barfive;
+}
+
 void pciCheckFunction (uint8_t bus, uint8_t device, uint8_t function)
 {
 //kprintf( "\t%d\t%d" ,pciCheckBaseClass(bus, device, function), pciCheckSubClass(bus,device,function));
@@ -98,11 +106,15 @@ if(function==0)
 	{
             	if(pciCheckProgIF(bus,device)==0x01 )
 		 {	
-			uint16_t deviceID= pciCheckDevice(bus,device);
-			kprintf("\nHelloAHCI :%d",(int)deviceID);
-		//kprintf("\n AHCI discovered at:");
-	 	kprintf("\nBus: %d",(int)bus);
-		kprintf("\nDevice: %d",(int)device);
+				uint16_t deviceID= pciCheckDevice(bus,device);
+				kprintf("\nAHCI DeviceID :%d",(int)deviceID);
+				kprintf("\nBus: %d",(int)bus);
+				kprintf("\nDevice: %d",(int)device);
+				uint32_t abar5= pciCheckBarFive(bus,device);
+					
+				//hba_mem_t *abar = (void *)abar5; 
+				
+				//probe_AHCI(abar);
 		}
 	}
 }
