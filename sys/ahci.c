@@ -26,16 +26,17 @@ return 0;
 }
 
 
-void probe_AHCI(hba_mem_t 	*abar)
+void probe_AHCI(hba_mem_t *abar)
 {
 uint32_t pi= abar->pi;
+kprintf("\n%p: is the pi %p\n", pi, abar);
 int i=0;
       while (i<32)
        {       
      		 if(pi & 1)
 		{
 			int dt =check_type(&abar ->ports[i]);		
-			if (dt ==AHCI_DEV_SATA)
+			if (dt ==AHCI_DEV_SATA){
 
 				kprintf("SATA drive found at port %d\n",i);
 				return;

@@ -41,6 +41,17 @@ uint16_t pciConfigReadWord(uint8_t bus, uint8_t slot, uint8_t func , uint8_t off
 	return (tmp);
 }
 
+void pciConfigWriteWord(uint8_t bus, uint8_t slot, uint8_t func , uint8_t offset)
+{
+	uint32_t address;
+	uint32_t lbus= (uint32_t)bus;
+	uint32_t lslot =(uint32_t)slot;
+	uint32_t lfunc =(uint32_t)func; 
+	address=(uint32_t)((lbus<<16)|(lslot<<11)|(lfunc<<8)|(offset&0xfc)|((uint32_t)0x80000000));
+
+	outl (0xCF8, address);
+	outl(0xCFC, 0x100001);
+}
 
 uint16_t pciCheckVendor(uint8_t bus, uint8_t slot,uint8_t function)
 {
@@ -109,12 +120,12 @@ if(function==0)
 				uint16_t deviceID= pciCheckDevice(bus,device);
 				kprintf("\nAHCI DeviceID :%d",(int)deviceID);
 				kprintf("\nBus: %d",(int)bus);
-				kprintf("\nDevice: %d",(int)device);
-				uint32_t abar5= pciCheckBarFive(bus,device);
-					
-				//hba_mem_t *abar = (void *)abar5; 
-				
-				//probe_AHCI(abar);
+				kprintf("\nDevice: %d\n",(int)device);
+				pciConfigWriteWord(bus, device, 0, 0x24);
+				uint64_t abar5 = (uint64_t)pciCheckBarFive(bus,device);
+				hba_mem_t *abar = (hba_mem_t *)abar5;	
+				//kprintf("%p\n", abar);
+				probe_AHCI(abar);
 		}
 	}
 }
