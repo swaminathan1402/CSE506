@@ -47,3 +47,12 @@ void strcat(char *dest, char *src){
 	}
 	dest[index] = '\0';
 }
+
+void *memset(void *array, int c, size_t n){
+    unisigned char* temp = array;
+    while(n--){
+        *temp++ = (unsigned char)c;
+    }
+    return array;
+
+}
