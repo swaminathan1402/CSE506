@@ -337,4 +337,7 @@ typedef volatile struct {
 
 void probe_AHCI(hba_mem_t * abar);
 
+void stop_cmd(hba_port_t *port);
+void start_cmd(hba_port_t *port);
+
 #endif
