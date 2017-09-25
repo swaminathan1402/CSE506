@@ -50,7 +50,7 @@ void pciConfigWriteWord(uint8_t bus, uint8_t slot, uint8_t func , uint8_t offset
 	address=(uint32_t)((lbus<<16)|(lslot<<11)|(lfunc<<8)|(offset&0xfc)|((uint32_t)0x80000000));
 
 	outl (0xCF8, address);
-	outl(0xCFC, 0x300000);  // 0x100000
+	outl(0xCFC, 0x10000000);  // 0x100000
 }
 
 uint16_t pciCheckVendor(uint8_t bus, uint8_t slot,uint8_t function)
