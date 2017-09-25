@@ -122,3 +122,35 @@ void rebase(hba_port_t *port, int port_number){
 	}
 	start_cmd(port);
 }
+
+
+
+
+
+//Block no : passed as block -> ranges from 0 to 99
+//Byte : 1 byte value to be written/read on the block start 
+//Size of a block is 4k bytes
+
+int read (hba_port_t *port , uint32_t startl ,uint32_t starth, int block ,uint8_t *byte )
+{
+	port->is=(uint32_t) -1;
+	int spin=0 ;//Spin lock timeout counter
+	int slot =findcmdport(port);
+	if(slot == -1)
+	{
+		return 0;
+	}
+	hba_cmd_header * cmdheader = (hba_cmd_header *)port->clb;
+	cmdheader+=slot;
+	cmdheader->cfl =sizeof(fis_reg_h2d_t)/sizeof(uint32_t);
+	cmdheader->w =0;
+	cmdheader->prdtl=1;
+	hba_cmd_tbl * cmdtbl = (hba_cmd_tbl *)(cmdheader->ctba);
+	memset(cmdtbl,0 , sizeof(hba_cmd_tbl));
+	
+	
+	
+
+}
+
+
