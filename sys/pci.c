@@ -50,7 +50,7 @@ void pciConfigWriteWord(uint8_t bus, uint8_t slot, uint8_t func , uint8_t offset
 	address=(uint32_t)((lbus<<16)|(lslot<<11)|(lfunc<<8)|(offset&0xfc)|((uint32_t)0x80000000));
 
 	outl (0xCF8, address);
-	outl(0xCFC, 0x100001);
+	outl(0xCFC, 0x300000);  // 0x100000
 }
 
 uint16_t pciCheckVendor(uint8_t bus, uint8_t slot,uint8_t function)
@@ -106,7 +106,7 @@ uint32_t pciCheckBarFive(uint8_t bus, uint8_t device)
 	return barfive;
 }
 
-void pciCheckFunction (uint8_t bus, uint8_t device, uint8_t function)
+void pciCheckFunction (uint8_t bus, uint8_t device, uint8_t function, hba_mem_t **ahci_mem_base)
 {
 //kprintf( "\t%d\t%d" ,pciCheckBaseClass(bus, device, function), pciCheckSubClass(bus,device,function));
 
@@ -124,6 +124,7 @@ if(function==0)
 				pciConfigWriteWord(bus, device, 0, 0x24);
 				uint64_t abar5 = (uint64_t)pciCheckBarFive(bus,device);
 				hba_mem_t *abar = (hba_mem_t *)abar5;	
+				*ahci_mem_base = abar;
 				//kprintf("%p\n", abar);
 				probe_AHCI(abar);
 		}
@@ -142,7 +143,7 @@ return head;
 }
 
 
-void bruteForcePCIcheckAHCI()
+void bruteForcePCIcheckAHCI(hba_mem_t **ahci_mem_base)
 {
 uint32_t bus ;
 uint8_t device;
@@ -157,14 +158,14 @@ for (bus=0; bus<256; bus++)
 			//kprintf("%d,%d\t" ,bus+1,device+1);
 			if (pciCheckVendor(bus,device,function)!=0xffff)
 			{
-				pciCheckFunction (bus, device,function);
+				pciCheckFunction (bus, device,function, ahci_mem_base);
 				header=pciCheckHeader(bus, device);
 				if((header & 0x80)==1)	
 				{
 					for(function =1 ;function <8 ;function++)
 					{	
 						if(pciCheckVendor(bus,device,function)!=0xFFFF)
-					 		pciCheckFunction(bus, device,function);		
+					 		pciCheckFunction(bus, device,function, ahci_mem_base);		
 					}
 				}
 			}	

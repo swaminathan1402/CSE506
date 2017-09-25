@@ -11,6 +11,8 @@ uint8_t initial_stack[INITIAL_STACK_SIZE]__attribute__((aligned(16)));
 uint32_t* loader_stack;
 extern char kernmem, physbase;
 
+hba_mem_t *ahci_mem_base;
+
 void start(uint32_t *modulep, void *physbase, void *physfree)
 {
   __asm__("sti;");
@@ -26,10 +28,16 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   }
  kprintf("physfree %p\n", (uint64_t)physfree);
  kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
-//  int value =7;
- // kprintf(" Hello :%d", value);
-
- bruteForcePCIcheckAHCI();
+ bruteForcePCIcheckAHCI(&ahci_mem_base);
+ ahci_mem_base->ghc |= (0x01);
+ ahci_mem_base->ghc |= (1<<31);
+ ahci_mem_base->ghc |= (0x02);
+ 
+ for(int i=0; i<32; i++){
+    rebase(&(ahci_mem_base->ports[i]) ,i);
+    //kprintf("babe is rebasing %d\n", i);
+ }
+ kprintf("pi value %p\n", ahci_mem_base->pi);
 
  /*
 for (int i=0 ;i < 90 ;i++ ){
@@ -57,6 +65,11 @@ void boot(void)
   init_idt();  
   initScreen();  
   init_pic();
+ 
+ 
+ 
+ 
+ 
 //  bruteForcePCIcheckAHCI(); 
   start(
     (uint32_t*)((char*)(uint64_t)loader_stack[3] + (uint64_t)&kernmem - (uint64_t)&physbase),

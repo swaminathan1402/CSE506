@@ -49,7 +49,7 @@ void strcat(char *dest, char *src){
 }
 
 void *memset(void *array, int c, size_t n){
-    unisigned char* temp = array;
+    unsigned char* temp = array;
     while(n--){
         *temp++ = (unsigned char)c;
     }

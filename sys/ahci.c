@@ -2,6 +2,15 @@
 #include<sys/ahci.h>
 #include<sys/kprintf.h>
 #define AHCI_BASE 0x400000 
+void *memset(void *array, int c, size_t n){
+    unsigned char* temp = array;
+    while(n--){
+        *temp++ = (unsigned char)c;
+    }
+    return array;
+
+}
+
 static int check_type(hba_port_t *port)
 {
  uint32_t ssts= port->ssts;
@@ -28,8 +37,8 @@ return 0;
 
 void probe_AHCI(hba_mem_t *abar)
 {
-uint32_t pi= abar->pi;
-kprintf("\n%p: is the pi %p\n", pi, abar);
+uint32_t pi = abar->pi;
+kprintf("the pi value %p\n", pi);
 int i=0;
       while (i<32)
        {       
@@ -112,6 +121,5 @@ void rebase(hba_port_t *port, int port_number){
 		cmdHeader[i].ctba = AHCI_BASE + (40 << 10) + (port_number << 13) + (i << 8);
 		memset((void *)cmdHeader[i].ctba, 0, 256);
 	}
-
 	start_cmd(port);
 }
