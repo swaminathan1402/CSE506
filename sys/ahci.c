@@ -38,7 +38,6 @@ return 0;
 void probe_AHCI(hba_mem_t *abar)
 {
 uint32_t pi = abar->pi;
-kprintf("the pi value %p\n", pi);
 int i=0;
       while (i<32)
        {       
@@ -71,13 +70,13 @@ int i=0;
 	}
 }
 
-void stop_cmd(hba_port_t *port){
+void start_cmd(hba_port_t *port){
 	while(port->cmd & HBA_PxCMD_CR);
 	port->cmd |= HBA_PxCMD_FRE;
 	port->cmd |= HBA_PxCMD_ST;	
 }
 
-void start_cmd(hba_port_t *port){
+void stop_cmd(hba_port_t *port){
 	port->cmd &= ~HBA_PxCMD_ST;
 	while(1){
 		if(port->cmd & HBA_PxCMD_FR)
@@ -90,7 +89,7 @@ void start_cmd(hba_port_t *port){
 }
 
 void rebase(hba_port_t *port, int port_number){
-	stop_cmd(port); // telling the port to not to listen for any FIS 
+	stop_cmd(port); // telling the port to not to listen for any FIS 	
 	// each port should be 1K aligned =>
 	// Each port has 32 command headers 
 	// and each command header size 32 bytes
@@ -122,15 +121,9 @@ void rebase(hba_port_t *port, int port_number){
 	}
 	start_cmd(port);
 }
-
-
-
-
-
 //Block no : passed as block -> ranges from 0 to 99
 //Byte : 1 byte value to be written/read on the block start 
-//Size of a block is 4k bytes
-
+//Size of a block is 4k byt
 int read (hba_port_t *port , uint32_t startl ,uint32_t starth, int block ,uint8_t *byte )
 {
 	port->is=(uint32_t) -1;
@@ -152,5 +145,26 @@ int read (hba_port_t *port , uint32_t startl ,uint32_t starth, int block ,uint8_
 	
 
 }
+
+int write_sectors(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count){
+	port->is = (uint32_t)(-1);
+	int spin = 0;
+	int spin = findFreeSlot(port);
+	if (slot == -1) return 0;
+	hba_cmd_header *cmdheader = (uint64_t)port->clb;
+	cmdheader += slot;
+	cmdheader->cfl = sizeof(FIS_REG_H2D)/sizeof(uint32_t); // no idea
+	cmdheader->w = 1; // we must write
+	cmheader->prdtl = (uint16_t)((count-1)>>4) + 1; // count: 799.. prdtl is 51
+	// sector size 512 bytes
+	// 4KB block => 4 * 1024 = 4096 bytes
+	// therefore, sector count is 4096/512 = 8 sectors
+	// since, there are 100 4KB blocks, we need 8 * 100 = 800 sectors
+	// now that count = 800, then i suppose prdtl = ((800-1)/16) + 1
+
+	// But each PRDT entry reads 16sectors => 8192 bytes.
+}
+
+
 
 
