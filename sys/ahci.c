@@ -121,3 +121,25 @@ void rebase(hba_port_t *port, int port_number){
 	}
 	start_cmd(port);
 }
+
+int write_sectors(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count){
+	port->is = (uint32_t)(-1);
+	int spin = 0;
+	int spin = findFreeSlot(port);
+	if (slot == -1) return 0;
+	hba_cmd_header *cmdheader = (uint64_t)port->clb;
+	cmdheader += slot;
+	cmdheader->cfl = sizeof(FIS_REG_H2D)/sizeof(uint32_t); // no idea
+	cmdheader->w = 1; // we must write
+	cmheader->prdtl = (uint16_t)((count-1)>>4) + 1; // count: 799.. prdtl is 51
+	// sector size 512 bytes
+	// 4KB block => 4 * 1024 = 4096 bytes
+	// therefore, sector count is 4096/512 = 8 sectors
+	// since, there are 100 4KB blocks, we need 8 * 100 = 800 sectors
+	// now that count = 800, then i suppose prdtl = ((800-1)/16) + 1
+
+	// But each PRDT entry reads 16sectors => 8192 bytes.
+}
+
+
+
