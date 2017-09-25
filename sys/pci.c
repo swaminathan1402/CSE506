@@ -38,19 +38,19 @@ uint16_t pciConfigReadWord(uint8_t bus, uint8_t slot, uint8_t func , uint8_t off
 
 	outl (0xCF8, address);
 	tmp =(uint16_t)((inl(0xCFC)>> ((offset&2)*8)) & 0xffff);
-	return (tmp);
+	return tmp;
 }
 
 void pciConfigWriteWord(uint8_t bus, uint8_t slot, uint8_t func , uint8_t offset)
 {
 	uint32_t address;
 	uint32_t lbus= (uint32_t)bus;
-	uint32_t lslot =(uint32_t)slot;
-	uint32_t lfunc =(uint32_t)func; 
+	uint32_t lslot = (uint32_t)slot;
+	uint32_t lfunc = (uint32_t)func; 
 	address=(uint32_t)((lbus<<16)|(lslot<<11)|(lfunc<<8)|(offset&0xfc)|((uint32_t)0x80000000));
 
 	outl (0xCF8, address);
-	outl(0xCFC, 0x300000);  // 0x100000
+	outl (0xCFC, 0x10000000);  // 0x100000
 }
 
 uint16_t pciCheckVendor(uint8_t bus, uint8_t slot,uint8_t function)
@@ -100,7 +100,7 @@ uint32_t pciCheckBarFive(uint8_t bus, uint8_t device)
 {
 	uint32_t lbarfive_hi,lbarfive_lo;
 	uint32_t barfive;
-	lbarfive_lo=pciConfigReadWord(bus, device,0,0x24);
+	lbarfive_lo= pciConfigReadWord(bus, device,0,0x24);
 	lbarfive_hi= pciConfigReadWord(bus,device,0,0x26);
 	barfive = (uint32_t)(lbarfive_lo |(lbarfive_hi<<16)); 	
 	return barfive;
@@ -117,12 +117,14 @@ if(function==0)
 	{
             	if(pciCheckProgIF(bus,device)==0x01 )
 		 {	
-				uint16_t deviceID= pciCheckDevice(bus,device);
+				uint16_t deviceID = pciCheckDevice(bus,device);
 				kprintf("\nAHCI DeviceID :%d",(int)deviceID);
 				kprintf("\nBus: %d",(int)bus);
 				kprintf("\nDevice: %d\n",(int)device);
+
 				pciConfigWriteWord(bus, device, 0, 0x24);
 				uint64_t abar5 = (uint64_t)pciCheckBarFive(bus,device);
+
 				hba_mem_t *abar = (hba_mem_t *)abar5;	
 				*ahci_mem_base = abar;
 				//kprintf("%p\n", abar);

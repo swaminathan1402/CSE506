@@ -97,7 +97,6 @@ void rebase(hba_port_t *port, int port_number){
 	// size => 32 * 32 = 1K
 	port->clb = AHCI_BASE + (port_number << 10);
 	memset((void *)(port->clb), 0, 1024);
-
 	// each port size is 1K
 	// our FIS offset will be 32 * 1K = 32K
 	// each fis port size is 256 bytes: tagHBA_FIS in osdev
