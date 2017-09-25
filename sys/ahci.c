@@ -38,7 +38,6 @@ return 0;
 void probe_AHCI(hba_mem_t *abar)
 {
 uint32_t pi = abar->pi;
-kprintf("the pi value %p\n", pi);
 int i=0;
       while (i<32)
        {       
@@ -71,13 +70,13 @@ int i=0;
 	}
 }
 
-void stop_cmd(hba_port_t *port){
+void start_cmd(hba_port_t *port){
 	while(port->cmd & HBA_PxCMD_CR);
 	port->cmd |= HBA_PxCMD_FRE;
 	port->cmd |= HBA_PxCMD_ST;	
 }
 
-void start_cmd(hba_port_t *port){
+void stop_cmd(hba_port_t *port){
 	port->cmd &= ~HBA_PxCMD_ST;
 	while(1){
 		if(port->cmd & HBA_PxCMD_FR)
@@ -90,7 +89,7 @@ void start_cmd(hba_port_t *port){
 }
 
 void rebase(hba_port_t *port, int port_number){
-	stop_cmd(port); // telling the port to not to listen for any FIS 
+	stop_cmd(port); // telling the port to not to listen for any FIS 	
 	// each port should be 1K aligned =>
 	// Each port has 32 command headers 
 	// and each command header size 32 bytes
