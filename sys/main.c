@@ -45,11 +45,13 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
 	index++;
     }
  }
- int c = 5; 
- int status_write = write(&ahci_mem_base->ports[SATA_PORT], 0, 0, 1, &c);
- int a;
- int status_read = read(&ahci_mem_base->ports[SATA_PORT], 0, 0, 1, &a);
- kprintf("Done writing %d %d %p %p\n", status_read, status_write, a, &c);
+ uint64_t *c = 0x20000000;
+ *c = 2;
+ uint64_t *a = 0x25000000;
+ kprintf("%p:c\n%p:a\n", c, a);
+ int status_write = write(&ahci_mem_base->ports[SATA_PORT], 0, 0, 1, c);
+ int status_read = read(&ahci_mem_base->ports[SATA_PORT], 0, 0, 1, a);
+ kprintf("Done writing %d %d %d %d\n", status_read, status_write, a, c);
  /*
 for (int i=0 ;i < 90 ;i++ ){
  __asm__ ("int $32");

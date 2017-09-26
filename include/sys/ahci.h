@@ -346,6 +346,6 @@ void stop_cmd(hba_port_t *port);
 void start_cmd(hba_port_t *port);
 void rebase(hba_port_t *port, int portno);
 int find_cmdslot(hba_port_t *port);
-int read(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count, int *buffer);
-int write(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count, int *buffer);
+int read(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count, uint16_t *buffer);
+int write(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count, uint16_t *buffer);
 #endif
