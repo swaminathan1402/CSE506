@@ -51,12 +51,6 @@ int i=0;
 			if (dt ==AHCI_DEV_SATA){
 
 				kprintf("SATA drive found at port %d\n",i);
-				rebase(&abar->ports[i],0);
-				
-				write_ahci(&abar->ports[i],100 );
-				read_ahci(&abar->ports[i],)
-				
-
 				return;
 			}
 			else if(dt ==AHCI_DEV_SATAPI)
@@ -175,7 +169,7 @@ int write_sectors(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t c
 	// But each PRDT entry reads 16sectors => 8192 bytes.
 }
 */
-
+/*
 int  read(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count, uint16_t* buffer){
      port->is_rwc = (uint32_t) -1; //CLear pending interrupts
      int slot = find_cmdslot(port);
@@ -261,9 +255,9 @@ int  read(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count, ui
   
  	return 1;
  }
-
-int  write(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count){
-     port->is_rwc = (uint32_t) -1; //CLear pending interrupts
+*/
+int write(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count, int *buffer){
+      port->is_rwc = (uint32_t) -1; //CLear pending interrupts
      int slot = find_cmdslot(port);
      if(slot == -1){
          return -1;
@@ -280,7 +274,6 @@ int  write(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count){
  
      // 8K bytes (16 sectors) per PRDT
      int i=0;
-     uint8_t buffer[1024]={7};
     // uint64_t buf = (uint64_t)buffer;
      for ( i=0; i<cmdheader->prdtl; i++){
 		

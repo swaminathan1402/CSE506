@@ -35,6 +35,17 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
     rebase(&(ahci_mem_base->ports[i]) ,i);
  }
  kprintf("Rebased!\n");
+ 
+ int buffer[409601];
+ int index = 0;
+ for(int i=0; i<100; i++){
+    for(int j=0; j<4096; j++){
+	buffer[index] =i;
+	index++;
+    }
+ }
+ 
+ write(&ahci_mem_base->ports[SATA], 0x20000000, 0x25000000, 800, buffer);  // count parameter is 8 because: 409600/512 = 800sectors
 
  /*
 for (int i=0 ;i < 90 ;i++ ){

@@ -345,4 +345,6 @@ void probe_AHCI(hba_mem_t * abar);
 void stop_cmd(hba_port_t *port);
 void start_cmd(hba_port_t *port);
 void rebase(hba_port_t *port, int portno);
+int find_cmdslot(hba_port_t *port);
+int write(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count);
 #endif
