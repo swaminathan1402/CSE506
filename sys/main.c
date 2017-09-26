@@ -45,9 +45,11 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
 	index++;
     }
  }
- 
- write(&ahci_mem_base->ports[SATA_PORT], 0, 0, 1, buffer);  // count parameter is 8 because: 409600/512 = 800sectors
- kprintf("Done writing \n");
+ int c = 5; 
+ int status_write = write(&ahci_mem_base->ports[SATA_PORT], 0, 0, 1, &c);
+ int a;
+ int status_read = read(&ahci_mem_base->ports[SATA_PORT], 0, 0, 1, &a);
+ kprintf("Done writing %d %d %p %p\n", status_read, status_write, a, &c);
  /*
 for (int i=0 ;i < 90 ;i++ ){
  __asm__ ("int $32");
