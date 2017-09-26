@@ -126,6 +126,22 @@ void rebase(hba_port_t *port, int port_number){
 	start_cmd(port);
 }
 
+// Find a free command list slot
+int find_cmdslot(hba_port_t *port)
+{
+	// If not set in SACT and CI, the slot is free
+	uint32_t slots = (port->sact | port->ci);
+	int cmdslots = 32;
+	for (int i=0; i<cmdslots; i++)
+	{
+		if ((slots&1) == 0)
+			return i;
+		slots >>= 1;
+	}
+	kprintf("Cannot find free command list entry\n");
+	return -1;
+}
+
 int  write(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count, uint16_t* buffer){
     port->is_rwc = (uint32_t) -1; //CLear pending interrupts
     int slot = find_cmdslot(port);
@@ -136,7 +152,7 @@ int  write(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count, u
     hba_cmd_header_t *cmdheader = (hba_cmd_header_t*)port->clb;
     cmdheader += slot;
     cmdheader->cfl = sizeof(fis_reg_h2d_t)/sizeof(uint32_t);	// Command FIS size
-    cmdheader->w = 0;		// Write to  device
+    cmdheader->w = 1;		// Write to  device
     cmdheader->prdtl = (uint16_t)((count-1)>>4) + 1;	// PRDT entries count
 
     hba_cmd_tbl_t *cmdtbl = (hba_cmd_tbl_t*)(cmdheader->ctba);
@@ -212,19 +228,89 @@ int  write(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count, u
 	return 1;
 }
  
-// Find a free command list slot
-int find_cmdslot(hba_port_t *port)
-{
-	// If not set in SACT and CI, the slot is free
-	uint32_t slots = (port->sact | port->ci);
-	int cmdslots = 32;
-	for (int i=0; i<cmdslots; i++)
-	{
-		if ((slots&1) == 0)
-			return i;
-		slots >>= 1;
-	}
-	kprintf("Cannot find free command list entry\n");
-	return -1;
-}
+int  read(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count, uint16_t* buffer){
+    port->is_rwc = (uint32_t) -1; //CLear pending interrupts
+    int slot = find_cmdslot(port);
+    if(slot == -1){
+        return -1;
+    }
+    
+    hba_cmd_header_t *cmdheader = (hba_cmd_header_t*)port->clb;
+    cmdheader += slot;
+    cmdheader->cfl = sizeof(fis_reg_h2d_t)/sizeof(uint32_t);	// Command FIS size
+    cmdheader->w = 0;		// Write to  device
+    cmdheader->prdtl = (uint16_t)((count-1)>>4) + 1;	// PRDT entries count
 
+    hba_cmd_tbl_t *cmdtbl = (hba_cmd_tbl_t*)(cmdheader->ctba);
+    memset(cmdtbl, 0, sizeof(hba_cmd_tbl_t) + (cmdheader->prdtl-1)*sizeof(hba_prdt_entry_t));
+
+    // 8K bytes (16 sectors) per PRDT
+    int i=0;
+    uint64_t buf = (uint64_t)buffer;
+    for ( i=0; i<cmdheader->prdtl-1; i++){
+            cmdtbl->prdt_entry[i].dba = (uint32_t)buf;
+            cmdtbl->prdt_entry[i].dbc = 8*1024;	// 8K bytes
+            cmdtbl->prdt_entry[i].i = 1;
+            buf += 4*1024;	// 4K words
+            count -= 16;	// 16 sectors
+	}
+	// Last entry
+	cmdtbl->prdt_entry[i].dba = (uint32_t)buf;
+	cmdtbl->prdt_entry[i].dbc = count<<9;	// 512 bytes per sector
+	cmdtbl->prdt_entry[i].i = 1;           // check this!!
+ 
+	// Setup command
+	fis_reg_h2d_t *cmdfis = (fis_reg_h2d_t*)(&cmdtbl->cfis);
+ 
+	//cmdfis->fis_type = fis_type_t.FIS_TYPE_REG_H2D;
+	cmdfis->fis_type = FIS_TYPE_REG_H2D;
+	cmdfis->c = 1;	// Command
+	cmdfis->command = ATA_CMD_READ_DMA_EX;
+ 
+	cmdfis->lba0 = (uint8_t)startl;
+	cmdfis->lba1 = (uint8_t)(startl>>8);
+	cmdfis->lba2 = (uint8_t)(startl>>16);
+	cmdfis->device = 1<<6;	// LBA mode
+ 
+	cmdfis->lba3 = (uint8_t)(startl>>24);
+	cmdfis->lba4 = (uint8_t)starth;
+	cmdfis->lba5 = (uint8_t)(starth>>8);
+ 
+	cmdfis->count = count;
+	int spin = 0;
+ 
+	// The below loop waits until the port is no longer busy before issuing a new command
+	while ((port->tfd & (ATA_STATUS_BSY | ATA_STATUS_DRQ)) && spin < 1000000)
+	{
+		spin++;
+	}
+	if (spin == 1000000)
+	{
+		kprintf("Port is hung\n");
+		return -1;
+	}
+ 
+	port->ci = 1<<slot;	// Issue command
+ 
+	// Wait for completion
+	while (1)
+	{
+		if ((port->ci & (1<<slot)) == 0) 
+			break;
+		if (port->is_rwc & HBA_PxIS_TFES)	// Task file error
+		{
+			kprintf("Read disk error\n");
+			return -1;
+		}
+	}
+ 
+	// Check again
+	if (port->is_rwc & HBA_PxIS_TFES)
+	{
+		kprintf("Read disk error\n");
+		return -1;
+	}
+ 
+	return 1;
+}
+ 

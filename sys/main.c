@@ -28,7 +28,7 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   }
  kprintf("physfree %p\n", (uint64_t)physfree);
  kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
- bruteForcePCIcheckAHCI(&ahci_mem_base);
+int SATA_PORT =  bruteForcePCIcheckAHCI(&ahci_mem_base);
  ahci_mem_base->ghc |= (0x01);
  ahci_mem_base->ghc |= (1<<31);
  ahci_mem_base->ghc |= (0x02);
@@ -38,7 +38,8 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
     //kprintf("babe is rebasing %d\n", i);
  }
  kprintf("pi value %p\n", ahci_mem_base->pi);
-
+char *buffer = "Hello World\n";
+write(&ahci_mem_base->ports[SATA_PORT], 0, 0, 1, buffer);
  /*
 for (int i=0 ;i < 90 ;i++ ){
  __asm__ ("int $32");
