@@ -149,7 +149,7 @@ void rebase(hba_port_t *port, int port_number){
  	return -1;
  }
 
-int read(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count, uint16_t *buf)
+int read(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count, uint64_t *buf)
 {
 	port->is_rwc = (uint32_t)-1;		// Clear pending interrupt bits
 	int spin = 0; // Spin lock timeout counter
@@ -174,7 +174,7 @@ int read(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count, uin
 		cmdtbl->prdt_entry[i].dba = (uint64_t)buf;
 		cmdtbl->prdt_entry[i].dbc = 8*1024;	// 8K bytes
 		cmdtbl->prdt_entry[i].i = 1;
-		buf += 4*1024;	// 4K words
+		buf += 1024;	// 4K words
 		count -= 16;	// 16 sectors
 	}
 	// Last entry
@@ -236,7 +236,7 @@ int read(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count, uin
 	return 1;
 }
 
-int write(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count, uint16_t *buf)
+int write(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count, uint64_t *buf)
 {
 	port->is_rwc = (uint32_t)-1;		// Clear pending interrupt bits
 	int spin = 0; // Spin lock timeout counter
@@ -261,7 +261,7 @@ int write(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count, ui
 		cmdtbl->prdt_entry[i].dba = (uint64_t)buf;
 		cmdtbl->prdt_entry[i].dbc = 8*1024;	// 8K bytes
 		cmdtbl->prdt_entry[i].i = 1;
-		buf += 4*1024;	// 4K words
+		buf += 1024;	// 4K words
 		count -= 16;	// 16 sectors
 	}
 	// Last entry

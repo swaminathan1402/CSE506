@@ -12,6 +12,14 @@ uint32_t* loader_stack;
 extern char kernmem, physbase;
 
 hba_mem_t *ahci_mem_base;
+void *memset1(void *array, int c, size_t n){
+    unsigned char* temp = array;
+    while(n--){
+        *temp++ = (unsigned char)c;
+    }
+    return array;
+
+}
 
 void start(uint32_t *modulep, void *physbase, void *physfree)
 {
@@ -37,24 +45,37 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
  }
  kprintf("Rebased!\n");
  
- int buffer[409601];
- int index = 0;
- for(int i=0; i<100; i++){
-    for(int j=0; j<4096; j++){
-	buffer[index] =i;
-	index++;
-    }
- }
- int val = 1;
  //uint64_t *c = 0x30000000;
- uint64_t *c = 0x3000000;
- uint64_t *a = 0x2500000;
- *c = 5;
- kprintf("%p:c\n%p:a\n", c, a);
- kprintf("%d\n", *c);
- int status_write = write(&ahci_mem_base->ports[SATA_PORT], 0, 0, 1, c);
- int status_read = read(&ahci_mem_base->ports[SATA_PORT], 0, 0, 1, a);
- kprintf("Done writing %d %d %d %d\n", status_read, status_write, *a, *c);
+ uint64_t *c = (uint64_t *)0x7009000;
+ uint64_t *a = (uint64_t *)0x2500000;
+ //*c = 5;
+ /*
+ memset1(c, 1, 1* 1024*sizeof(c));
+ int status_write = write(&ahci_mem_base->ports[SATA_PORT], 9, 0, 16, c);
+ int status_read = read(&ahci_mem_base->ports[SATA_PORT], 9, 0, 16, a);
+
+ memset1(c, 2, 1* 1024*sizeof(c));
+ status_write = write(&ahci_mem_base->ports[SATA_PORT], 1, 0, 16, c);
+ status_read = read(&ahci_mem_base->ports[SATA_PORT], 1, 0, 16, a+1024);
+
+ memset1(c, 3, 1* 1024*sizeof(c));
+ status_write = write(&ahci_mem_base->ports[SATA_PORT], 3, 0, 16, c);
+ status_read = read(&ahci_mem_base->ports[SATA_PORT], 3, 0, 16, a+1024+1024);
+
+ memset1(c, 4, 1* 1024*sizeof(c));
+ status_write = write(&ahci_mem_base->ports[SATA_PORT], 4, 0, 16, c);
+ status_read = read(&ahci_mem_base->ports[SATA_PORT], 4, 0, 16, a+1024+1024+1024);
+ */
+ for(int i=0; i<100; i++){
+  for(int j=0; j<4; j++){
+	 memset1(c, i, 1* 1024*sizeof(c));
+	 write(&ahci_mem_base->ports[SATA_PORT], 4*i+j, 0, 16, c);
+	 read(&ahci_mem_base->ports[SATA_PORT], 4*i+j, 0, 16, a+(1024*(4*i+j)));
+  }
+ }
+ for(int i=0; i<400*1024; i++){
+    kprintf("%d \t", (uint8_t)a[i]);
+ }
  /*
 for (int i=0 ;i < 90 ;i++ ){
  __asm__ ("int $32");
