@@ -60,48 +60,48 @@ uint16_t pciCheckVendor(uint8_t bus, uint8_t slot,uint8_t function)
 	return vendor;
 }
 
-uint16_t pciCheckDevice(uint8_t bus, uint8_t slot)
+uint16_t pciCheckDevice(uint8_t bus, uint8_t slot,uint8_t function)
 {
 	uint16_t deviceID;
-	deviceID =pciConfigReadWord(bus,slot,0,2);
+	deviceID =pciConfigReadWord(bus,slot,function,2);
 	return deviceID;
 }
 
-uint8_t pciCheckBaseClass(uint8_t bus, uint8_t slot)
+uint8_t pciCheckBaseClass(uint8_t bus, uint8_t slot, uint8_t function)
 {
 	uint8_t class;
 	uint16_t classinfo;
-	classinfo =pciConfigReadWord(bus,slot,0x0,0x0A); 
+	classinfo =pciConfigReadWord(bus,slot,function,0x0A); 
 	class =(uint8_t)((classinfo & 0xff00)>>8);
 	return class;
 }
 
-uint8_t pciCheckProgIF(uint8_t bus, uint8_t slot)
+uint8_t pciCheckProgIF(uint8_t bus, uint8_t slot,uint8_t function)
 {
 	uint8_t prog;
 	uint16_t classinfo;
-	classinfo =pciConfigReadWord(bus,slot,0x0,0x08); 
+	classinfo =pciConfigReadWord(bus,slot,function,0x08); 
 	prog =(uint8_t)((classinfo & 0xff00)>>8);
 	return prog;
 }
 
 
 
-uint8_t pciCheckSubClass(uint8_t bus, uint8_t slot )
+uint8_t pciCheckSubClass(uint8_t bus, uint8_t slot, uint8_t function )
 {
 	uint8_t subclass;
 	uint16_t classinfo;
-	classinfo =pciConfigReadWord(bus,slot,0,0x0A); 
+	classinfo =pciConfigReadWord(bus,slot,function,0x0A); 
 	subclass =(uint8_t)((classinfo & 0x00ff));
 	return subclass;
 }
 
-uint32_t pciCheckBarFive(uint8_t bus, uint8_t device)
+uint32_t pciCheckBarFive(uint8_t bus, uint8_t device,uint8_t function)
 {
 	uint32_t lbarfive_hi,lbarfive_lo;
 	uint32_t barfive;
-	lbarfive_lo= pciConfigReadWord(bus, device,0,0x24);
-	lbarfive_hi= pciConfigReadWord(bus,device,0,0x26);
+	lbarfive_lo= pciConfigReadWord(bus, device,function,0x24);
+	lbarfive_hi= pciConfigReadWord(bus,device,function,0x26);
 	barfive = (uint32_t)(lbarfive_lo |(lbarfive_hi<<16)); 	
 	return barfive;
 }
@@ -113,18 +113,19 @@ int pciCheckFunction (uint8_t bus, uint8_t device, uint8_t function, hba_mem_t *
 //kprintf("%d\t ",bus);
 //kprintf("%d \t", device);
 
-if(function==0)	
-{	if(pciCheckBaseClass(bus, device)==0x01 &&  pciCheckSubClass(bus,device)==0x06)
+//if(function==0)	
+//{	
+	if(pciCheckBaseClass(bus, device,function)==0x01 &&  pciCheckSubClass(bus,device,function)==0x06)
 	{
-            	if(pciCheckProgIF(bus,device)==0x01 )
+            	if(pciCheckProgIF(bus,device,function)==0x01 )
 		 {	
-				uint16_t deviceID = pciCheckDevice(bus,device);
+				uint16_t deviceID = pciCheckDevice(bus,device,function);
 				kprintf("\nAHCI DeviceID :%d",(int)deviceID);
 				kprintf("\nBus: %d",(int)bus);
 				kprintf("\nDevice: %d\n",(int)device);
 
-				pciConfigWriteWord(bus, device, 0, 0x24);
-				uint64_t abar5 = (uint64_t)pciCheckBarFive(bus,device);
+				pciConfigWriteWord(bus, device, function, 0x24);
+				uint64_t abar5 = (uint64_t)pciCheckBarFive(bus,device,function);
 
 				hba_mem_t *abar = (hba_mem_t *)abar5;	
 				*ahci_mem_base = abar;
@@ -132,7 +133,7 @@ if(function==0)
 			    	 return probe_AHCI(abar);
 		}
 	}
-}
+//}
 return -1 ;
 }
 

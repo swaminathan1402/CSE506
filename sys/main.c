@@ -70,7 +70,12 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   for(int j=0; j<4; j++){
 	 memset1(c, i, 1* 1024*sizeof(c));
 	 write(&ahci_mem_base->ports[SATA_PORT], 4*i+j, 0, 16, c);
-	 read(&ahci_mem_base->ports[SATA_PORT], 4*i+j, 0, 16, a+(1024*(4*i+j)));
+	 //read(&ahci_mem_base->ports[SATA_PORT], 4*i+j, 0, 16, a+(1024*(4*i+j)));
+  }
+ }
+ for(int i=0; i<100; i++){
+  for(int j=0; j<4; j++){
+    read(&ahci_mem_base->ports[SATA_PORT], 4*i+j, 0, 16, a+(1024*(4*i+j)));
   }
  }
  for(int i=0; i<400*1024; i++){
