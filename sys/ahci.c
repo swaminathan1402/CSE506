@@ -39,45 +39,52 @@ return 0;
 }
 
 
-void probe_AHCI(hba_mem_t *abar)
+int probe_AHCI(hba_mem_t *abar)
 {
 uint32_t pi = abar->pi;
 int i=0;
+int count =0;
       while (i<32)
        {       
      		 if(pi & 1)
 		{
 			int dt =check_type(&abar ->ports[i]);		
 			if (dt ==AHCI_DEV_SATA){
-
+				
 				kprintf("SATA drive found at port %d\n",i);
-				rebase(&abar->ports[i],0);
+		
+
+			//	rebase(&abar->ports[i],0);
 				
-				write_ahci(&abar->ports[i],100 );
-				read_ahci(&abar->ports[i],)
+			//	write_ahci(&abar->ports[i],100 );
+			//	read_ahci(&abar->ports[i],)
 				
 
-				return;
+			//	return;
 			}
 			else if(dt ==AHCI_DEV_SATAPI)
 			{
 				kprintf("SATAPI drive found at port %d\n",i);	
-	                	return;
+	                 //	return;
 			}
 			else if(dt==AHCI_DEV_SEMB)
 			{
 				kprintf("SEMB drive found at port %d\n",i);
-				 return;
+				// return;
 			}
 			else if(dt ==AHCI_DEV_PM )
 			{
 				kprintf("PM drive found at port %d\n",i);	 
-                                return;
+                             //   return;
 			}
 		}
+		count++;
+		if(count==2)
+		{return i;}
 		pi>>=1;
 		i++;
 	}
+return -1;
 }
 
 void start_cmd(hba_port_t *port){
@@ -280,11 +287,11 @@ int  write(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count){
  
      // 8K bytes (16 sectors) per PRDT
      int i=0;
-     uint8_t buffer[1024]={7};
+    // uint8_t buffer[1024]={7};
     // uint64_t buf = (uint64_t)buffer;
      for ( i=0; i<cmdheader->prdtl; i++){
 		
-             cmdtbl->prdt_entry[i].dba =buffer ;
+            // cmdtbl->prdt_entry[i].dba =buffer ;
              cmdtbl->prdt_entry[i].dbc = 8*1024;	// 8K bytes
              cmdtbl->prdt_entry[i].i = 1;
 	     	

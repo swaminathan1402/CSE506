@@ -12,6 +12,7 @@ uint32_t* loader_stack;
 extern char kernmem, physbase;
 
 hba_mem_t *ahci_mem_base;
+int port;
 
 void start(uint32_t *modulep, void *physbase, void *physfree)
 {
@@ -28,8 +29,9 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   }
  kprintf("physfree %p\n", (uint64_t)physfree);
  kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
- bruteForcePCIcheckAHCI(&ahci_mem_base);
- ahci_mem_base->ghc = ahci_mem_base->ghc | 0x01;
+ port=bruteForcePCIcheckAHCI(&ahci_mem_base);
+ kprintf("\nPort returned to main :%d", port); 
+ahci_mem_base->ghc = ahci_mem_base->ghc | 0x01;
  ahci_mem_base->ghc |= 0x02;
  for(int i=0; i<32; i++){
     rebase(&(ahci_mem_base->ports[i]) ,i);
