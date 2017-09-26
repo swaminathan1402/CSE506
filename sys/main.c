@@ -28,7 +28,8 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   }
  kprintf("physfree %p\n", (uint64_t)physfree);
  kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
- bruteForcePCIcheckAHCI(&ahci_mem_base);
+ int SATA_PORT =bruteForcePCIcheckAHCI(&ahci_mem_base);
+ kprintf("\nPort returned to main :%d", SATA_PORT); 
  ahci_mem_base->ghc = ahci_mem_base->ghc | 0x01;
  ahci_mem_base->ghc |= 0x02;
  for(int i=0; i<32; i++){
@@ -45,8 +46,8 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
     }
  }
  
- write(&ahci_mem_base->ports[SATA], 0x20000000, 0x25000000, 800, buffer);  // count parameter is 8 because: 409600/512 = 800sectors
-
+ write(&ahci_mem_base->ports[SATA_PORT], 0, 0, 1, buffer);  // count parameter is 8 because: 409600/512 = 800sectors
+ kprintf("Done writing \n");
  /*
 for (int i=0 ;i < 90 ;i++ ){
  __asm__ ("int $32");

@@ -106,12 +106,13 @@ uint32_t pciCheckBarFive(uint8_t bus, uint8_t device)
 	return barfive;
 }
 
-void pciCheckFunction (uint8_t bus, uint8_t device, uint8_t function, hba_mem_t **ahci_mem_base)
+int pciCheckFunction (uint8_t bus, uint8_t device, uint8_t function, hba_mem_t **ahci_mem_base)
 {
 //kprintf( "\t%d\t%d" ,pciCheckBaseClass(bus, device, function), pciCheckSubClass(bus,device,function));
 
 //kprintf("%d\t ",bus);
 //kprintf("%d \t", device);
+
 if(function==0)	
 {	if(pciCheckBaseClass(bus, device)==0x01 &&  pciCheckSubClass(bus,device)==0x06)
 	{
@@ -128,11 +129,11 @@ if(function==0)
 				hba_mem_t *abar = (hba_mem_t *)abar5;	
 				*ahci_mem_base = abar;
 				//kprintf("%p\n", abar);
-				probe_AHCI(abar);
+			    	 return probe_AHCI(abar);
 		}
 	}
 }
-//return;
+return -1 ;
 }
 
 uint8_t pciCheckHeader(uint8_t bus, uint8_t device)
@@ -145,11 +146,12 @@ return head;
 }
 
 
-void bruteForcePCIcheckAHCI(hba_mem_t **ahci_mem_base)
+int bruteForcePCIcheckAHCI(hba_mem_t **ahci_mem_base)
 {
 uint32_t bus ;
 uint8_t device;
 uint8_t header;
+int port_no=-1;
 //kprintf("Brute force started!!\n");
 for (bus=0; bus<256; bus++)
 	{
@@ -160,14 +162,16 @@ for (bus=0; bus<256; bus++)
 			//kprintf("%d,%d\t" ,bus+1,device+1);
 			if (pciCheckVendor(bus,device,function)!=0xffff)
 			{
-				pciCheckFunction (bus, device,function, ahci_mem_base);
+				port_no=pciCheckFunction (bus, device,function, ahci_mem_base);
+				if(port_no!=-1)
+				return port_no;
 				header=pciCheckHeader(bus, device);
 				if((header & 0x80)==1)	
 				{
 					for(function =1 ;function <8 ;function++)
 					{	
 						if(pciCheckVendor(bus,device,function)!=0xFFFF)
-					 		pciCheckFunction(bus, device,function, ahci_mem_base);		
+					 	port_no=pciCheckFunction(bus, device,function, ahci_mem_base);		
 					}
 				}
 			}	
@@ -176,5 +180,6 @@ for (bus=0; bus<256; bus++)
 	}
 //kprintf("Brute Force ended\n");
 //return;
+return port_no;
 }
 

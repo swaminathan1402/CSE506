@@ -39,39 +39,46 @@ return 0;
 }
 
 
-void probe_AHCI(hba_mem_t *abar)
+int probe_AHCI(hba_mem_t *abar)
 {
 uint32_t pi = abar->pi;
 int i=0;
+int count =0;
       while (i<32)
        {       
      		 if(pi & 1)
 		{
 			int dt =check_type(&abar ->ports[i]);		
 			if (dt ==AHCI_DEV_SATA){
-
+				
 				kprintf("SATA drive found at port %d\n",i);
-				return;
+				count++;
+		
 			}
 			else if(dt ==AHCI_DEV_SATAPI)
 			{
 				kprintf("SATAPI drive found at port %d\n",i);	
-	                	return;
+	                 //	return;
 			}
 			else if(dt==AHCI_DEV_SEMB)
 			{
 				kprintf("SEMB drive found at port %d\n",i);
-				 return;
+				// return;
 			}
 			else if(dt ==AHCI_DEV_PM )
 			{
 				kprintf("PM drive found at port %d\n",i);	 
-                                return;
+                             //   return;
 			}
+		}
+		if(count==2)
+		{
+			return i;
 		}
 		pi>>=1;
 		i++;
 	}
+return -1;
 }
 
 void start_cmd(hba_port_t *port){
@@ -267,7 +274,7 @@ int write(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count, in
      cmdheader += slot;
      cmdheader->cfl = sizeof(fis_reg_h2d_t)/sizeof(uint32_t);	// Command FIS size
      cmdheader->w = 1;		// Write to  device
-     cmdheader->prdtl = 50;	// PRDT entries count
+     cmdheader->prdtl = 100; //50;	// PRDT entries count
  
      hba_cmd_tbl_t *cmdtbl = (hba_cmd_tbl_t*)(cmdheader->ctba);
      memset(cmdtbl, 0, sizeof(hba_cmd_tbl_t) + (cmdheader->prdtl-1)*sizeof(hba_prdt_entry_t));
@@ -277,9 +284,9 @@ int write(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count, in
     // uint64_t buf = (uint64_t)buffer;
      for ( i=0; i<cmdheader->prdtl; i++){
 		
-             cmdtbl->prdt_entry[i].dba =buffer ;
-             cmdtbl->prdt_entry[i].dbc = 8*1024;	// 8K bytes
-             cmdtbl->prdt_entry[i].i = 1;
+            cmdtbl->prdt_entry[i].dba = (uint16_t)buffer;
+            cmdtbl->prdt_entry[i].dbc = 4 * 1024;//8*1024;	// 8K bytes
+            cmdtbl->prdt_entry[i].i = 1;
 	     	
            // buf += 4*1024;	// 4K words
             // count -= 16;	// 16 sectors
