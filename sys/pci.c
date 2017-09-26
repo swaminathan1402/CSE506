@@ -142,37 +142,40 @@ return head;
 
 }
 
-
-void bruteForcePCIcheckAHCI(hba_mem_t **ahci_mem_base)
+int bruteForcePCIcheckAHCI(hba_mem_t **ahci_mem_base)
 {
 uint32_t bus ;
 uint8_t device;
 uint8_t header;
+int port_no=-1;
 //kprintf("Brute force started!!\n");
 for (bus=0; bus<256; bus++)
-	{
+        {   
 
-		for(device=0; device<32;device++)
-		{
-			uint8_t function=0;
-			//kprintf("%d,%d\t" ,bus+1,device+1);
-			if (pciCheckVendor(bus,device,function)!=0xffff)
-			{
-				pciCheckFunction (bus, device,function, ahci_mem_base);
-				header=pciCheckHeader(bus, device);
-				if((header & 0x80)==1)	
-				{
-					for(function =1 ;function <8 ;function++)
-					{	
-						if(pciCheckVendor(bus,device,function)!=0xFFFF)
-					 		pciCheckFunction(bus, device,function, ahci_mem_base);		
-					}
-				}
-			}	
+                for(device=0; device<32;device++)
+                {   
+                        uint8_t function=0;
+                        //kprintf("%d,%d\t" ,bus+1,device+1);
+                        if (pciCheckVendor(bus,device,function)!=0xffff)
+                        {   
+                                port_no=pciCheckFunction (bus, device,function, ahci_mem_base);
+                                if(port_no!=-1)
+                                return port_no;
+                                header=pciCheckHeader(bus, device);
+                                if((header & 0x80)==1)  
+                                {   
+                                        for(function =1 ;function <8 ;function++)
+                                        {    
+                                                if(pciCheckVendor(bus,device,function)!=0xFFFF)
+                                                port_no=pciCheckFunction(bus, device,function, ahci_mem_base);    
+                                        }   
+                                }   
+                        }    
 
-		}		
-	}
+                }    
+        }   
 //kprintf("Brute Force ended\n");
 //return;
+return port_no;
 }
 
