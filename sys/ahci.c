@@ -17,12 +17,12 @@ void *memset(void *array, int c, size_t n){
 
 static int check_type(hba_port_t *port)
 {
- uint32_t ssts= port->ssts;
- uint8_t ipm= (ssts>>8) & 0x0F;
- uint8_t det= ssts & 0x0F; 
+ //uint32_t ssts= port->ssts;
+ //uint8_t ipm= (ssts>>8) & 0x0F;
+ //uint8_t det= ssts & 0x0F; 
 
- if (det && ipm) //Check drive status register
-{
+// if (det && ipm) //Check drive status register
+//{
 	switch (port->sig)
 	{
           case AHCI_DEV_SATAPI:
@@ -34,7 +34,7 @@ static int check_type(hba_port_t *port)
 	   default:
 		return AHCI_DEV_SATA;
 	}	
-}
+//}
 return 0;
 }
 
@@ -42,6 +42,7 @@ return 0;
 int probe_AHCI(hba_mem_t *abar)
 {
 uint32_t pi = abar->pi;
+kprintf("THE PI VALUE: %p\n", abar->pi);
 int i=0;
 int count =0;
       while (i<32)

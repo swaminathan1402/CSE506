@@ -37,15 +37,21 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
  kprintf("physfree %p\n", (uint64_t)physfree);
  kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
  int SATA_PORT =bruteForcePCIcheckAHCI(&ahci_mem_base);
- kprintf("\nPort returned to main :%d", SATA_PORT); 
+ kprintf("\nSATA PORT(using) :%d\n", SATA_PORT); 
+ kprintf("IPM %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts >> 8));
+ kprintf("DET %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts & 0x0F));
+
+ // RESETING
  ahci_mem_base->ghc = ahci_mem_base->ghc | 0x01;
  ahci_mem_base->ghc |= 0x02;
+ // disbale transition to partial and slumber states
+ ahci_mem_base->ports[SATA_PORT].sctl = ahci_mem_base->ports[SATA_PORT].sctl | 0x301;
+
+ //kprintf("Rebase[Started]\n");
  for(int i=0; i<32; i++){
     rebase(&(ahci_mem_base->ports[i]) ,i);
  }
- kprintf("Rebased!\n");
- 
- //uint64_t *c = 0x30000000;
+ kprintf("Rebase[Finished]\n");
  uint64_t *c = (uint64_t *)0x7009000;
  uint64_t *a = (uint64_t *)0x2500000;
  //*c = 5;
@@ -66,26 +72,28 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
  status_write = write(&ahci_mem_base->ports[SATA_PORT], 4, 0, 16, c);
  status_read = read(&ahci_mem_base->ports[SATA_PORT], 4, 0, 16, a+1024+1024+1024);
  */
+
+
+ //kprintf("Writing[Starting]\n");
  for(int i=0; i<100; i++){
-  for(int j=0; j<4; j++){
-	 memset1(c, i, 1* 1024*sizeof(c));
-	 write(&ahci_mem_base->ports[SATA_PORT], 4*i+j, 0, 16, c);
-	 //read(&ahci_mem_base->ports[SATA_PORT], 4*i+j, 0, 16, a+(1024*(4*i+j)));
-  }
+  //for(int j=0; j<4; j++){
+	 memset1(c, i, 1* 512*sizeof(c));
+	 write(&ahci_mem_base->ports[SATA_PORT], i*8, 0, 8, c);
+  //}
  }
+
+ //kprintf("Writing[Finished]\n");
+ //kprintf("Reading[Starting]\n");
  for(int i=0; i<100; i++){
-  for(int j=0; j<4; j++){
-    read(&ahci_mem_base->ports[SATA_PORT], 4*i+j, 0, 16, a+(1024*(4*i+j)));
-  }
+  //for(int j=0; j<4; j++){
+    read(&ahci_mem_base->ports[SATA_PORT], i*8, 0, 8, a+(512*8*i));
+  //}
  }
- for(int i=0; i<400*1024; i++){
-    kprintf("%d \t", (uint8_t)a[i]);
+ //kprintf("Reading[Finished]\n");
+ for(int i=0; i<400*1024; i+=(4*1024)){
+    //kprintf("%d \t", (uint8_t)a[i]); // PRINTING THE CONTENTS READ FROM THE DISK
  }
- /*
-for (int i=0 ;i < 90 ;i++ ){
- __asm__ ("int $32");
-}
-*/
+ kprintf("\n we have successfully read the contents from the disk\n");
  while(1);
 }
 
@@ -108,17 +116,11 @@ void boot(void)
   initScreen();  
   init_pic();
  
- 
- 
- 
- 
-//  bruteForcePCIcheckAHCI(); 
   start(
     (uint32_t*)((char*)(uint64_t)loader_stack[3] + (uint64_t)&kernmem - (uint64_t)&physbase),
     (uint64_t*)&physbase,
     (uint64_t*)(uint64_t)loader_stack[4]
   );
- //bruteForcePCIcheckAHCI();
   for(
     temp1 = "!!!!! start() returned !!!!!", temp2 = (char*)0xb8000;
     *temp1;
