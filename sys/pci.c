@@ -116,11 +116,9 @@ int pciCheckFunction (uint8_t bus, uint8_t device, uint8_t function, hba_mem_t *
 
 //if(function==0)	
 //{
-	if(function != 0)
-		kprintf("MULTI FUNCTION\n");
-	
 	if(pciCheckBaseClass(bus, device,function)==0x01 &&  pciCheckSubClass(bus,device,function)==0x06)
 	{
+		kprintf("HEY MAN IT COMES HERE %d, %d, %d\n", bus, device, function);
             	if(pciCheckProgIF(bus,device,function)==0x01 )
 		 {	
 				uint16_t deviceID = pciCheckDevice(bus,device,function);
@@ -170,16 +168,18 @@ for (bus=0; bus<256; bus++)
 				port_no=pciCheckFunction (bus, device,function, ahci_mem_base, addr);
 				if(port_no!=-1)	return port_no;
 				header=pciCheckHeader(bus, device);
-				if((header & 0x80)==1)	
+				if((header & 0x80) != 0)	
 				{
-					kprintf("Does it even come here\n");
 					for(function =1 ;function <8 ;function++)
 					{	
-						if(pciCheckVendor(bus,device,function)!=0xFFFF)
-					 	port_no=pciCheckFunction(bus, device,function, ahci_mem_base, addr);
-						if(port_no != -1) return port_no;	
+						//if(pciCheckVendor(bus,device,function)!=0xFFFF)
+					 	port_no=pciCheckFunction(bus, device,function, ahci_mem_base, addr);		
+						if(port_no!=-1)
+						return port_no;
 					}
 				}
+			} else {
+				//kprintf("NO DEVICE \n");
 			}	
 
 		}		
