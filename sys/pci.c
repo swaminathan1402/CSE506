@@ -41,7 +41,7 @@ uint16_t pciConfigReadWord(uint8_t bus, uint8_t slot, uint8_t func , uint8_t off
 	return tmp;
 }
 
-void pciConfigWriteWord(uint8_t bus, uint8_t slot, uint8_t func , uint8_t offset)
+void pciConfigWriteWord(uint8_t bus, uint8_t slot, uint8_t func , uint8_t offset, uint32_t addr)
 {
 	uint32_t address;
 	uint32_t lbus= (uint32_t)bus;
@@ -51,7 +51,7 @@ void pciConfigWriteWord(uint8_t bus, uint8_t slot, uint8_t func , uint8_t offset
 
 	outl (0xCF8, address);
 	// outl (0xCFC, 0x10000000);  // 0x100000
-	outl (0xCFC, 0x10000000);
+	outl (0xCFC, addr);
 }
 
 uint16_t pciCheckVendor(uint8_t bus, uint8_t slot,uint8_t function)
@@ -107,7 +107,7 @@ uint32_t pciCheckBarFive(uint8_t bus, uint8_t device,uint8_t function)
 	return barfive;
 }
 
-int pciCheckFunction (uint8_t bus, uint8_t device, uint8_t function, hba_mem_t **ahci_mem_base)
+int pciCheckFunction (uint8_t bus, uint8_t device, uint8_t function, hba_mem_t **ahci_mem_base, uint32_t addr)
 {
 //kprintf( "\t%d\t%d" ,pciCheckBaseClass(bus, device, function), pciCheckSubClass(bus,device,function));
 
@@ -125,7 +125,7 @@ int pciCheckFunction (uint8_t bus, uint8_t device, uint8_t function, hba_mem_t *
 				kprintf("\nBus: %d",(int)bus);
 				kprintf("\nDevice: %d\n",(int)device);
 
-				pciConfigWriteWord(bus, device, function, 0x24);
+				pciConfigWriteWord(bus, device, function, 0x24, addr);
 				uint64_t abar5 = (uint64_t)pciCheckBarFive(bus,device,function);
 
 				hba_mem_t *abar = (hba_mem_t *)abar5;	
@@ -148,7 +148,7 @@ return head;
 }
 
 
-int bruteForcePCIcheckAHCI(hba_mem_t **ahci_mem_base)
+int bruteForcePCIcheckAHCI(hba_mem_t **ahci_mem_base, uint32_t addr)
 {
 uint32_t bus ;
 uint8_t device;
@@ -164,7 +164,7 @@ for (bus=0; bus<256; bus++)
 			//kprintf("%d,%d\t" ,bus+1,device+1);
 			if (pciCheckVendor(bus,device,function)!=0xffff)
 			{
-				port_no=pciCheckFunction (bus, device,function, ahci_mem_base);
+				port_no=pciCheckFunction (bus, device,function, ahci_mem_base, addr);
 				if(port_no!=-1)
 				return port_no;
 				header=pciCheckHeader(bus, device);
@@ -173,7 +173,7 @@ for (bus=0; bus<256; bus++)
 					for(function =1 ;function <8 ;function++)
 					{	
 						if(pciCheckVendor(bus,device,function)!=0xFFFF)
-					 	port_no=pciCheckFunction(bus, device,function, ahci_mem_base);		
+					 	port_no=pciCheckFunction(bus, device,function, ahci_mem_base, addr);		
 					}
 				}
 			}	

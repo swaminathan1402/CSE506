@@ -36,7 +36,9 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   }
  kprintf("physfree %p\n", (uint64_t)physfree);
  kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
- int SATA_PORT =bruteForcePCIcheckAHCI(&ahci_mem_base);
+
+ int SATA_PORT;
+ SATA_PORT = bruteForcePCIcheckAHCI(&ahci_mem_base, 0xb0000);
  kprintf("\nSATA PORT(using) :%d\n", SATA_PORT); 
  kprintf("IPM %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts >> 8));
  kprintf("DET %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts & 0x0F));
