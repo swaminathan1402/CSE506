@@ -42,12 +42,23 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
  kprintf("\nSATA PORT(using) :%d\n", SATA_PORT); 
  kprintf("IPM BEFORE: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts >> 8));
  kprintf("DET BEFORE: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts & 0x0F));
- //ahci_mem_base->ports[SATA_PORT].sctl = ahci_mem_base->ports[SATA_PORT].sctl | 0x300;
+ ahci_mem_base->ports[SATA_PORT].sctl = ahci_mem_base->ports[SATA_PORT].sctl | 0x300;
  //ahci_mem_base->ports[SATA_PORT].sctl = ahci_mem_base->ports[SATA_PORT].sctl | 0x01;
 
+while(ahci_mem_base->ports[SATA_PORT].cmd>>28!=0x0)
+{// wait for ahci_mem_base. icc to become 0x0 in order to change its value.
+}
 
  ahci_mem_base->ports[SATA_PORT].cmd = ahci_mem_base->ports[SATA_PORT].cmd | (1 << 28);
- kprintf("IPM AFTER: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts >> 8));
+//Set icc to 0x1 for ipm to transition to active state
+
+while (ahci_mem_base->ports[SATA_PORT].cmd>>28!=0x0) 
+{
+//Wait for ahci_mem_base.icc to become 0x0 again so that indicates the active transition has already happened.
+}
+
+//Hopefully this should show IPM becoming 0x1
+kprintf("IPM AFTER: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts >> 8));
  kprintf("DET AFTER: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts & 0x0F));
  // RESETING
  //ahci_mem_base->ghc = ahci_mem_base->ghc | 0x01;
