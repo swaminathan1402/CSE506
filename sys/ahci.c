@@ -43,8 +43,8 @@ int probe_AHCI(hba_mem_t *abar)
 {
 uint32_t pi = abar->pi;
 kprintf("THE PI VALUE: %p\n", abar->pi);
+int count = 0;
 int i=0;
-int count =0;
       while (i<32)
        {       
      		 if(pi & 1)
@@ -59,21 +59,23 @@ int count =0;
 			else if(dt ==AHCI_DEV_SATAPI)
 			{
 				kprintf("SATAPI drive found at port %d\n",i);	
+				count++;
 	                 //	return;
 			}
 			else if(dt==AHCI_DEV_SEMB)
 			{
 				kprintf("SEMB drive found at port %d\n",i);
+				count++;
 				// return;
 			}
 			else if(dt ==AHCI_DEV_PM )
 			{
 				kprintf("PM drive found at port %d\n",i);	 
+				count++;
                              //   return;
 			}
 		}
-		if(count==2)
-		{
+		if(count == 1){
 			return i;
 		}
 		pi>>=1;
