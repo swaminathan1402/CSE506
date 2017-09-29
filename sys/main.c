@@ -50,7 +50,6 @@ while(ahci_mem_base->ports[SATA_PORT].cmd>>28!=0x0)
 {// wait for ahci_mem_base. icc to become 0x0 in order to change its value.
 }
 
-<<<<<<< HEAD
  ahci_mem_base->ports[SATA_PORT].cmd = ahci_mem_base->ports[SATA_PORT].cmd | (1 << 28);
 //Set icc to 0x1 for ipm to transition to active state
 
@@ -62,8 +61,6 @@ while (ahci_mem_base->ports[SATA_PORT].cmd>>28!=0x0)
 //Hopefully this should show IPM becoming 0x1
 kprintf("IPM AFTER: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts >> 8));
  kprintf("DET AFTER: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts & 0x0F));
-=======
->>>>>>> 9fc92a45fd60226eefe66671c313e4a4ef14dfbb
  // RESETING
  //ahci_mem_base->ghc = ahci_mem_base->ghc | 0x01;
  //ahci_mem_base->ghc |= 0x02;
