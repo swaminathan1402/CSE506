@@ -39,17 +39,17 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
 
  int SATA_PORT;
  SATA_PORT = bruteForcePCIcheckAHCI(&ahci_mem_base, 0xa8000); // b0000
+ ahci_mem_base->ports[SATA_PORT].cmd = ahci_mem_base->ports[SATA_PORT].cmd | (1 << 28);
  kprintf("\nSATA PORT(using) :%d\n", SATA_PORT); 
  kprintf("IPM BEFORE: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts >> 8));
  kprintf("DET BEFORE: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts & 0x0F));
- ahci_mem_base->ports[SATA_PORT].sctl = ahci_mem_base->ports[SATA_PORT].sctl | 0x300;
- ahci_mem_base->ports[SATA_PORT].sctl = ahci_mem_base->ports[SATA_PORT].sctl | 0x01;
+ //ahci_mem_base->ports[SATA_PORT].sctl = ahci_mem_base->ports[SATA_PORT].sctl | 0x300;
+ //ahci_mem_base->ports[SATA_PORT].sctl = ahci_mem_base->ports[SATA_PORT].sctl | 0x01;
 
 
  // RESETING
- ahci_mem_base->ghc = ahci_mem_base->ghc | 0x01;
- ahci_mem_base->ghc |= 0x02;
- ahci_mem_base->ports[SATA_PORT].cmd = ahci_mem_base->ports[SATA_PORT].cmd | (1 << 28);
+ //ahci_mem_base->ghc = ahci_mem_base->ghc | 0x01;
+ //ahci_mem_base->ghc |= 0x02;
  kprintf("IPM AFTER: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts >> 8));
  kprintf("DET AFTER: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts & 0x0F));
 
@@ -59,8 +59,8 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
  //}
     kprintf("Rebase[Finished]\n");
  // disbale transition to partial and slumber states
- uint64_t *c = (uint64_t *)0x7009000;
- uint64_t *a = (uint64_t *)0x2500000;
+ uint64_t *c = (uint64_t *)0x70090000;
+ uint64_t *a = (uint64_t *)0x25000000;
  //*c = 5;
  /*
  memset1(c, 1, 1* 1024*sizeof(c));
