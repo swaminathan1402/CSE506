@@ -42,16 +42,16 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
  kprintf("\nSATA PORT(using) :%d\n", SATA_PORT); 
  kprintf("IPM BEFORE: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts >> 8));
  kprintf("DET BEFORE: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts & 0x0F));
- //ahci_mem_base->ports[SATA_PORT].sctl = ahci_mem_base->ports[SATA_PORT].sctl | 0x300;
- //ahci_mem_base->ports[SATA_PORT].sctl = ahci_mem_base->ports[SATA_PORT].sctl | 0x01;
+ ahci_mem_base->ports[SATA_PORT].sctl = ahci_mem_base->ports[SATA_PORT].sctl | 0x300;
+ ahci_mem_base->ports[SATA_PORT].sctl = ahci_mem_base->ports[SATA_PORT].sctl | 0x01;
 
 
+ // RESETING
+ ahci_mem_base->ghc = ahci_mem_base->ghc | 0x01;
+ ahci_mem_base->ghc |= 0x02;
  ahci_mem_base->ports[SATA_PORT].cmd = ahci_mem_base->ports[SATA_PORT].cmd | (1 << 28);
  kprintf("IPM AFTER: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts >> 8));
  kprintf("DET AFTER: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts & 0x0F));
- // RESETING
- //ahci_mem_base->ghc = ahci_mem_base->ghc | 0x01;
- //ahci_mem_base->ghc |= 0x02;
 
  //for(int i=0; i<32; i++){
     kprintf("Rebase[Started: Port: %d]\n", SATA_PORT);
