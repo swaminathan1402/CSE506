@@ -39,6 +39,7 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
 
  int SATA_PORT;
  SATA_PORT = bruteForcePCIcheckAHCI(&ahci_mem_base, 0xa8000); // b0000
+ ahci_mem_base->ports[SATA_PORT].cmd = ahci_mem_base->ports[SATA_PORT].cmd | (1 << 28);
  kprintf("\nSATA PORT(using) :%d\n", SATA_PORT); 
  kprintf("IPM BEFORE: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts >> 8));
  kprintf("DET BEFORE: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts & 0x0F));
@@ -49,6 +50,7 @@ while(ahci_mem_base->ports[SATA_PORT].cmd>>28!=0x0)
 {// wait for ahci_mem_base. icc to become 0x0 in order to change its value.
 }
 
+<<<<<<< HEAD
  ahci_mem_base->ports[SATA_PORT].cmd = ahci_mem_base->ports[SATA_PORT].cmd | (1 << 28);
 //Set icc to 0x1 for ipm to transition to active state
 
@@ -60,9 +62,13 @@ while (ahci_mem_base->ports[SATA_PORT].cmd>>28!=0x0)
 //Hopefully this should show IPM becoming 0x1
 kprintf("IPM AFTER: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts >> 8));
  kprintf("DET AFTER: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts & 0x0F));
+=======
+>>>>>>> 9fc92a45fd60226eefe66671c313e4a4ef14dfbb
  // RESETING
  //ahci_mem_base->ghc = ahci_mem_base->ghc | 0x01;
  //ahci_mem_base->ghc |= 0x02;
+ kprintf("IPM AFTER: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts >> 8));
+ kprintf("DET AFTER: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts & 0x0F));
 
  //for(int i=0; i<32; i++){
     kprintf("Rebase[Started: Port: %d]\n", SATA_PORT);
@@ -70,8 +76,8 @@ kprintf("IPM AFTER: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts >> 8));
  //}
     kprintf("Rebase[Finished]\n");
  // disbale transition to partial and slumber states
- uint64_t *c = (uint64_t *)0x7009000;
- uint64_t *a = (uint64_t *)0x2500000;
+ uint64_t *c = (uint64_t *)0x70090000;
+ uint64_t *a = (uint64_t *)0x25000000;
  //*c = 5;
  /*
  memset1(c, 1, 1* 1024*sizeof(c));
