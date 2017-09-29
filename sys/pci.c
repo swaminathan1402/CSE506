@@ -172,8 +172,10 @@ for (bus=0; bus<256; bus++)
 				{
 					for(function =1 ;function <8 ;function++)
 					{	
-						if(pciCheckVendor(bus,device,function)!=0xFFFF)
+						//if(pciCheckVendor(bus,device,function)!=0xFFFF)
 					 	port_no=pciCheckFunction(bus, device,function, ahci_mem_base, addr);		
+						if(port_no!=-1)
+						return port_no;
 					}
 				}
 			}	
