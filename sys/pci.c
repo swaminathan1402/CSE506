@@ -48,7 +48,7 @@ void pciConfigWriteWord(uint8_t bus, uint8_t slot, uint8_t func , uint8_t offset
 	uint32_t lslot = (uint32_t)slot;
 	uint32_t lfunc = (uint32_t)func; 
 	address=(uint32_t)((lbus<<16)|(lslot<<11)|(lfunc<<8)|(offset&0xfc)|((uint32_t)0x80000000));
-
+	kprintf("MOVING THE BAR TO %x\n", addr);
 	outl (0xCF8, address);
 	// outl (0xCFC, 0x10000000);  // 0x100000
 	outl (0xCFC, addr);
@@ -115,7 +115,10 @@ int pciCheckFunction (uint8_t bus, uint8_t device, uint8_t function, hba_mem_t *
 //kprintf("%d \t", device);
 
 //if(function==0)	
-//{	
+//{
+	if(function != 0)
+		kprintf("MULTI FUNCTION\n");
+	
 	if(pciCheckBaseClass(bus, device,function)==0x01 &&  pciCheckSubClass(bus,device,function)==0x06)
 	{
             	if(pciCheckProgIF(bus,device,function)==0x01 )
@@ -154,7 +157,7 @@ uint32_t bus ;
 uint8_t device;
 uint8_t header;
 int port_no=-1;
-//kprintf("Brute force started!!\n");
+kprintf("Brute force started @%x!!\n", addr);
 for (bus=0; bus<256; bus++)
 	{
 
@@ -165,22 +168,23 @@ for (bus=0; bus<256; bus++)
 			if (pciCheckVendor(bus,device,function)!=0xffff)
 			{
 				port_no=pciCheckFunction (bus, device,function, ahci_mem_base, addr);
-				if(port_no!=-1)
-				return port_no;
+				if(port_no!=-1)	return port_no;
 				header=pciCheckHeader(bus, device);
 				if((header & 0x80)==1)	
 				{
+					kprintf("Does it even come here\n");
 					for(function =1 ;function <8 ;function++)
 					{	
 						if(pciCheckVendor(bus,device,function)!=0xFFFF)
-					 	port_no=pciCheckFunction(bus, device,function, ahci_mem_base, addr);		
+					 	port_no=pciCheckFunction(bus, device,function, ahci_mem_base, addr);
+						if(port_no != -1) return port_no;	
 					}
 				}
 			}	
 
 		}		
 	}
-//kprintf("Brute Force ended\n");
+kprintf("Brute Force ended\n");
 //return;
 return port_no;
 }
