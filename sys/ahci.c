@@ -75,7 +75,7 @@ int i=0;
                              //   return;
 			}
 		}
-		if(count == 2){
+		if(count == 1){
 			return i;
 		}
 		pi>>=1;
