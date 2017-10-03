@@ -55,6 +55,18 @@ void setSCTL(int SATA_PORT){
 	ahci_mem_base->ports[SATA_PORT].sctl = 0x300;
 }
 
+int readTFDRegsSuccess(int SATA_PORT){
+	int busy = ahci_mem_base->ports[SATA_PORT].tfd & 0x80;
+	int drq = ahci_mem_base->ports[SATA_PORT].tfd & 0x8;
+	int err = ahci_mem_base->ports[SATA_PORT].tfd & 0x1;
+	kprintf("\n ***Reading Error codes***\n");
+	kprintf("BUSY: %d\nDRQ: %d\nERR: %d\n", busy, drq, err);
+	kprintf("\n *** ***\n");
+	if(!busy & !drq & !err)
+		return 1;
+	return 0;
+}
+
 void start(uint32_t *modulep, void *physbase, void *physfree)
 {
   __asm__("sti;");
@@ -74,8 +86,6 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
  int SATA_PORT;
  SATA_PORT = bruteForcePCIcheckAHCI(&ahci_mem_base, 0xa8000); // b0000
  kprintf("\nSATA PORT(using) :%d\n", SATA_PORT); 
- kprintf("IPM BEFORE: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts >> 8));
- kprintf("DET BEFORE: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts & 0x0F));	
  enableAHCI();
  resetGHC();
  enableAHCI();
@@ -91,12 +101,12 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
  }
  ahci_mem_base->ports[SATA_PORT].serr_rwc = 0xffffffff;
  ahci_mem_base->ports[SATA_PORT].is_rwc = 0xffffffff;
-
 			
  kprintf("IPM AFTER: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts >> 8));
  kprintf("DET AFTER: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts & 0x0F));
  
  
+ while(readTFDRegsSuccess(SATA_PORT) == 0);
  // disbale transition to partial and slumber states
  uint64_t *c = (uint64_t *)0x7009000;
  uint64_t *a = (uint64_t *)0x2500000;
