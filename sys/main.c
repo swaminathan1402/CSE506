@@ -23,8 +23,8 @@ void *memset1(void *array, int c, size_t n){
 
 void wait(){
 
-		for(int i=0; i<10000; i++){
-			for(int j=0; j<10000;j++){
+	for(int i=0; i<10000; i++){
+		for(int j=0; j<10000;j++){
 
 		}
 	}
