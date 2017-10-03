@@ -22,12 +22,37 @@ void *memset1(void *array, int c, size_t n){
 }
 
 void wait(){
-
-	for(int i=0; i<10000; i++){
-		for(int j=0; j<10000;j++){
-
-		}
+    for(int i=0; i<10000; i++){
+        for(int j=0; j<10000;j++){
 	}
+    }
+}
+
+void enableAHCI(){
+    if((ahci_mem_base->ghc & 0x80000000) == 0) {
+        ahci_mem_base->ghc |= 0x80000000; // ahci enabled
+        wait();
+    }
+}
+
+void resetGHC(){
+
+    ahci_mem_base->ghc |= 1; // hard reset of ghc
+    while(ahci_mem_base->ghc & 1) wait(); // Make sure reset is done completely
+    wait();
+}
+
+void forcePortIdle(int SATA_PORT){
+    // Make sure that the port is not performing any command lists
+    if((ahci_mem_base->ports[SATA_PORT].cmd & (HBA_PxCMD_ST | HBA_PxCMD_CR | HBA_PxCMD_FR | HBA_PxCMD_FRE))){
+	stop_cmd(&(ahci_mem_base->ports[SATA_PORT]));
+    }
+}
+
+void setSCTL(int SATA_PORT){
+	ahci_mem_base->ports[SATA_PORT].sctl = 0x301; // COMRESET has been sent to the interface
+	wait(); // wait for 1 milisecond
+	ahci_mem_base->ports[SATA_PORT].sctl = 0x300;
 }
 
 void start(uint32_t *modulep, void *physbase, void *physfree)
@@ -50,134 +75,41 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
  SATA_PORT = bruteForcePCIcheckAHCI(&ahci_mem_base, 0xa8000); // b0000
  kprintf("\nSATA PORT(using) :%d\n", SATA_PORT); 
  kprintf("IPM BEFORE: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts >> 8));
- kprintf("DET BEFORE: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts & 0x0F));
-
- // RESETING
-// ahci_mem_base->ghc = ahci_mem_base->ghc | 0x01; // reset                                
-// while(	(ahci_mem_base->ghc & 0x1) !=0)
-//{
-//Wait for reset to complete
-// kprintf("waiting to reset ");
-//}
-	
-//ahci_mem_base->ghc |= 0x02; // interrupt enabled
-if((ahci_mem_base->ghc & 0x80000000)==0)
- ahci_mem_base->ghc |= 0x80000000; // ahci enabled
- 
-//kprintf("\nCAP.SAM:%d", (ahci_mem_base->cap>>18)&0x1);
- kprintf("\n THE AHCI MEM BASE GHC(AHCI ENABLED): %d", (ahci_mem_base->ghc >> 31));
-			ahci_mem_base->ports[SATA_PORT].cmd &= 0xFFFFFFFE ;
-
-kprintf("About to  wait for the cr bit to be set\n");
-while((ahci_mem_base->ports[SATA_PORT].cmd >> 15 ) | 0x01){
-	//wait for the cr bit to be set
-}
-
-kprintf("CR bit check is done\n");
-
-			ahci_mem_base->ports[SATA_PORT].cmd &= 0xFFFFFFEF ;
-			ahci_mem_base->ports[SATA_PORT].cmd &= 0xFFFFBFFF ;
-
-// kprintf("\n THE AHCI MEM BASE GHC(INTERRUPT ENABLED): %d\n", (ahci_mem_base->ghc & 0x2));
-//kprintf("\n AHCI CMD.ST:%d",(ahci_mem_base->ports[SATA_PORT].cmd&0x01));
-//kprintf("\n AHCI CMD.FRE:%d", (ahci_mem_base->ports[SATA_PORT].cmd&0x08));
-
-//while((ahci_mem_base->ports[SATA_PORT].cmd& 0x0000C001)!=0)
-// ahci_mem_base->ports[SATA_PORT].cmd &=0xFFFF3FFE;// Clear ST,CR,FR;
-// wait();
-// ahci_mem_base->ports[SATA_PORT].cmd |= 0x00000016; //Set FRE, SUD, POD
-// wait();
-
-// ahci_mem_base->ports[SATA_PORT].sctl = ahci_mem_base->ports[SATA_PORT].sctl | 0x300;
-// wait();
-// ahci_mem_base->ports[SATA_PORT].sctl = ahci_mem_base->ports[SATA_PORT].sctl | 0x01;
-// wait();
-
-//ahci_mem_base->ports[SATA_PORT].is_rwc =0;
-//ahci_mem_base->ports[SATA_PORT].serr_rwc=0;
-//ahci_mem_base->ports[SATA_PORT].sntf_rwc=0;
-
- /*
- while(ahci_mem_base->ports[SATA_PORT].cmd>>28!=0x0){
- // wait for ahci_mem_base. icc to become 0x0 in order to change its value.
+ kprintf("DET BEFORE: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts & 0x0F));	
+ enableAHCI();
+ resetGHC();
+ enableAHCI();
+ forcePortIdle(SATA_PORT);
+ kprintf("starting rebase\n");
+ rebase(&(ahci_mem_base->ports[SATA_PORT]) ,SATA_PORT);
+ kprintf("rebase ended\n");
+ setSCTL(SATA_PORT);
+ if(ahci_mem_base->cap & (ahci_mem_base->cap >> 27)) {
+    kprintf("Staggered spin up is supported\n");
+    ahci_mem_base->ports[SATA_PORT].cmd |= (0x2 | 0x4 | 1<<28); // setting Spinup(SUD), POD, ICC
+    wait();
  }
- */
-// wait();
+ ahci_mem_base->ports[SATA_PORT].serr_rwc = 0xffffffff;
+ ahci_mem_base->ports[SATA_PORT].is_rwc = 0xffffffff;
 
-// kprintf("ICC STATE: %d\n", (ahci_mem_base->ports[SATA_PORT].cmd >> 28));
-// ahci_mem_base->ports[SATA_PORT].cmd = ahci_mem_base->ports[SATA_PORT].cmd | (1 << 28);
-// wait();
-//Set icc to 0x1 for ipm to transition to active state
-
-// kprintf("ICC STATE: %d\n", (ahci_mem_base->ports[SATA_PORT].cmd >> 28));
-// wait();
-//Wait for ahci_mem_base.icc to become 0x0 again so that indicates the active transition has already happened.
- //ahci_mem_base->ports[SATA_PORT].cmd &= 0xEFFFFFFF;
-//while(ahci_mem_base->ports[SATA_PORT].cmd>>28 !=0)
-//{
-//kprintf("ICC state :%d \n", (ahci_mem_base->ports[SATA_PORT].cmd>>28));
-//}
-//Hopefully this should show IPM becoming 0x1
- /*
- while (ahci_mem_base->ports[SATA_PORT].ssts >> 8 != 0x1){
-	// Wait for IPM to become 1
- }
- */
-// wait();
- 
-			ahci_mem_base->ports[SATA_PORT].sctl &= 0xFFFFFFF0;                 
-kprintf("Rebase[Started: Port: %d]\n", SATA_PORT);
-			rebase(&(ahci_mem_base->ports[SATA_PORT]) ,SATA_PORT);
-kprintf("Rebase[Finished]\n");    
-  
-			ahci_mem_base->ports[SATA_PORT].cmd |= 0x10;                 
-			ahci_mem_base->ports[SATA_PORT].cmd |= 0x02;
-			
-			while((ahci_mem_base->ports[SATA_PORT].ssts & 0x0F) != 1 || (ahci_mem_base->ports[SATA_PORT].ssts & 0x0F) != 3){
-				//loop
-			}
-
-			ahci_mem_base->ports[SATA_PORT].serr_rwc = 0xFFFFFFFF;
-			
-			while(1){
-				if((ahci_mem_base->ports[SATA_PORT].tfd & 0x01) == 0 && (ahci_mem_base->ports[SATA_PORT].tfd & 0x80) == 0) {
-					if((ahci_mem_base->ports[SATA_PORT].tfd & 0x08) == 0){
-						break;
-					}
-				}	
-
-			}
 			
  kprintf("IPM AFTER: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts >> 8));
  kprintf("DET AFTER: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts & 0x0F));
  
  
- 
-
- 
- 
- 
  // disbale transition to partial and slumber states
- uint64_t *c = (uint64_t *)0xc8000;
+ uint64_t *c = (uint64_t *)0x7009000;
  uint64_t *a = (uint64_t *)0x2500000;
 
  kprintf("Writing[Starting]\n");
  for(int i=0; i<100; i++){
-  //for(int j=0; j<4; j++){
 	 memset1(c, i, 1* 512*sizeof(c));
 	 write(&ahci_mem_base->ports[SATA_PORT], i*8, 0, 8, c);
-	//kprintf("DONE\n");
-  //}
  }
 
- //kprintf("Writing[Finished]\n");
- //kprintf("Reading[Starting]\n");
  for(int i=0; i<100; i++){
-  //for(int j=0; j<4; j++){
     read(&ahci_mem_base->ports[SATA_PORT], i*8, 0, 8, a+(512*8*i));
-  //}
  }
- //kprintf("Reading[Finished]\n");
  for(int i=0; i<400*1024; i+=(4*1024)){
     kprintf("%d \t", (uint8_t)a[i]); // PRINTING THE CONTENTS READ FROM THE DISK
  }
