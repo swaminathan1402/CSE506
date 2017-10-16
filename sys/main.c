@@ -86,6 +86,33 @@ void showAllFreePages(){
   }
 }
 
+freelist *get_free_page(){
+	freelist *page = first_free_page;
+	first_free_page = first_free_page->next;
+	first_free_page->prev = NULL;
+
+	kprintf("New free page points to %p", first_free_page);
+	return page;
+}
+
+
+freelist *get_free_pages(int numPages){
+	freelist *temp = first_free_page;
+	int counter = 0;
+	while(counter < numPages){
+		temp = temp->next;
+		counter++;
+	}
+
+	freelist *newpage = first_free_page;
+	first_free_page = temp->next;
+	temp->next = NULL;
+	first_free_page->prev = NULL;
+	
+	kprintf("Newpage returned is %p\n First free page now points to %p", newpage, first_free_page);
+	return newpage;
+}
+
 void start(uint32_t *modulep, void *physbase, void *physfree)
 {
   __asm__("sti;");
@@ -119,13 +146,13 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
 	  current_free_page = newpage;
 	  base += PAGE_SIZE;
 	  //kprintf("Adding %p to the free list\t", newpage);
-	} 
+	}
     }
   }
-  showAllFreePages();
   kprintf("physfree %p\n", (uint64_t)physfree);
   kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
-
+  //showAllFreePages();
+  freelist *newpage = get_free_pages(5);
 
 
   /*
