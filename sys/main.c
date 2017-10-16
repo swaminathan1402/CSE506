@@ -7,6 +7,8 @@
 #include <sys/idt.h>
 #include <sys/pci.h>
 #define INITIAL_STACK_SIZE 4096
+#define PAGE_SIZE 4096
+
 uint8_t initial_stack[INITIAL_STACK_SIZE]__attribute__((aligned(16)));
 uint32_t* loader_stack;
 extern char kernmem, physbase;
@@ -67,6 +69,23 @@ int readTFDRegsSuccess(int SATA_PORT){
 	return 0;
 }
 
+typedef struct freelist {
+  int header;
+  struct freelist *next;
+  struct freelist *prev;
+}freelist;
+
+freelist *first_free_page = NULL;
+freelist *current_free_page = NULL;
+
+void showAllFreePages(){
+  freelist *temp = first_free_page;
+  while(temp != NULL){
+    kprintf("%p\n", temp);
+    temp = temp->next;
+  }
+}
+
 void start(uint32_t *modulep, void *physbase, void *physfree)
 {
   __asm__("sti;");
@@ -75,56 +94,84 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
     uint32_t type;
   }__attribute__((packed)) *smap;
   while(modulep[0] != 0x9001) modulep += modulep[1]+2;
+  first_free_page = (freelist *)(physfree);
+  first_free_page->header = 90;
+  first_free_page->next = NULL;
+  first_free_page->prev = NULL;
+  current_free_page = first_free_page;
   for(smap = (struct smap_t*)(modulep+2); smap < (struct smap_t*)((char*)modulep+modulep[1]+2*4); ++smap) {
     if (smap->type == 1 /* memory */ && smap->length != 0) {
       kprintf("Available Physical Memory [%p-%p]\n", smap->base, smap->base + smap->length);
+	if((uint64_t)current_free_page > (uint64_t)physfree)
+	{
+	  freelist *newpage = (freelist *)smap->base;
+	  current_free_page->next = newpage;
+	  newpage->prev = current_free_page;
+	  current_free_page = newpage;
+	}
+	
+      	uint64_t base = (uint64_t)current_free_page + PAGE_SIZE;
+	while(base < smap->base + smap->length){
+	  freelist *newpage = (freelist *)base;
+	  newpage->header = 1;
+	  newpage->prev = current_free_page;
+	  current_free_page->next = newpage;
+	  current_free_page = newpage;
+	  base += PAGE_SIZE;
+	  //kprintf("Adding %p to the free list\t", newpage);
+	} 
     }
   }
- kprintf("physfree %p\n", (uint64_t)physfree);
- kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
+  showAllFreePages();
+  kprintf("physfree %p\n", (uint64_t)physfree);
+  kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
 
- int SATA_PORT;
- SATA_PORT = bruteForcePCIcheckAHCI(&ahci_mem_base, 0xa8000); // b0000
- kprintf("\nSATA PORT(using) :%d\n", SATA_PORT); 
- enableAHCI();
- resetGHC();
- enableAHCI();
- forcePortIdle(SATA_PORT);
- kprintf("starting rebase\n");
- rebase(&(ahci_mem_base->ports[SATA_PORT]) ,SATA_PORT);
- kprintf("rebase ended\n");
- setSCTL(SATA_PORT);
- if(ahci_mem_base->cap & (ahci_mem_base->cap >> 27)) {
-    kprintf("Staggered spin up is supported\n");
-    ahci_mem_base->ports[SATA_PORT].cmd |= (0x2 | 0x4 | 1<<28); // setting Spinup(SUD), POD, ICC
-    wait();
- }
- ahci_mem_base->ports[SATA_PORT].serr_rwc = 0xffffffff;
- ahci_mem_base->ports[SATA_PORT].is_rwc = 0xffffffff;
-			
- kprintf("IPM AFTER: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts >> 8));
- kprintf("DET AFTER: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts & 0x0F));
+
+
+  /*
+  int SATA_PORT;
+  SATA_PORT = bruteForcePCIcheckAHCI(&ahci_mem_base, 0xa8000); // b0000
+  kprintf("\nSATA PORT(using) :%d\n", SATA_PORT); 
+  enableAHCI();
+  resetGHC();
+  enableAHCI();
+  forcePortIdle(SATA_PORT);
+  kprintf("starting rebase\n");
+  rebase(&(ahci_mem_base->ports[SATA_PORT]) ,SATA_PORT);
+  kprintf("rebase ended\n");
+  setSCTL(SATA_PORT);
+  if(ahci_mem_base->cap & (ahci_mem_base->cap >> 27)) {
+     kprintf("Staggered spin up is supported\n");
+     ahci_mem_base->ports[SATA_PORT].cmd |= (0x2 | 0x4 | 1<<28); // setting Spinup(SUD), POD, ICC
+     wait();
+  }
+  ahci_mem_base->ports[SATA_PORT].serr_rwc = 0xffffffff;
+  ahci_mem_base->ports[SATA_PORT].is_rwc = 0xffffffff;
+         		
+  kprintf("IPM AFTER: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts >> 8));
+  kprintf("DET AFTER: %x\n",  (ahci_mem_base->ports[SATA_PORT].ssts & 0x0F));
  
  
- while(readTFDRegsSuccess(SATA_PORT) == 0);
- // disbale transition to partial and slumber states
- uint64_t *c = (uint64_t *)0x7009000;
- uint64_t *a = (uint64_t *)0x2500000;
+  while(readTFDRegsSuccess(SATA_PORT) == 0);
+  uint64_t *c = (uint64_t *)0x7009000;
+  uint64_t *a = (uint64_t *)0x2500000;
 
- kprintf("Writing[Starting]\n");
- for(int i=0; i<100; i++){
-	 memset1(c, i, 1* 512*sizeof(c));
-	 write(&ahci_mem_base->ports[SATA_PORT], i*8, 0, 8, c);
- }
-
- for(int i=0; i<100; i++){
-    read(&ahci_mem_base->ports[SATA_PORT], i*8, 0, 8, a+(512*8*i));
- }
- for(int i=0; i<400*1024; i+=(4*1024)){
-    kprintf("%d \t", (uint8_t)a[i]); // PRINTING THE CONTENTS READ FROM THE DISK
- }
- kprintf("\n we have successfully read the contents from the disk\n");
- while(1);
+  kprintf("Writing[Status]: Started\n");
+  for(int i=0; i<100; i++){
+          memset1(c, i, 1* 512*sizeof(c));
+          write(&ahci_mem_base->ports[SATA_PORT], i*8, 0, 8, c);
+  }
+  kprintf("Writing[Status]: Completed\n");
+  kprintf("Reading[Status]: Started\n");
+  for(int i=0; i<100; i++){
+     read(&ahci_mem_base->ports[SATA_PORT], i*8, 0, 8, a+(512*8*i));
+  }
+  for(int i=0; i<400*1024; i+=(4*1024)){
+     //kprintf("%d \t", (uint8_t)a[i]); // PRINTING THE CONTENTS READ FROM THE DISK
+  }
+  kprintf("\n we have successfully read the contents from the disk\n");
+  */
+  while(1);
 }
 
 void boot(void)
