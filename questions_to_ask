@@ -1,0 +1,1 @@
+We create freelist from physfree. But, what happens to the memory present before physbase

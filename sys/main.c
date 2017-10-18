@@ -6,6 +6,7 @@
 #include <sys/pic.h>
 #include <sys/idt.h>
 #include <sys/pci.h>
+#include <sys/page_table.h>
 #define INITIAL_STACK_SIZE 4096
 #define PAGE_SIZE 4096
 
@@ -68,6 +69,8 @@ int readTFDRegsSuccess(int SATA_PORT){
 		return 1;
 	return 0;
 }
+
+// uint64_t page_directory[1024] __attribute__((aligned(4096)));
 
 typedef struct freelist {
   int header;
@@ -152,8 +155,8 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   kprintf("physfree %p\n", (uint64_t)physfree);
   kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
   //showAllFreePages();
-  freelist *newpage = get_free_pages(5);
-
+  //freelist *newpage = get_free_pages(5);
+  
 
   /*
   int SATA_PORT;
@@ -201,6 +204,7 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   while(1);
 }
 
+
 void boot(void)
 {
    
@@ -219,7 +223,7 @@ void boot(void)
   init_idt();  
   initScreen();  
   init_pic();
- 
+  init_pd();
   start(
     (uint32_t*)((char*)(uint64_t)loader_stack[3] + (uint64_t)&kernmem - (uint64_t)&physbase),
     (uint64_t*)&physbase,
