@@ -73,10 +73,9 @@ int readTFDRegsSuccess(int SATA_PORT){
 // uint64_t page_directory[1024] __attribute__((aligned(4096)));
 
 typedef struct freelist {
-  int header;
   struct freelist *next;
   struct freelist *prev;
-}freelist;
+}__attribute__((aligned(4096))) freelist;
 
 freelist *first_free_page = NULL;
 freelist *current_free_page = NULL;
@@ -94,7 +93,7 @@ freelist *get_free_page(){
 	first_free_page = first_free_page->next;
 	first_free_page->prev = NULL;
 
-	kprintf("New free page points to %p", first_free_page);
+	// kprintf("New free page points to %p", first_free_page);
 	return page;
 }
 
@@ -118,14 +117,14 @@ freelist *get_free_pages(int numPages){
 
 void start(uint32_t *modulep, void *physbase, void *physfree)
 {
-  __asm__("sti;");
+  //__asm__("sti;");
+  __asm__("cli;");
   struct smap_t {
     uint64_t base, length;
     uint32_t type;
   }__attribute__((packed)) *smap;
   while(modulep[0] != 0x9001) modulep += modulep[1]+2;
   first_free_page = (freelist *)(physfree);
-  first_free_page->header = 90;
   first_free_page->next = NULL;
   first_free_page->prev = NULL;
   current_free_page = first_free_page;
@@ -143,7 +142,6 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
       	uint64_t base = (uint64_t)current_free_page + PAGE_SIZE;
 	while(base < smap->base + smap->length){
 	  freelist *newpage = (freelist *)base;
-	  newpage->header = 1;
 	  newpage->prev = current_free_page;
 	  current_free_page->next = newpage;
 	  current_free_page = newpage;
@@ -153,7 +151,86 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
     }
   }
   kprintf("physfree %p\n", (uint64_t)physfree);
+  kprintf("physbase %p\n", (uint64_t)physbase);
+  int size_of_kernel = (uint64_t)physfree - (uint64_t)physbase;
+  kprintf("the size of kernel %d\n", size_of_kernel);
   kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
+
+
+
+  uint64_t *pointer_to_pml4e = (uint64_t *)get_free_page();
+  // uint64_t *pointer_to_pdpe = (uint64_t *)get_free_page();
+  // uint64_t *pointer_to_pde = (uint64_t *)get_free_page();
+  // uint64_t *pointer_to_pte = (uint64_t *)get_free_page();
+
+  memset1(pointer_to_pml4e, 0, 4096);
+  // memset1(pointer_to_pdpe, 0, 4096);
+  // memset1(pointer_to_pde, 0, 4096);
+  // memset1(pointer_to_pte, 0, 4096);
+
+  pml4e = (PML4E *)pointer_to_pml4e;
+  // pdpe = (PDPE *)pointer_to_pdpe;
+  // pde = (PDE *)pointer_to_pde;
+  // pte = (PTE *)pointer_to_pte;
+
+  
+  for(int i=0; i<=size_of_kernel; i+=4096){
+	uint64_t virtual_addr = (uint64_t)&kernmem + i;
+	int pml4e_index = (0x0000ff8000000000 & virtual_addr) >> 39;
+	if((pml4e+pml4e_index)->p == 0){
+		uint64_t* pointer_to_pdpe = (uint64_t *)get_free_page();	
+		memset1(pointer_to_pdpe, 0, 4096);
+		(pml4e + pml4e_index)->page_directory_pointer_base_address = (uint64_t)pointer_to_pdpe & 0x000ffffffffff000;
+		(pml4e + pml4e_index)->p = 1;
+		(pml4e + pml4e_index)->us = 1;
+		(pml4e + pml4e_index)->rw = 1;
+		
+
+		pdpe = (PDPE *)pointer_to_pdpe;
+		int pdpe_index = (0x0000007fc0000000 & virtual_addr) >> 30;
+		(pdpe+pdpe_index)->p = 0;
+
+		kprintf("%p %d %d: %p %d \n", pdpe, pdpe_index, (pdpe+510)->p, pml4e, pml4e_index);
+		if((pdpe + pdpe_index)->p == 0){
+			uint64_t free_page_2 = (uint64_t) get_free_page();
+			(pdpe + pdpe_index)->page_directory_base_address = free_page_2 & 0x000ffffffffff000;
+			(pdpe + pdpe_index)->p = 1;
+			(pdpe + pdpe_index)->rw = 1;
+			(pdpe + pdpe_index)->us = 1;
+
+			uint64_t *pointer_to_pde = (uint64_t *)free_page_2;
+			memset1(pointer_to_pde, 0, 4096);
+			pde = (PDE *)pointer_to_pde;
+
+			int pde_index = (0x000000003fe00000 & virtual_addr) >> 21;
+			(pde+pde_index)->p = 0;
+			if((pde + pde_index)->p == 0){
+				uint64_t free_page_3 = (uint64_t) get_free_page();
+				(pde + pde_index)->page_table_base_address = free_page_3;
+				(pde + pde_index)->p = 1;
+				(pde + pde_index)->rw = 1;
+				(pde + pde_index)->us = 1;
+
+				uint64_t *pointer_to_pte = (uint64_t *)free_page_3;
+				memset1(pointer_to_pte, 0, 4096);
+				pte = (PTE *)pointer_to_pte;
+				//int pte_index = (0x0000000000001ff000 & virtual_addr) >> 12;
+				// init_pd(pte, pointer_to_pml4e, (uint64_t)physbase, 512*4096);
+			}
+		}
+		
+		
+	}
+  } 
+  
+  
+  
+  
+  
+  
+  
+  
+  
   //showAllFreePages();
   //freelist *newpage = get_free_pages(5);
   
@@ -223,7 +300,7 @@ void boot(void)
   init_idt();  
   initScreen();  
   init_pic();
-  init_pd();
+  // init_pd();
   start(
     (uint32_t*)((char*)(uint64_t)loader_stack[3] + (uint64_t)&kernmem - (uint64_t)&physbase),
     (uint64_t*)&physbase,
