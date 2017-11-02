@@ -25,7 +25,7 @@ void init_pd(PTE* first_pte, PML4E* first_pml4e, uint64_t from, int size){
 	kprintf("Performing Kernel Identity mapping to first pte's 2 MB \n");
 
 	idpaging(first_pte, from, size);
-	//idpaging(first_pte + 85, from+size, 5*4096);
+	idpaging(first_pte + 85, from+size, 10*4096);
 
 	kprintf("pointer to pml4e pdpe addr:%p\n pointer to first pte: %p\n", (first_pml4e+511)->page_directory_pointer_base_address, first_pte);
 	kprintf("pointer to pml4e:%p\n", first_pml4e);
@@ -35,7 +35,6 @@ void init_pd(PTE* first_pte, PML4E* first_pml4e, uint64_t from, int size){
         	:"r"(first_pml4e)
         );
 	kprintf("crap\n");
-	while(1);
 }
 
 void setMap(uint64_t virtual_addr, uint64_t physical_addr){
