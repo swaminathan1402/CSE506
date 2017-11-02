@@ -266,7 +266,7 @@ void boot(void)
   // note: function changes rsp, local stack variables can't be practically used
   register char  *temp2, *temp1;
 
-  for(temp2 = (char*)0xb8001; temp2 < (char*)0xb8000+160*25; temp2 += 2) *temp2 = 7 /* white */;
+  for(temp2 = (char*)VIDEO_MEM_BUF+1; temp2 < (char*)VIDEO_MEM_BUF+160*25; temp2 += 2) *temp2 = 7 /* white */;
   __asm__ volatile (
     "cli;"
     "movq %%rsp, %0;"
@@ -285,7 +285,7 @@ void boot(void)
     (uint64_t*)(uint64_t)loader_stack[4]
   );
   for(
-    temp1 = "!!!!! start() returned !!!!!", temp2 = (char*)0xb8000;
+    temp1 = "!!!!! start() returned !!!!!", temp2 = (char*)VIDEO_MEM_BUF;
     *temp1;
     temp1 += 1, temp2 += 2
   ) *temp2 = *temp1;

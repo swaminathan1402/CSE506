@@ -34,6 +34,7 @@ void init_pd(PTE* first_pte, PML4E* first_pml4e, uint64_t from, int size){
         	:
         	:"r"(first_pml4e)
         );
+	setMap (VIDEO_MEM_BUF,0xb8000);
 	kprintf("crap\n");
 }
 
