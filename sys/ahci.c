@@ -1,4 +1,5 @@
 #include<sys/defs.h>
+#include<sys/memory.h>
 #include<sys/ahci.h>
 #include<sys/kprintf.h>
 #define AHCI_BASE 0x400000 
@@ -6,14 +7,14 @@ int find_cmdslot(hba_port_t *port);
 
 
 
-void *memset(void *array, int c, size_t n){
-    unsigned char* temp = array;
-    while(n--){
-        *temp++ = (unsigned char)c;
-    }
-    return array;
-
-}
+// void *memset(void *array, int c, size_t n){
+//     unsigned char* temp = array;
+//     while(n--){
+//         *temp++ = (unsigned char)c;
+//     }
+//     return array;
+// 
+// }
 
 static int check_type(hba_port_t *port)
 {

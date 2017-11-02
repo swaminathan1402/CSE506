@@ -15,16 +15,3 @@ char *gets(char *s){
 	char *string = s;
 	return string;	
 }
-
-	/*
-	char ch='\0';
-	char command[1024];
-	int i=0;
-	while((ch = getchar()) != '\n'){
-		command[i] = ch;
-		i++;
-	}
-	//command[i] = '\0';
-	printf("%s", command);
-	return 0;
-	*/

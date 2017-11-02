@@ -1,4 +1,5 @@
 #include <sys/defs.h>
+#include <sys/memory.h>
 #include <sys/gdt.h>
 #include <sys/kprintf.h>
 #include <sys/tarfs.h>
@@ -6,6 +7,7 @@
 #include <sys/pic.h>
 #include <sys/idt.h>
 #include <sys/pci.h>
+#include <sys/page.h>
 #include <sys/page_table.h>
 #define INITIAL_STACK_SIZE 4096
 #define PAGE_SIZE 4096
@@ -15,14 +17,6 @@ uint32_t* loader_stack;
 extern char kernmem, physbase;
 
 hba_mem_t *ahci_mem_base;
-void *memset1(void *array, int c, size_t n){
-    unsigned char* temp = array;
-    while(n--){
-        *temp++ = (unsigned char)c;
-    }
-    return array;
-
-}
 
 void wait(){
     for(int i=0; i<10000; i++){
@@ -70,50 +64,6 @@ int readTFDRegsSuccess(int SATA_PORT){
 	return 0;
 }
 
-// uint64_t page_directory[1024] __attribute__((aligned(4096)));
-
-typedef struct freelist {
-  struct freelist *next;
-  struct freelist *prev;
-}__attribute__((aligned(4096))) freelist;
-
-freelist *first_free_page = NULL;
-freelist *current_free_page = NULL;
-
-void showAllFreePages(){
-  freelist *temp = first_free_page;
-  while(temp != NULL){
-    kprintf("%p\n", temp);
-    temp = temp->next;
-  }
-}
-
-freelist *get_free_page(){
-	freelist *page = first_free_page;
-	first_free_page = first_free_page->next;
-	first_free_page->prev = NULL;
-
-	// kprintf("New free page points to %p", first_free_page);
-	return page;
-}
-
-
-freelist *get_free_pages(int numPages){
-	freelist *temp = first_free_page;
-	int counter = 0;
-	while(counter < numPages){
-		temp = temp->next;
-		counter++;
-	}
-
-	freelist *newpage = first_free_page;
-	first_free_page = temp->next;
-	temp->next = NULL;
-	first_free_page->prev = NULL;
-	
-	kprintf("Newpage returned is %p\n First free page now points to %p", newpage, first_free_page);
-	return newpage;
-}
 
 void start(uint32_t *modulep, void *physbase, void *physfree)
 {
@@ -152,48 +102,80 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   }
   kprintf("physfree %p\n", (uint64_t)physfree);
   kprintf("physbase %p\n", (uint64_t)physbase);
-  int size_of_kernel = (uint64_t)physfree - (uint64_t)physbase;
-  kprintf("the size of kernel %d\n", size_of_kernel);
   kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
 
 
 
   uint64_t *pointer_to_pml4e = (uint64_t *)get_free_page();
-  // uint64_t *pointer_to_pdpe = (uint64_t *)get_free_page();
-  // uint64_t *pointer_to_pde = (uint64_t *)get_free_page();
-  // uint64_t *pointer_to_pte = (uint64_t *)get_free_page();
-
-  memset1(pointer_to_pml4e, 0, 4096);
-  // memset1(pointer_to_pdpe, 0, 4096);
-  // memset1(pointer_to_pde, 0, 4096);
-  // memset1(pointer_to_pte, 0, 4096);
+  int *a = (int *)get_free_page();
+  uint64_t *pointer_to_pdpe = (uint64_t *)get_free_page();
+  int *b = (int *)get_free_page();
+  uint64_t *pointer_to_pde = (uint64_t *)get_free_page();
+  int *c = (int *)get_free_page();
+  uint64_t *pointer_to_pte = (uint64_t *)get_free_page();
+  kprintf("%p %p %p\n", a, b, c);
 
   pml4e = (PML4E *)pointer_to_pml4e;
-  // pdpe = (PDPE *)pointer_to_pdpe;
-  // pde = (PDE *)pointer_to_pde;
-  // pte = (PTE *)pointer_to_pte;
+  memset(pml4e, 0, 4096);
+  pdpe = (PDPE *)pointer_to_pdpe;
+  memset(pdpe, 0, 4096);
+  pde = (PDE *)pointer_to_pde;
+  memset(pde, 0, 4096);
+  pte = (PTE *)pointer_to_pte;
+  memset(pte, 0, 4096);
+
+  (pml4e + 511)->page_directory_pointer_base_address = ((uint64_t)pointer_to_pdpe >> 12);
+  (pml4e + 511)->p = 1; 
+  (pml4e + 511)->rw = 1; 
+  (pml4e + 511)->us = 1; 
+
+  (pdpe + 510)->page_directory_base_address = (uint64_t)pointer_to_pde >> 12;
+  (pdpe + 510)->p = 1; 
+  (pdpe + 510)->rw = 1; 
+  (pdpe + 510)->us = 1;
+
+  (pde + 1)->page_table_base_address = (uint64_t)pointer_to_pte >> 12;
+  (pde + 1)->p = 1;
+  (pde + 1)->rw = 1;
+  (pde + 1)->us = 1;
 
   
+  kprintf("pml4e points to %p %p\n pdpe points to %p %p\n pde points to %p %p\n %d size",
+  	(pml4e + 511)->page_directory_pointer_base_address,
+	pointer_to_pdpe,
+	(pdpe + 510)->page_directory_base_address,
+	pointer_to_pde,
+	(pde+1)->page_table_base_address,
+	pointer_to_pte,
+	sizeof(pml4e));
+  int size_of_kernel = (uint64_t)physfree - (uint64_t)physbase;
+  kprintf("the size of kernel %x\n", size_of_kernel);
+
+  init_pd(pte, pml4e, (uint64_t)physbase, size_of_kernel);
+  int d = 5;
+  d+=5;
+  // setMap((uint64_t)&kernmem + 0xb8000, 0xb8000);
+
+  /*
   for(int i=0; i<=size_of_kernel; i+=4096){
 	uint64_t virtual_addr = (uint64_t)&kernmem + i;
 	int pml4e_index = (0x0000ff8000000000 & virtual_addr) >> 39;
 	if((pml4e+pml4e_index)->p == 0){
 		uint64_t* pointer_to_pdpe = (uint64_t *)get_free_page();	
 		memset1(pointer_to_pdpe, 0, 4096);
-		(pml4e + pml4e_index)->page_directory_pointer_base_address = (uint64_t)pointer_to_pdpe & 0x000ffffffffff000;
+		(pml4e + pml4e_index)->page_directory_pointer_base_address = (uint64_t)pointer_to_pdpe ;
 		(pml4e + pml4e_index)->p = 1;
 		(pml4e + pml4e_index)->us = 1;
 		(pml4e + pml4e_index)->rw = 1;
 		
-
+		memset1(pointer_to_pdpe, 0, 4096);
 		pdpe = (PDPE *)pointer_to_pdpe;
 		int pdpe_index = (0x0000007fc0000000 & virtual_addr) >> 30;
-		(pdpe+pdpe_index)->p = 0;
 
-		kprintf("%p %d %d: %p %d \n", pdpe, pdpe_index, (pdpe+510)->p, pml4e, pml4e_index);
+		kprintf("%p %d %d: %p %d \n", pdpe, pdpe_index,(pdpe+510)->p, pml4e, pml4e_index);
 		if((pdpe + pdpe_index)->p == 0){
 			uint64_t free_page_2 = (uint64_t) get_free_page();
-			(pdpe + pdpe_index)->page_directory_base_address = free_page_2 & 0x000ffffffffff000;
+			(pdpe + pdpe_index)->page_directory_base_address =(uint64_t) pointer_to_pde;
 			(pdpe + pdpe_index)->p = 1;
 			(pdpe + pdpe_index)->rw = 1;
 			(pdpe + pdpe_index)->us = 1;
@@ -203,10 +185,9 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
 			pde = (PDE *)pointer_to_pde;
 
 			int pde_index = (0x000000003fe00000 & virtual_addr) >> 21;
-			(pde+pde_index)->p = 0;
 			if((pde + pde_index)->p == 0){
 				uint64_t free_page_3 = (uint64_t) get_free_page();
-				(pde + pde_index)->page_table_base_address = free_page_3;
+				(pde + pde_index)->page_table_base_address =(uint64_t) pointer_to_pte;
 				(pde + pde_index)->p = 1;
 				(pde + pde_index)->rw = 1;
 				(pde + pde_index)->us = 1;
@@ -214,18 +195,15 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
 				uint64_t *pointer_to_pte = (uint64_t *)free_page_3;
 				memset1(pointer_to_pte, 0, 4096);
 				pte = (PTE *)pointer_to_pte;
-				//int pte_index = (0x0000000000001ff000 & virtual_addr) >> 12;
-				// init_pd(pte, pointer_to_pml4e, (uint64_t)physbase, 512*4096);
+				int pte_index = (0x0000000000001ff000 & virtual_addr) >> 12;
+				init_pd(pte, pointer_to_pml4e, (uint64_t)physbase, 512*4096);
 			}
 		}
 		
 		
 	}
   } 
-  
-  
-  
-  
+  */
   
   
   

@@ -79,8 +79,8 @@ void initScreen(){
 }
 
 int findCursorX(){
-	register char *temp = (char *)0xb8000;
 	int pos = 0;
+	register char *temp = (char *)0xb8000;
 	while(*temp){
 		pos+=2;
 		temp+=2;

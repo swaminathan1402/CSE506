@@ -10,7 +10,7 @@ uint64_t  page_table[1024] __attribute__((aligned(4096)));
 uint64_t *pointer_to_page_directory;
 uint64_t *pointer_to_page_table;
 void init_pt();
-
+void setMap(uint64_t, uint64_t);
 typedef struct {
 	uint8_t p:1;
 	uint8_t rw:1;
@@ -24,7 +24,7 @@ typedef struct {
 	uint64_t page_directory_pointer_base_address: 40;
 	uint16_t available: 11;
 	uint8_t nx:1;
-}__attribute__((aligned(4096))) PML4E;
+}__attribute__((packed)) PML4E;
 
 
 typedef struct {
@@ -41,7 +41,7 @@ typedef struct {
 	uint64_t page_directory_base_address: 40;
 	uint16_t available: 11;
 	uint8_t nx:1;
-}__attribute__((aligned(4096))) PDPE;
+}__attribute__((packed)) PDPE;
 
 
 typedef struct {
@@ -58,7 +58,7 @@ typedef struct {
 	uint64_t page_table_base_address: 40;
 	uint16_t available: 11;
 	uint8_t nx:1;
-}__attribute__((aligned(4096))) PDE;
+}__attribute__((packed)) PDE;
 
 typedef struct {
 	uint8_t p:1;
@@ -74,7 +74,7 @@ typedef struct {
 	uint64_t physical_address: 40;
 	uint16_t available: 11;
 	uint8_t nx:1;
-}__attribute__((aligned(4096))) PTE;
+}__attribute__((packed)) PTE;
 
 
 
@@ -83,6 +83,6 @@ PDPE *pdpe;
 PDE *pde ;
 PTE *pte;
 
-void init_pd(PTE*,uint64_t *, uint64_t, int);
+void init_pd(PTE*,PML4E *, uint64_t, int);
 
 #endif

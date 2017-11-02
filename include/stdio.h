@@ -9,5 +9,4 @@ int printf(const char *format, ...);
 
 char *gets(char *s);
 char getchar();
-
 #endif
