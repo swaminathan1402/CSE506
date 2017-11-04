@@ -73,15 +73,15 @@ char volatile *itoa(int value, int base){
 }
 
 void initScreen(){
-	register char *temp = (char *)0xb8000;
+	register char *temp = (char *)VIDEO_MEM_BUF;
 	*temp = '\0';
 	return;
 }
 
 int findCursorX(){
 	int pos = 0;
-	register char *temp = (char *)0xb8000;
-	while(*temp){
+	register char *temp = (char *)VIDEO_MEM_BUF;
+	 while(*temp){
 		pos+=2;
 		temp+=2;
 	}
@@ -89,7 +89,7 @@ int findCursorX(){
 }
 
 int findCursorY(){
-	register char *temp = (char *)0xb8000;
+	register char *temp = (char *)VIDEO_MEM_BUF;
 	int pos = 0;
 	while(*temp){
 		pos+=2;
@@ -99,7 +99,7 @@ int findCursorY(){
 }
 
 void scroll(){
-	register char *flusher = (char *)0xb8000;
+	register char *flusher = (char *)VIDEO_MEM_BUF;
 	while(*flusher){
 		*flusher = '\0';
 		flusher+=2;
@@ -125,7 +125,7 @@ void kprintf(const char *fmt, ...)
 		pos_x = 0;
 		pos_y = 0;
 	}
-	temp2 = (char *)0xb8000 + pos_y*160 + pos_x;
+	temp2 = (char *)VIDEO_MEM_BUF + pos_y*160 + pos_x;
 	
 	va_list ap;
         int numberOfParams = 0;

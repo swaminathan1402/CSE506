@@ -107,13 +107,13 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
 
 
   uint64_t *pointer_to_pml4e = (uint64_t *)get_free_page();
-  int *a = (int *)get_free_page();
+  // int *a = (int *)get_free_page();
   uint64_t *pointer_to_pdpe = (uint64_t *)get_free_page();
-  int *b = (int *)get_free_page();
+  // int *b = (int *)get_free_page();
   uint64_t *pointer_to_pde = (uint64_t *)get_free_page();
-  int *c = (int *)get_free_page();
+  // int *c = (int *)get_free_page();
   uint64_t *pointer_to_pte = (uint64_t *)get_free_page();
-  kprintf("%p %p %p\n", a, b, c);
+  // kprintf("%p %p %p\n", a, b, c);
 
   pml4e = (PML4E *)pointer_to_pml4e;
   memset(pml4e, 0, 4096);
@@ -150,8 +150,12 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
 	sizeof(pml4e));
   int size_of_kernel = (uint64_t)physfree - (uint64_t)physbase;
   kprintf("the size of kernel %x\n", size_of_kernel);
-  setMap((uint64_t)&kernmem - (uint64_t)physbase + 0xb8000, 0xb8000);
+  //setMap((uint64_t)&kernmem - (uint64_t)physbase + 0xb8000, 0xb8000);
+  //init_pd(pte, pml4e, (uint64_t)physbase, size_of_kernel);
+  //for( int i=0; i<256;i++) 
+  //  setMap(i*4096, i*4096);
   init_pd(pte, pml4e, (uint64_t)physbase, size_of_kernel);
+  kprintf("shit\n");
 
   /*
   for(int i=0; i<=size_of_kernel; i+=4096){
@@ -263,7 +267,7 @@ void boot(void)
   // note: function changes rsp, local stack variables can't be practically used
   register char  *temp2, *temp1;
 
-  for(temp2 = (char*)0xb8001; temp2 < (char*)0xb8000+160*25; temp2 += 2) *temp2 = 7 /* white */;
+  for(temp2 = (char*)VIDEO_MEM_BUF+1; temp2 < (char*)VIDEO_MEM_BUF+160*25; temp2 += 2) *temp2 = 7 /* white */;
   __asm__ volatile (
     "cli;"
     "movq %%rsp, %0;"
@@ -282,7 +286,7 @@ void boot(void)
     (uint64_t*)(uint64_t)loader_stack[4]
   );
   for(
-    temp1 = "!!!!! start() returned !!!!!", temp2 = (char*)0xb8000;
+    temp1 = "!!!!! start() returned !!!!!", temp2 = (char*)VIDEO_MEM_BUF;
     *temp1;
     temp1 += 1, temp2 += 2
   ) *temp2 = *temp1;
