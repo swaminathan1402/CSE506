@@ -150,11 +150,8 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
 	sizeof(pml4e));
   int size_of_kernel = (uint64_t)physfree - (uint64_t)physbase;
   kprintf("the size of kernel %x\n", size_of_kernel);
-
+  setMap((uint64_t)&kernmem - (uint64_t)physbase + 0xb8000, 0xb8000);
   init_pd(pte, pml4e, (uint64_t)physbase, size_of_kernel);
-  int d = 5;
-  d+=5;
-  // setMap((uint64_t)&kernmem + 0xb8000, 0xb8000);
 
   /*
   for(int i=0; i<=size_of_kernel; i+=4096){

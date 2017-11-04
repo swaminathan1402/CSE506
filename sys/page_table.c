@@ -13,10 +13,10 @@ void idpaging(PTE* first_pte, uint64_t from, int size){
 		(first_pte + i)->rw = 1;
 		(first_pte + i)->p  = 1;
 		(first_pte + i)->us = 1;
-		kprintf("%p <- %p\n", (first_pte+i)->physical_address, first_pte + i);
+		//kprintf("%p <- %p\n", (first_pte+i)->physical_address, first_pte + i);
 		
 	}
-	kprintf("From %p\n", from);
+	// kprintf("From %p\n", from);
 }
 
 
@@ -34,15 +34,14 @@ void init_pd(PTE* first_pte, PML4E* first_pml4e, uint64_t from, int size){
         	:
         	:"r"(first_pml4e)
         );
-	kprintf("crap\n");
+	//kprintf("crap\n");
 }
 
 void setMap(uint64_t virtual_addr, uint64_t physical_addr){
-	int pml4e_index = virtual_addr & 0x0000ff8000000000 >> 39;
-	int pdpe_index = virtual_addr & 0x0000007fc0000000 >> 30;
-	int pde_index = virtual_addr & 0x000000003fe00000 >> 21;
-	int pte_index = virtual_addr & 0x0000000000001ff000 >> 12;
-
+	int pml4e_index = (virtual_addr & 0x0000ff8000000000) >> 39;
+	int pdpe_index = (virtual_addr & 0x0000007fc0000000) >> 30;
+	int pde_index = (virtual_addr & 0x000000003fe00000) >> 21;
+	int pte_index = (virtual_addr & 0x00000000001ff000) >> 12;
 	if((pml4e+pml4e_index)->p == 0 ){
 		
 		// get free page
@@ -119,6 +118,7 @@ void setMap(uint64_t virtual_addr, uint64_t physical_addr){
 	}
 
 	if((pde + pde_index)->p == 0){
+		kprintf("This is what happens %p, %d %d %d %d\n", virtual_addr, pml4e_index, pdpe_index, pde_index, pte_index);
 		
 		// get free page
                uint64_t *temp_page_1 = (uint64_t *)get_free_page();
@@ -133,6 +133,7 @@ void setMap(uint64_t virtual_addr, uint64_t physical_addr){
                		(pte + pte_index)->rw = 1;
                		(pte + pte_index)->p  = 1;
                		(pte + pte_index)->us = 1;
+			kprintf("setting pte %p\n", physical_addr >> 12);
                }
 
 	}
@@ -143,5 +144,4 @@ void setMap(uint64_t virtual_addr, uint64_t physical_addr){
                 (pte + pte_index)->p  = 1;
                 (pte + pte_index)->us = 1;
 	}
-
 }
