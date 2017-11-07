@@ -13,10 +13,10 @@ void idpaging(PTE* first_pte, uint64_t from, int size){
 		(first_pte + i)->rw = 1;
 		(first_pte + i)->p  = 1;
 		(first_pte + i)->us = 1;
-		kprintf("%p <- %p\n", (first_pte+i)->physical_address, first_pte + i);
+		//kprintf("%p <- %p\n", (first_pte+i)->physical_address, first_pte + i);
 		
 	}
-	// kprintf("From %p\n", from);
+	//kprintf("From %p\n", from);
 }
 
 
@@ -25,19 +25,20 @@ void init_pd(PTE* first_pte, PML4E* first_pml4e, uint64_t from, int size){
 	kprintf("Performing Kernel Identity mapping to first pte's 2 MB \n");
 
 	idpaging(first_pte, from, size);
-	idpaging(first_pte + 85, from+size, 10*4096);
+	kprintf("Mapping from %p to %p\n", from+size, from+size+100*4096);
+	idpaging(first_pte + 85, from+size, 100*4096);
 
 	kprintf("pointer to pml4e pdpe addr:%p\n pointer to first pte: %p\n", (first_pml4e+511)->page_directory_pointer_base_address, first_pte);
 	kprintf("pointer to pml4e:%p\n", first_pml4e);
-	setMap(0xffffffff800b8000, 0xb8000);
-	//for( int i=0; i<256;i++) 
-        //  setMap(i*4096, i*4096);
+	//setMap(0xffffffff800b8000, 0xb8000);
+	setMap(0xb8000, 0xb8000);
+	for(int i=0; i<1024;i++)
+	    setMap(i*4096, i*4096);
 	__asm__ __volatile__(
         	"movq %0, %%cr3;"
         	:
         	:"r"(first_pml4e)
         );
-	//kprintf("crap\n");
 }
 
 void setMap(uint64_t virtual_addr, uint64_t physical_addr){
@@ -45,7 +46,7 @@ void setMap(uint64_t virtual_addr, uint64_t physical_addr){
 	int pdpe_index = (virtual_addr & 0x0000007fc0000000) >> 30;
 	int pde_index = (virtual_addr & 0x000000003fe00000) >> 21;
 	int pte_index = (virtual_addr & 0x00000000001ff000) >> 12;
-	//kprintf("This is what happens %p, %d %d %d %d\n", virtual_addr, pml4e_index, pdpe_index, pde_index, pte_index);
+	kprintf("This is what happens %p, %d %d %d %d\n", virtual_addr, pml4e_index, pdpe_index, pde_index, pte_index);
 	if((pml4e+pml4e_index)->p == 0 ){
 		
 		// get free page
