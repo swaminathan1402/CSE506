@@ -175,26 +175,28 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
 	: "=m"(rflags)
 	:
     );
+    mainTask = (task *)get_free_page();
+    otherTask = (task *)get_free_page();
     createTask(mainTask, mainOne, rflags, cr3);
     createTask(otherTask, mainTwo, rflags, cr3);
     mainTask->next = otherTask;
     otherTask->next = mainTask;
     runningTask = mainTask;
+    kprintf("%p is running task and %p is the next task ", (uint64_t)mainTask, (uint64_t)mainTask->next);
     uint64_t shit = (uint64_t)mainOne;
-    __asm__ __volatile__ (
+    __asm__ __volatile__ ( 
+	"mov %1, %%rsp;"
 	"call %0;"
 	:
-	: "m"(shit)
+	: "m"(shit) ,"m" (mainTask->regs.rsp)  
 	:
     );
     //initTasking();
-
     /* End of yield testing */
     
    //showAllFreePages();
    //freelist *newpage = get_free_pages(5);
   
-
   /*
   int SATA_PORT;
   SATA_PORT = bruteForcePCIcheckAHCI(&ahci_mem_base, 0xa8000); // b0000
