@@ -177,18 +177,22 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
     );
     mainTask = (task *)get_free_page();
     otherTask = (task *)get_free_page();
-    createTask(mainTask, mainOne, rflags, cr3);
-    createTask(otherTask, mainTwo, rflags, cr3);
+    createTask(mainTask, mainOne, rflags, cr3, otherTask);
+    createTask(otherTask, mainTwo, rflags, cr3, mainTask);
+    /*
     mainTask->next = otherTask;
     otherTask->next = mainTask;
+    */
     runningTask = mainTask;
-    kprintf("%p is running task and %p is the next task ", (uint64_t)mainTask, (uint64_t)mainTask->next);
+    runningTask->regs.rsp += 56; 
     uint64_t shit = (uint64_t)mainOne;
-    __asm__ __volatile__ ( 
-	"mov %1, %%rsp;"
-	"call %0;"
+    __asm__ __volatile__ (
+	"movq %0, %%rsi;"
+    	"movq %1, %%r11;"
+    	"movq %%r11, %%rsp;"
+	"call %%rsi;"
 	:
-	: "m"(shit) ,"m" (mainTask->regs.rsp)  
+	: "m"(shit), "m"(mainTask->regs.rsp)
 	:
     );
     //initTasking();
