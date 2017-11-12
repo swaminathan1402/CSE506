@@ -151,10 +151,6 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   	sizeof(pml4e));
     int size_of_kernel = (uint64_t)physfree - (uint64_t)physbase;
     kprintf("the size of kernel %x\n", size_of_kernel);
-    //setMap((uint64_t)&kernmem - (uint64_t)physbase + 0xb8000, 0xb8000);
-    //init_pd(pte, pml4e, (uint64_t)physbase, size_of_kernel);
-    //for( int i=0; i<256;i++) 
-    //  setMap(i*4096, i*4096);
     init_pd(pte, pml4e, (uint64_t)physbase, size_of_kernel);
     kprintf("shit\n");
     int *c = (int *)get_free_page();
@@ -179,20 +175,15 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
     otherTask = (task *)get_free_page();
     createTask(mainTask, mainOne, rflags, cr3, otherTask);
     createTask(otherTask, mainTwo, rflags, cr3, mainTask);
-    /*
-    mainTask->next = otherTask;
-    otherTask->next = mainTask;
-    */
     runningTask = mainTask;
-    runningTask->regs.rsp += 56; 
-    uint64_t shit = (uint64_t)mainOne;
+    //runningTask->regs.rsp += 56; 
     __asm__ __volatile__ (
 	"movq %0, %%rsi;"
     	"movq %1, %%r11;"
     	"movq %%r11, %%rsp;"
 	"call %%rsi;"
 	:
-	: "m"(shit), "m"(mainTask->regs.rsp)
+	: "m"(runningTask->regs.rip), "m"(mainTask->regs.rsp)
 	:
     );
     //initTasking();

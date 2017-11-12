@@ -9,7 +9,7 @@ typedef struct {
 
 typedef struct task{
 	registers regs;
-	// struct task* next;
+	struct task* next;
 } task;
 
 task* runningTask;
