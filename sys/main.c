@@ -173,9 +173,13 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
     );
     mainTask = (task *)get_free_page();
     otherTask = (task *)get_free_page();
+    idleTask = (task *)get_free_page();
+
     createTask(mainTask, mainOne, rflags, cr3, otherTask);
-    createTask(otherTask, mainTwo, rflags, cr3, mainTask);
-    runningTask = mainTask;
+    createTask(otherTask, mainTwo, rflags, cr3, idleTask);
+    createTask(idleTask, beIdle, rflags, cr3, mainTask);
+
+    runningTask = idleTask;
     //runningTask->regs.rsp += 56; 
     __asm__ __volatile__ (
 	"movq %0, %%rsi;"

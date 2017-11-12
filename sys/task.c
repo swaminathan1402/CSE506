@@ -118,6 +118,12 @@ void mainOne() {
 	}
 	yield();
 }
+void beIdle(){
+	while(1){
+		yield();
+	}
+
+}
 void createTask(task *me, 
 		void (*main)(), 
 		uint64_t rflags, 

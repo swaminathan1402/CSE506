@@ -15,6 +15,7 @@ typedef struct task{
 task* runningTask;
 task* mainTask;
 task* otherTask;
+task* idleTask;
 
 void createTask(task*, void(*)(), uint64_t, uint64_t, task*);
 void yield();
@@ -22,4 +23,5 @@ void switchTo(registers *old, registers *current);
 
 void mainOne();
 void mainTwo();
+void beIdle();
 #endif
