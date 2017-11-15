@@ -166,3 +166,34 @@ void createTask(task *me,
 	);
 	me->regs.rsp -= 56;
 }
+
+void test_user_function()
+{
+
+kprintf("Crapp!!");
+
+}
+
+void switch_to_ring_3()
+{
+	__asm__ __volatile__ (
+	"cli;"
+	"movq $0x23 , %%rax;"
+	"movq %%rax , %%ds;"
+	"movq %%rax , %%es;"
+	"movq %%rax , %%fs;"
+	"movq %%rax , %%gs;"
+
+	"movq %%rsp, %%rax;"
+        "push $0x23 ;"
+	"push %%rax;"
+	"pushf;"
+	"push $0x1B;"
+	"push  %0; "
+	"iretq;"
+	:
+	:"m"(test_user_function)
+	:
+	);
+}
+

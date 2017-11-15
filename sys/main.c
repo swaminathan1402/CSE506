@@ -180,17 +180,16 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
     createTask(idleTask, beIdle, rflags, cr3, mainTask);
 
     runningTask = idleTask;
-    //runningTask->regs.rsp += 56; 
-    __asm__ __volatile__ (
-	"movq %0, %%rsi;"
-    	"movq %1, %%r11;"
-    	"movq %%r11, %%rsp;"
-	"call %%rsi;"
-	:
-	: "m"(runningTask->regs.rip), "m"(mainTask->regs.rsp)
-	:
-    );
-    //initTasking();
+    switch_to_ring_3();
+    // __asm__ __volatile__ (
+    //     "movq %0, %%rsi;"
+    // 	"movq %1, %%r11;"
+    // 	"movq %%r11, %%rsp;"
+    //     "call %%rsi;"
+    //     :
+    //     : "m"(runningTask->regs.rip), "m"(mainTask->regs.rsp)
+    //     :
+    // );
     /* End of yield testing */
     
    //showAllFreePages();
