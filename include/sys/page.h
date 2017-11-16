@@ -14,5 +14,5 @@ freelist *current_free_page;
 void showAllFreePages();
 freelist *get_free_page();
 freelist *get_free_pages(int numPages);
-
+freelist *get_free_user_page();
 #endif

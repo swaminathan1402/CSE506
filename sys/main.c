@@ -128,17 +128,17 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
     (pml4e + 511)->page_directory_pointer_base_address = ((uint64_t)pointer_to_pdpe >> 12);
     (pml4e + 511)->p = 1; 
     (pml4e + 511)->rw = 1; 
-    (pml4e + 511)->us = 1; 
+    (pml4e + 511)->us = 0; 
   
     (pdpe + 510)->page_directory_base_address = (uint64_t)pointer_to_pde >> 12;
-    (pdpe + 510)->p = 1; 
+    (pdpe + 510)->p = 1;
     (pdpe + 510)->rw = 1; 
-    (pdpe + 510)->us = 1;
+    (pdpe + 510)->us = 0;
   
     (pde + 1)->page_table_base_address = (uint64_t)pointer_to_pte >> 12;
     (pde + 1)->p = 1;
     (pde + 1)->rw = 1;
-    (pde + 1)->us = 1;
+    (pde + 1)->us = 0;
   
     
     kprintf("pml4e points to %p %p\n pdpe points to %p %p\n pde points to %p %p\n %d size",
@@ -174,22 +174,24 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
     mainTask = (task *)get_free_page();
     otherTask = (task *)get_free_page();
     idleTask = (task *)get_free_page();
+    userTask = (task *)get_free_page();
+
 
     createTask(mainTask, mainOne, rflags, cr3, otherTask);
-    createTask(otherTask, mainTwo, rflags, cr3, idleTask);
+    createTask(otherTask, mainTwo, rflags, cr3, userTask);
+    createTask(userTask, switch_to_ring_3, rflags, cr3, idleTask);
     createTask(idleTask, beIdle, rflags, cr3, mainTask);
 
     runningTask = idleTask;
-    switch_to_ring_3();
-    // __asm__ __volatile__ (
-    //     "movq %0, %%rsi;"
-    // 	"movq %1, %%r11;"
-    // 	"movq %%r11, %%rsp;"
-    //     "call %%rsi;"
-    //     :
-    //     : "m"(runningTask->regs.rip), "m"(mainTask->regs.rsp)
-    //     :
-    // );
+    __asm__ __volatile__ (
+        "movq %0, %%rsi;"
+    	"movq %1, %%r11;"
+    	"movq %%r11, %%rsp;"
+        "call %%rsi;"
+        :
+        : "m"(runningTask->regs.rip), "m"(mainTask->regs.rsp)
+        :
+    );
     /* End of yield testing */
     
    //showAllFreePages();

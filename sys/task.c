@@ -169,31 +169,33 @@ void createTask(task *me,
 
 void test_user_function()
 {
-
-kprintf("Crapp!!");
+	kprintf("Crapp!!");
+	while(1);
 
 }
 
 void switch_to_ring_3()
 {
+	uint64_t user_fn_addr  = (uint64_t)test_user_function;
 	__asm__ __volatile__ (
 	"cli;"
+	"movq %0, %%r13;"
 	"movq $0x23 , %%rax;"
 	"movq %%rax , %%ds;"
 	"movq %%rax , %%es;"
 	"movq %%rax , %%fs;"
 	"movq %%rax , %%gs;"
-
 	"movq %%rsp, %%rax;"
-        "push $0x23 ;"
+
+        "push $0x23;"  // data segment is at offset 32.. last two bits should be 2. 32 or 3
 	"push %%rax;"
 	"pushf;"
-	"push $0x1B;"
-	"push  %0; "
+	"push $0x2B;" // data segment is at offset 40... last two bits should be 2. 40 or 3
+	"push %%r13;"
+
 	"iretq;"
 	:
-	:"m"(test_user_function)
+	:"m"(user_fn_addr)
 	:
 	);
 }
-

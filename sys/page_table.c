@@ -12,7 +12,7 @@ void idpaging(PTE* first_pte, uint64_t from, int size){
 		(first_pte + i)->physical_address = from >> 12;
 		(first_pte + i)->rw = 1;
 		(first_pte + i)->p  = 1;
-		(first_pte + i)->us = 1;
+		(first_pte + i)->us = 0;
 		//kprintf("%p <- %p\n", (first_pte+i)->physical_address, first_pte + i);
 		
 	}
@@ -31,9 +31,11 @@ void init_pd(PTE* first_pte, PML4E* first_pml4e, uint64_t from, int size){
 	kprintf("pointer to pml4e pdpe addr:%p\n pointer to first pte: %p\n", (first_pml4e+511)->page_directory_pointer_base_address, first_pte);
 	kprintf("pointer to pml4e:%p\n", first_pml4e);
 	//setMap(0xffffffff800b8000, 0xb8000);
-	setMap(0xb8000, 0xb8000);
+	setMap(0xb8000, 0xb8000, 0);
 	for(int i=0; i<1024;i++)
-	    setMap(i*4096, i*4096);
+	    setMap(i*4096, i*4096, 0);
+
+	
 	__asm__ __volatile__(
         	"movq %0, %%cr3;"
         	:
@@ -41,7 +43,7 @@ void init_pd(PTE* first_pte, PML4E* first_pml4e, uint64_t from, int size){
         );
 }
 
-void setMap(uint64_t virtual_addr, uint64_t physical_addr){
+void setMap(uint64_t virtual_addr, uint64_t physical_addr, int user_accessible){
 	int pml4e_index = (virtual_addr & 0x0000ff8000000000) >> 39;
 	int pdpe_index = (virtual_addr & 0x0000007fc0000000) >> 30;
 	int pde_index = (virtual_addr & 0x000000003fe00000) >> 21;
@@ -54,7 +56,7 @@ void setMap(uint64_t virtual_addr, uint64_t physical_addr){
 		memset(some_page, 0, 4096);
 		(pml4e + pml4e_index)->page_directory_pointer_base_address = (uint64_t)some_page >> 12;
                 (pml4e + pml4e_index)->p = 1;
-                (pml4e + pml4e_index)->us = 1;
+                (pml4e + pml4e_index)->us = user_accessible;
                 (pml4e + pml4e_index)->rw = 1;
 
 		pdpe = (PDPE *)some_page;
@@ -64,7 +66,7 @@ void setMap(uint64_t virtual_addr, uint64_t physical_addr){
 			(pdpe + pdpe_index)->page_directory_base_address =(uint64_t)temp_page >> 12;
                         (pdpe + pdpe_index)->p = 1;
                         (pdpe + pdpe_index)->rw = 1;
-                        (pdpe + pdpe_index)->us = 1;
+                        (pdpe + pdpe_index)->us = user_accessible;
 
 			pde = (PDE *)temp_page;
 			if((pde + pde_index)->p == 0){
@@ -72,14 +74,14 @@ void setMap(uint64_t virtual_addr, uint64_t physical_addr){
                                 (pde + pde_index)->page_table_base_address =(uint64_t) temp_page_1 >> 12 ;
                                 (pde + pde_index)->p = 1;
                                 (pde + pde_index)->rw = 1;
-                                (pde + pde_index)->us = 1;
+                                (pde + pde_index)->us = user_accessible;
 
 				pte = (PTE *)temp_page_1;
 				if((pte + pte_index)->p == 0){
 					(pte + pte_index)->physical_address = physical_addr >> 12;
 					(pte + pte_index)->rw = 1;
 					(pte + pte_index)->p  = 1;
-					(pte + pte_index)->us = 1;
+					(pte + pte_index)->us = user_accessible;
 					
 				}
 			}
@@ -95,7 +97,7 @@ void setMap(uint64_t virtual_addr, uint64_t physical_addr){
                 (pdpe + pdpe_index)->page_directory_base_address =(uint64_t)temp_page >> 12;
                 (pdpe + pdpe_index)->p = 1;
                 (pdpe + pdpe_index)->rw = 1;
-                (pdpe + pdpe_index)->us = 1;
+                (pdpe + pdpe_index)->us = user_accessible;
                                                                                        
                 pde = (PDE *)temp_page;
 		if((pde + pde_index)->p == 0){
@@ -103,14 +105,14 @@ void setMap(uint64_t virtual_addr, uint64_t physical_addr){
                         (pde + pde_index)->page_table_base_address =(uint64_t) temp_page_1 >> 12;
                         (pde + pde_index)->p = 1;
                         (pde + pde_index)->rw = 1;
-                        (pde + pde_index)->us = 1;
+                        (pde + pde_index)->us = user_accessible;
                                                                                             
                 	pte = (PTE *)temp_page_1;
                 	if((pte + pte_index)->p == 0){
                 		(pte + pte_index)->physical_address = physical_addr >> 12;
                 		(pte + pte_index)->rw = 1;
                 		(pte + pte_index)->p  = 1;
-                		(pte + pte_index)->us = 1;
+                		(pte + pte_index)->us = user_accessible;
                 		
                 	}
                 }
@@ -124,13 +126,13 @@ void setMap(uint64_t virtual_addr, uint64_t physical_addr){
                (pde + pde_index)->page_table_base_address =(uint64_t) temp_page_1 >> 12;
                (pde + pde_index)->p = 1;
                (pde + pde_index)->rw = 1;
-               (pde + pde_index)->us = 1;
+               (pde + pde_index)->us = user_accessible;
                pte = (PTE *)temp_page_1;
                if((pte + pte_index)->p == 0){
 	     		(pte + pte_index)->physical_address = physical_addr >> 12;
                		(pte + pte_index)->rw = 1;
                		(pte + pte_index)->p  = 1;
-               		(pte + pte_index)->us = 1;
+               		(pte + pte_index)->us = user_accessible;
 			//kprintf("setting pte %p\n", physical_addr >> 12);
                }
 
@@ -140,6 +142,6 @@ void setMap(uint64_t virtual_addr, uint64_t physical_addr){
 		(pte + pte_index)->physical_address = physical_addr >> 12;
                 (pte + pte_index)->rw = 1;
                 (pte + pte_index)->p  = 1;
-                (pte + pte_index)->us = 1;
+                (pte + pte_index)->us = user_accessible;
 	}
 }

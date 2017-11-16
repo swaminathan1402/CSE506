@@ -10,7 +10,7 @@ uint64_t  page_table[1024] __attribute__((aligned(4096)));
 uint64_t *pointer_to_page_directory;
 uint64_t *pointer_to_page_table;
 void init_pt();
-void setMap(uint64_t, uint64_t);
+void setMap(uint64_t, uint64_t, int);
 typedef struct {
 	uint8_t p:1;
 	uint8_t rw:1;
