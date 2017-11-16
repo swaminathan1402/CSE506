@@ -7,3 +7,11 @@ void *memset(void *array, int c, size_t n){
     }
     return array;
 }
+
+void *memcpy(void *dst, void *src, size_t n )
+{
+	while(n--)
+	{
+	*dst++= *src++;
+	}	
+}
