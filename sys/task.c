@@ -1,7 +1,8 @@
 #include <sys/task.h>
 #include <sys/kprintf.h>
 #include <sys/page.h>
-
+#include <sys/memory.h>
+#include <sys/page_table.h>
 void yield(){
 
 	/*
@@ -169,14 +170,23 @@ void createTask(task *me,
 
 void test_user_function()
 {
-	kprintf("Crapp!!");
-	while(1);
+//	int a = 2;
+//	int c = a + 3;
+//	kprintf("%d", c);
+	while(1)
+	{
+		syscall_write(0,"Hello Syscall", 13);
+	}
 
 }
 
 void switch_to_ring_3()
 {
-	uint64_t user_fn_addr  = (uint64_t)test_user_function;
+	uint64_t* user_fn_addr_ptr = (uint64_t *)test_user_function;
+	uint64_t* user_page = (uint64_t *)get_free_user_page();
+	//changeUserPrivilegePage((uint64_t)user_page);
+	memcpy(user_page,user_fn_addr_ptr,  0x30);
+	set_tss_rsp(user_task->rsp);
 	__asm__ __volatile__ (
 	"cli;"
 	"movq %0, %%r13;"
@@ -195,7 +205,7 @@ void switch_to_ring_3()
 
 	"iretq;"
 	:
-	:"m"(user_fn_addr)
+	:"m"(user_page)
 	:
 	);
 }

@@ -41,6 +41,6 @@ freelist *get_free_user_page(){
 	first_free_page = first_free_page->next;
 	first_free_page->prev = NULL;
 	uint64_t addr = (uint64_t)page;
-	setMap(addr, addr, 1);
+	changeUserPrivilegePage(addr);
 	return page;
 }

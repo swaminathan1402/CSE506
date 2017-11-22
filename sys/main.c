@@ -90,7 +90,7 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   	  current_free_page = newpage;
   	}
   	
-        	uint64_t base = (uint64_t)current_free_page + PAGE_SIZE;
+	uint64_t base = (uint64_t)current_free_page + PAGE_SIZE;
   	while(base < smap->base + smap->length){
   	  freelist *newpage = (freelist *)base;
   	  newpage->prev = current_free_page;

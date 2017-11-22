@@ -11,6 +11,8 @@ uint64_t *pointer_to_page_directory;
 uint64_t *pointer_to_page_table;
 void init_pt();
 void setMap(uint64_t, uint64_t, int);
+void changeUserPrivilegePage(uint64_t);
+
 typedef struct {
 	uint8_t p:1;
 	uint8_t rw:1;

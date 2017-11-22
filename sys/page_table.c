@@ -32,9 +32,11 @@ void init_pd(PTE* first_pte, PML4E* first_pml4e, uint64_t from, int size){
 	kprintf("pointer to pml4e:%p\n", first_pml4e);
 	//setMap(0xffffffff800b8000, 0xb8000);
 	setMap(0xb8000, 0xb8000, 0);
-	for(int i=0; i<1024;i++)
-	    setMap(i*4096, i*4096, 0);
-
+	int i;
+	for(i=0; i<1024;i++)
+	    setMap(i*4096, i*4096, 0); // kernel
+	//for(int j=0; j<512;j++)
+	  //  setMap((j) *4096+ 0xffffff0000000000, (j)*4096+ 0xffffff0000000000, 1);
 	
 	__asm__ __volatile__(
         	"movq %0, %%cr3;"
@@ -43,11 +45,27 @@ void init_pd(PTE* first_pte, PML4E* first_pml4e, uint64_t from, int size){
         );
 }
 
+void changeUserPrivilegePage(uint64_t virtual_addr){
+	int pml4e_index = (virtual_addr & 0x0000ff8000000000) >> 39;
+ 	int pdpe_index = (virtual_addr & 0x0000007fc0000000) >> 30;
+ 	int pde_index = (virtual_addr & 0x000000003fe00000) >> 21;
+ 	int pte_index = (virtual_addr & 0x00000000001ff000) >> 12;
+
+		
+	PDPE *some_pdpe = (PDPE*)(uint64_t)((pml4e+pml4e_index)->page_directory_pointer_base_address << 12);
+	PDE *some_pde = (PDE *)(uint64_t)((some_pdpe + pdpe_index)->page_directory_base_address << 12);
+	PTE *some_pte = (PTE *)(uint64_t)((some_pde + pde_index)->page_table_base_address << 12);
+	(pml4e+pml4e_index)->us=1;
+	(some_pdpe+pdpe_index)->us=1;
+	(some_pde+pde_index)->us=1;
+	(some_pte+pte_index)->us = 1;
+}
+
 void setMap(uint64_t virtual_addr, uint64_t physical_addr, int user_accessible){
 	int pml4e_index = (virtual_addr & 0x0000ff8000000000) >> 39;
-	int pdpe_index = (virtual_addr & 0x0000007fc0000000) >> 30;
-	int pde_index = (virtual_addr & 0x000000003fe00000) >> 21;
-	int pte_index = (virtual_addr & 0x00000000001ff000) >> 12;
+ 	int pdpe_index = (virtual_addr & 0x0000007fc0000000) >> 30;
+ 	int pde_index = (virtual_addr & 0x000000003fe00000) >> 21;
+ 	int pte_index = (virtual_addr & 0x00000000001ff000) >> 12;
 	kprintf("This is what happens %p, %d %d %d %d\n", virtual_addr, pml4e_index, pdpe_index, pde_index, pte_index);
 	if((pml4e+pml4e_index)->p == 0 ){
 		
