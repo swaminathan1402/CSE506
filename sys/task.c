@@ -3,6 +3,8 @@
 #include <sys/page.h>
 #include <sys/memory.h>
 #include <sys/page_table.h>
+#include <sys/gdt.h>
+#include <sys/syscall.h>
 void yield(){
 
 	/*
@@ -170,12 +172,23 @@ void createTask(task *me,
 
 void test_user_function()
 {
-//	int a = 2;
-//	int c = a + 3;
-//	kprintf("%d", c);
+__asm__ __volatile__(
+"lea %0, %%rax;"
+"movl  $0xC0000082 , %%ecx;"
+"movq %%rax, %%rdx; "
+"shr  $0x20 , %%rdx ;"
+"wrmsr;"
+"syscall;"
+:
+:"m"(syscall_handler)
+:
+);
+	//syscall_handler();
 	while(1)
 	{
-		syscall_write(0,"Hello Syscall", 13);
+		//syscall	
+
+	//syscall_write(0,"Hello Syscall", 13);
 	}
 
 }
@@ -186,7 +199,17 @@ void switch_to_ring_3()
 	uint64_t* user_page = (uint64_t *)get_free_user_page();
 	//changeUserPrivilegePage((uint64_t)user_page);
 	memcpy(user_page,user_fn_addr_ptr,  0x30);
-	set_tss_rsp(user_task->rsp);
+	uint64_t* user_rsp= (uint64_t*)get_free_user_page();
+	user_rsp+=0x1000;
+	uint64_t current_rsp;
+	__asm__ __volatile__("movq %%rsp, %0;"
+	:"=m" (current_rsp)
+	:
+	:
+	);
+	set_tss_rsp((void*)current_rsp);
+
+
 	__asm__ __volatile__ (
 	"cli;"
 	"movq %0, %%r13;"
@@ -195,7 +218,7 @@ void switch_to_ring_3()
 	"movq %%rax , %%es;"
 	"movq %%rax , %%fs;"
 	"movq %%rax , %%gs;"
-	"movq %%rsp, %%rax;"
+	"movq %1, %%rax;"
 
         "push $0x23;"  // data segment is at offset 32.. last two bits should be 2. 32 or 3
 	"push %%rax;"
@@ -205,7 +228,7 @@ void switch_to_ring_3()
 
 	"iretq;"
 	:
-	:"m"(user_page)
+	:"m"(user_page), "m"(user_rsp)
 	:
 	);
 }
