@@ -12,7 +12,7 @@ void idpaging(PTE* first_pte, uint64_t from, int size){
 		(first_pte + i)->physical_address = from >> 12;
 		(first_pte + i)->rw = 1;
 		(first_pte + i)->p  = 1;
-		(first_pte + i)->us = 0;
+		(first_pte + i)->us = 1;
 		//kprintf("%p <- %p\n", (first_pte+i)->physical_address, first_pte + i);
 		
 	}
@@ -34,7 +34,7 @@ void init_pd(PTE* first_pte, PML4E* first_pml4e, uint64_t from, int size){
 	setMap(0xb8000, 0xb8000, 0);
 	int i;
 	for(i=0; i<1024;i++)
-	    setMap(i*4096, i*4096, 0); // kernel
+	    setMap(i*4096, i*4096, 1); // kernel
 	//for(int j=0; j<512;j++)
 	  //  setMap((j) *4096+ 0xffffff0000000000, (j)*4096+ 0xffffff0000000000, 1);
 	

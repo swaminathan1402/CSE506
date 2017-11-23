@@ -3,5 +3,5 @@
 #include <sys/defs.h>
 
 void syscall_handler();
-
+void init_syscall();
 #endif

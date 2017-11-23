@@ -10,6 +10,7 @@
 #include <sys/page.h>
 #include <sys/page_table.h>
 #include <sys/task.h>
+#include<sys/syscall.h>
 #define INITIAL_STACK_SIZE 4096
 #define PAGE_SIZE 4096
 
@@ -128,17 +129,17 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
     (pml4e + 511)->page_directory_pointer_base_address = ((uint64_t)pointer_to_pdpe >> 12);
     (pml4e + 511)->p = 1; 
     (pml4e + 511)->rw = 1; 
-    (pml4e + 511)->us = 0; 
+    (pml4e + 511)->us = 1; 
   
     (pdpe + 510)->page_directory_base_address = (uint64_t)pointer_to_pde >> 12;
     (pdpe + 510)->p = 1;
     (pdpe + 510)->rw = 1; 
-    (pdpe + 510)->us = 0;
+    (pdpe + 510)->us = 1;
   
     (pde + 1)->page_table_base_address = (uint64_t)pointer_to_pte >> 12;
     (pde + 1)->p = 1;
     (pde + 1)->rw = 1;
-    (pde + 1)->us = 0;
+    (pde + 1)->us = 1;
   
     
     kprintf("pml4e points to %p %p\n pdpe points to %p %p\n pde points to %p %p\n %d size",
@@ -259,6 +260,7 @@ void boot(void)
     :"r"(&initial_stack[INITIAL_STACK_SIZE])
   );
   init_gdt(); 
+  init_syscall();	  
   init_idt();  
   initScreen();  
   init_pic();
