@@ -112,7 +112,7 @@ void mainOne() {
 	for(int i=0; i<1000; i++) {
 	    for(int j=0; j<1000; j++) {
 	    }
-	}
+	}	
 	yield();
 	kprintf("@MainOne ---- 2\n");
 	for(int i=0; i<1000; i++) {
@@ -170,49 +170,13 @@ void createTask(task *me,
 	me->regs.rsp -= 56;
 }
 
-/*void cpuGetMSR(uint32_t msr, uint32_t*lo , uint32_t* hi)
-{
-
-__asm__ __volatile__(
-"rdmsr;"
-:"=a"(*lo), "=d"(*hi)
-:"c"(msr)
-
-);
-
-}
-void cpuSetMSR( uint32_t msr, uint32_t lo, uint32_t hi) 
-{
-__asm__ __volatile__(
-"wrmsr;"
-:
-:"a"(lo), "c"(msr), "d"(hi)
-:
-
-);
-}
-*/
 void test_user_function()
 {
-/*	uint32_t syscall_low= (uint32_t)((uint64_t)syscall_handler&0x00000000ffffffff);
-	uint32_t syscall_hi= (uint32_t)(((uint64_t)syscall_handler&0xffffffff00000000)>>32);
-	uint32_t efer_low, efer_hi;
-	uint32_t star_low, star_hi;
-	cpuGetMSR(0xC0000080 , &efer_low , &efer_hi);  
-	cpuSetMSR(0xC0000080,efer_low|0x1, efer_hi );//EFER SES SCE flag Set
-	cpuGetMSR(0xC0000081, &star_low, &star_hi);
-	cpuSetMSR(0xC0000081,star_low,(0x1b<<16|0x8));//Loading all K-CS . K_DS,U_CS,U_DS in STAR;
-	cpuSetMSR(0xC0000082,syscall_low, syscall_hi);// Load syscall handler function in LSTAR.
-
-*/	__asm__ __volatile__(
+	__asm__ __volatile__(
 
 	"syscall;"
 	);
-	while(1)
-	{
-	}	
-	
-
+	while(1);	
 }
 
 
@@ -221,7 +185,7 @@ void switch_to_ring_3()
 	//uint64_t* user_fn_addr_ptr = (uint64_t *)test_user_function;
 	//uint64_t* user_page = (uint64_t *)get_free_user_page();
 	//changeUserPrivilegePage((uint64_t)user_page);
-	//memcpy(user_page,user_fn_addr_ptr,  0x30);
+	//memcpy(user_page,user_fn_addr_ptr,  0x30);  
 	uint64_t* user_rsp= (uint64_t*)get_free_user_page();
 	user_rsp += 0x1000;
 	uint64_t current_rsp;
@@ -230,6 +194,7 @@ void switch_to_ring_3()
 	:
 	:
 	);
+					
 	set_tss_rsp((void*)current_rsp);
 
 
@@ -248,7 +213,7 @@ void switch_to_ring_3()
 	"pushf;"
 	"push $0x2B;" // data segment is at offset 40... last two bits should be 2. 40 or 3
 	"push %%r13;"
-
+	
 	"iretq;"
 	:
 	:"m"(test_user_function), "m"(user_rsp)

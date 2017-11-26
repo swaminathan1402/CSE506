@@ -172,16 +172,33 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
 	: "=m"(rflags)
 	:
     );
-    mainTask = (task *)get_free_page();
-    otherTask = (task *)get_free_page();
+    mainTask = (task *)get_free_page(); 
+    PML4E*  user_pml4e=(PML4E*)get_free_page();    
+    user_pml4e->p =0;
+    mainTask->regs.cr3= (uint64_t)user_pml4e;
+	
+   otherTask = (task *)get_free_page();
+    user_pml4e=(PML4E*)get_free_page();    
+    user_pml4e->p =0;
+    otherTask->regs.cr3= (uint64_t)user_pml4e;
+	
+
     idleTask = (task *)get_free_page();
+   user_pml4e=(PML4E*)get_free_page();    
+    user_pml4e->p =0;
+    idleTask->regs.cr3= (uint64_t)user_pml4e;
+	
+
     userTask = (task *)get_free_page();
+    user_pml4e=(PML4E*)get_free_page();    
+    user_pml4e->p =0;
+    userTask->regs.cr3= (uint64_t)user_pml4e;
+	
 
-
-    createTask(mainTask, mainOne, rflags, cr3, otherTask);
-    createTask(otherTask, mainTwo, rflags, cr3, userTask);
-    createTask(userTask, switch_to_ring_3, rflags, cr3, idleTask);
-    createTask(idleTask, beIdle, rflags, cr3, mainTask);
+    createTask(mainTask, mainOne, rflags, mainTask->regs.cr3, otherTask);
+    createTask(otherTask, mainTwo, rflags,otherTask->regs.cr3, userTask);
+    createTask(userTask, switch_to_ring_3, rflags, userTask->regs.cr3, idleTask);
+    createTask(idleTask, beIdle, rflags,  idleTask->regs.cr3, mainTask);
 
     runningTask = idleTask;
     __asm__ __volatile__ (

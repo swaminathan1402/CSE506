@@ -8,9 +8,8 @@ __asm__ __volatile__(
 "rdmsr;"
 :"=a"(*lo), "=d"(*hi)
 :"c"(msr)
-
+:
 );
-
 }
 
 
@@ -40,10 +39,23 @@ void init_syscall()
 }
 
 
-
-
 void syscall_handler()
 {
+kprintf("Hello Syscall");
+int option ;
+
+/*__asm__ __volatile __(
+"swapgs;"
+"movq %%rsp , %%gs:8; "
+"movq %%gs:0, %%rsp;"
+"push %%gs:8;"
+"swapgs;"
+:
+:
+:
+);
+*/
+
 __asm__ __volatile__(
 "cli;"
 "push %%rax;"
@@ -54,11 +66,35 @@ __asm__ __volatile__(
 "push %%rsi;"
 "push %%rdi;"
 "cld;"
-:
+"movq %%rax, %0"
+:"=m"(option)
 :
 :
 );
-kprintf("Hello Syscall");
+switch (option)
+{
+ case 0: //Sys read 
+ break;	
+case 1: //sys write
+break; 
+case 2:// sys_open
+break;	
+case 3: //sys_close
+break;
+case 8://sys_lseek 
+break;
+
+case 9: //sys_mmap
+break;
+case 11: //sys_munmap
+break;
+case 22: //sys_pipe
+break ;
+default :
+break;
+}
+
+
 __asm__ __volatile__(
 "pop %%rdi;"
 "pop %%rsi;"
