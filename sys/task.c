@@ -5,6 +5,8 @@
 #include <sys/page_table.h>
 #include <sys/gdt.h>
 #include <sys/syscall.h>
+#include <sys/tarfs.h>
+
 void yield(){
 
 	/*
@@ -109,6 +111,7 @@ void mainTwo() {
 
 void mainOne() {
 	kprintf("@MainOne ---- 1\n");
+	tarfs_read();
 	for(int i=0; i<1000; i++) {
 	    for(int j=0; j<1000; j++) {
 	    }
@@ -172,11 +175,13 @@ void createTask(task *me,
 
 void test_user_function()
 {
+	
 	__asm__ __volatile__(
 
 	"syscall;"
 	);
-	while(1);	
+	while(1);
+
 }
 
 
