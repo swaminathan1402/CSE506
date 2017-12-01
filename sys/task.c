@@ -204,6 +204,9 @@ void switch_to_ring_3()
 	);
 					
 	set_tss_rsp((void*)current_rsp);
+	uint32_t current_rsp_lo = current_rsp &0x00000000FFFFFFFF;
+	uint32_t current_rsp_hi =(current_rsp &0xFFFFFFFF00000000)>32;
+	cpuSetMSR(0xC0000102,current_rsp_lo, current_rsp_hi);
 
 	tarfs_read();
 

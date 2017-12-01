@@ -71,7 +71,7 @@ int readTFDRegsSuccess(int SATA_PORT){
 void start(uint32_t *modulep, void *physbase, void *physfree)
 {
     //__asm__("sti;");
-    __asm__("cli;");
+    __asm__("sti;");
     struct smap_t {
       uint64_t base, length;
       uint32_t type;
@@ -202,7 +202,12 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
         :
     );
     */
-    tarfs_read();
+ kprintf("Trying page fault");
+  uint64_t * ptr = (uint64_t*)0x123456789ABCDEF0;  
+  uint64_t do_page_fault = *ptr;
+ kprintf("%d" , do_page_fault);   
+
+// tarfs_read();
     /* End of yield testing */
     
    //showAllFreePages();

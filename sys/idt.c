@@ -20,12 +20,12 @@ struct idt_entry
 struct idtr_t
 {
 	uint16_t size:16;
-	uint64_t base:64; 
+	uint64_t base:64;; 
 }__attribute__((packed));
 
 extern void timer_wrapper();
 extern void keyboard_wrapper();
-
+extern void page_fault_wrapper();
 
 void idt_entry_table(int index, uint64_t function)
 {
@@ -43,7 +43,13 @@ void init_idt() {
 	for(int i=0; i<256; i++){
 		if(i == 33){
 			idt_entry_table(i, (uint64_t)keyboard_wrapper);
-		} else {
+		} else if(i==14)
+		{	
+			idt_entry_table(i,(uint64_t)page_fault_wrapper);	
+			
+		}
+		else
+		 {
 			idt_entry_table(i, (uint64_t)timer_wrapper);
 		}
 	}
