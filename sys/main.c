@@ -11,6 +11,7 @@
 #include <sys/page_table.h>
 #include <sys/task.h>
 #include<sys/syscall.h>
+#include <sys/elf64.h>
 #define INITIAL_STACK_SIZE 4096
 #define PAGE_SIZE 4096
 
@@ -152,6 +153,7 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   	sizeof(pml4e));
     int size_of_kernel = (uint64_t)physfree - (uint64_t)physbase;
     kprintf("the size of kernel %x\n", size_of_kernel);
+    
     init_pd(pte, pml4e, (uint64_t)physbase, size_of_kernel);
     kprintf("shit\n");
     int *c = (int *)get_free_page();
@@ -172,18 +174,21 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
 	: "=m"(rflags)
 	:
     );
+    /*
     mainTask = (task *)get_free_page();
     otherTask = (task *)get_free_page();
     idleTask = (task *)get_free_page();
     userTask = (task *)get_free_page();
 
-
-    createTask(mainTask, mainOne, rflags, cr3, otherTask);
-    createTask(otherTask, mainTwo, rflags, cr3, userTask);
-    createTask(userTask, switch_to_ring_3, rflags, cr3, idleTask);
-    createTask(idleTask, beIdle, rflags, cr3, mainTask);
+    createTask(mainOne, rflags, cr3);
+    createTask(mainTwo, rflags, cr3);
+    createTask(switch_to_ring_3, rflags, cr3);
+    createTask(beIdle, rflags, cr3);
 
     runningTask = idleTask;
+    */
+
+    /*
     __asm__ __volatile__ (
         "movq %0, %%rsi;"
     	"movq %1, %%r11;"
@@ -193,6 +198,9 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
         : "m"(runningTask->regs.rip), "m"(mainTask->regs.rsp)
         :
     );
+    */
+    tarfs_read();
+    kprintf("your mom is a");
     /* End of yield testing */
     
    //showAllFreePages();

@@ -6,6 +6,7 @@
 #include <sys/gdt.h>
 #include <sys/syscall.h>
 #include <sys/tarfs.h>
+#include <sys/elf64.h>
 
 void yield(){
 
@@ -111,7 +112,6 @@ void mainTwo() {
 
 void mainOne() {
 	kprintf("@MainOne ---- 1\n");
-	tarfs_read();
 	for(int i=0; i<1000; i++) {
 	    for(int j=0; j<1000; j++) {
 	    }
@@ -130,24 +130,25 @@ void beIdle(){
 	}
 
 }
-void createTask(task *me, 
-		void (*main)(), 
+
+void createTask(
+		void (*main)(),  // function pointer
 		uint64_t rflags, 
 		uint64_t page_dir, 
-		task *next ){
-	/*
-	task->regs.rax = 0;
-	task->regs.rbx = 0;
-	task->regs.rcx = 0;
-	task->regs.rdx = 0;
-	task->regs.rsi = 0;
-	task->regs.rdi = 0;
-	task->regs.rflags = rflags;
-	*/
+		Elf64_Ehdr *elf_header
+		){
+	task *me = (task *)get_free_page();
 	me->regs.rip = (uint64_t)main;
 	me->regs.cr3 = page_dir;
 	me->regs.rsp = (uint64_t)get_free_page() + 4096;  // create stack at the top of the page, so that it can grow downwards and not go to the previous page
-	me->next = next;
+
+	if(runningTask == NULL){
+		runningTask = me;
+		lastTask = me;
+	}
+	me->next = runningTask;
+	runningTask = me;
+	lastTask->next = runningTask;
 
 	__asm__ __volatile__(
 	"movq %%rsp, %%r11;"
@@ -167,10 +168,12 @@ void createTask(task *me,
 	"push %%rsi;"
 	"movq %%r11, %%rsp;"
         :
-	:"m"(me->regs.rsp), "m"(next), "m"(me)
+	:"m"(me->regs.rsp), "m"(me->next), "m"(me)
 	:"memory"
 	);
 	me->regs.rsp -= 56;
+
+	//return me;
 }
 
 
@@ -199,6 +202,7 @@ void switch_to_ring_3()
 	);
 	set_tss_rsp((void*)current_rsp);
 
+	tarfs_read();
 
 	__asm__ __volatile__ (
 	"cli;"

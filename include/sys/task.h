@@ -1,6 +1,7 @@
 #ifndef _TASK_H
 #define _TASK_H
 #include<sys/defs.h>
+#include<sys/elf64.h>
 
 void initTasking();
 typedef struct {
@@ -10,15 +11,17 @@ typedef struct {
 typedef struct task{
 	registers regs;
 	struct task* next;
+	
 } task;
 
 task* runningTask;
-task* mainTask;
-task* otherTask;
-task* idleTask;
-task* userTask;
+task* lastTask;
+//task* mainTask;
+//task* otherTask;
+//task* idleTask;
+//task* userTask;
 
-void createTask(task*, void(*)(), uint64_t, uint64_t, task*);
+void createTask(void(*)(), uint64_t, uint64_t, Elf64_Ehdr *);
 void yield();
 void switchTo(registers *old, registers *current);
 

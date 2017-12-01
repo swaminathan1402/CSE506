@@ -58,7 +58,7 @@ __asm__ __volatile__(
 :
 :
 );
-kprintf("Hello Syscall");
+//kprintf("Hello Syscall");
 __asm__ __volatile__(
 "pop %%rdi;"
 "pop %%rsi;"
