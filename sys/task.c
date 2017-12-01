@@ -115,7 +115,7 @@ void mainOne() {
 	for(int i=0; i<1000; i++) {
 	    for(int j=0; j<1000; j++) {
 	    }
-	}
+	}	
 	yield();
 	kprintf("@MainOne ---- 2\n");
 	for(int i=0; i<1000; i++) {
@@ -176,11 +176,9 @@ void createTask(
 	//return me;
 }
 
-
 void test_user_function()
 {
 	
-
 	__asm__ __volatile__(
 
 	"syscall;"
@@ -192,6 +190,10 @@ void test_user_function()
 
 void switch_to_ring_3()
 {
+	//uint64_t* user_fn_addr_ptr = (uint64_t *)test_user_function;
+	//uint64_t* user_page = (uint64_t *)get_free_user_page();
+	//changeUserPrivilegePage((uint64_t)user_page);
+	//memcpy(user_page,user_fn_addr_ptr,  0x30);  
 	uint64_t* user_rsp= (uint64_t*)get_free_user_page();
 	user_rsp += 0x1000;
 	uint64_t current_rsp;
@@ -200,6 +202,7 @@ void switch_to_ring_3()
 	:
 	:
 	);
+					
 	set_tss_rsp((void*)current_rsp);
 
 	tarfs_read();
@@ -219,7 +222,7 @@ void switch_to_ring_3()
 	"pushf;"
 	"push $0x2B;" // data segment is at offset 40... last two bits should be 2. 40 or 3
 	"push %%r13;"
-
+	
 	"iretq;"
 	:
 	:"m"(test_user_function), "m"(user_rsp)

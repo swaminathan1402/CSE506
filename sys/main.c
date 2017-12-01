@@ -178,7 +178,10 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
     mainTask = (task *)get_free_page();
     otherTask = (task *)get_free_page();
     idleTask = (task *)get_free_page();
-    userTask = (task *)get_free_page();
+    user_pml4e=(PML4E*)get_free_page();    
+    user_pml4e->p =0;
+    idleTask->regs.cr3= (uint64_t)user_pml4e;
+	
 
     createTask(mainOne, rflags, cr3);
     createTask(mainTwo, rflags, cr3);
@@ -200,7 +203,6 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
     );
     */
     tarfs_read();
-    kprintf("your mom is a");
     /* End of yield testing */
     
    //showAllFreePages();
