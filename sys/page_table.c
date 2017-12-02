@@ -66,7 +66,7 @@ void setMap(uint64_t virtual_addr, uint64_t physical_addr, int user_accessible){
  	int pdpe_index = (virtual_addr & 0x0000007fc0000000) >> 30;
  	int pde_index = (virtual_addr & 0x000000003fe00000) >> 21;
  	int pte_index = (virtual_addr & 0x00000000001ff000) >> 12;
-	kprintf("This is what happens %p, %d %d %d %d\n", virtual_addr, pml4e_index, pdpe_index, pde_index, pte_index);
+	//kprintf("This is what happens %p, %d %d %d %d\n", virtual_addr, pml4e_index, pdpe_index, pde_index, pte_index);
 	if((pml4e+pml4e_index)->p == 0 ){
 		
 		// get free page
