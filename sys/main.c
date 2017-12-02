@@ -201,13 +201,22 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
         : "m"(runningTask->regs.rip), "m"(mainTask->regs.rsp)
         :
     );
-    */
- kprintf("Trying page fault");
-  uint64_t * ptr = (uint64_t*)0x123456789ABCDEF0;  
+  kprintf("Trying page fault");
+  uint64_t *ptr = (uint64_t *)0x51200000000000;
   uint64_t do_page_fault = *ptr;
- kprintf("%d" , do_page_fault);   
+  kprintf("%d" , do_page_fault);   
+  */
 
-// tarfs_read();
+  tarfs_read();
+  kprintf("we are launching to ring3\n");
+  __asm__ __volatile__ (
+  	"movq %0, %%r11;"
+  	"movq %%r11, %%rsp;"
+      :
+      : "m"(runningTask->regs.rsp)
+      :
+  );
+  switch_to_ring_3(runningTask->regs.rip);
     /* End of yield testing */
     
    //showAllFreePages();

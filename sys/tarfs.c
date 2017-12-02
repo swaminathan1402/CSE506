@@ -4,6 +4,7 @@
 #include<sys/elf64.h>
 #include<sys/page_table.h>
 #include<sys/memory.h>
+#include<sys/task.h>
 
 int octal_to_decimal(char *str, int size){
 	int n = 0;
@@ -19,16 +20,14 @@ int octal_to_decimal(char *str, int size){
 
 void read_elf(Elf64_Ehdr *file){
 	
-	// kprintf("Type(Reloc/Exec/Shared/Core) %d\nInstruction Set: %d\nELF Version: %d\nPh Offset: %d\n", file->e_type, file->e_machine, file->e_version, file->e_phoff);
 	
 	Elf64_Phdr *program_header = (Elf64_Phdr *)((uint64_t)file + file->e_phoff);
-	kprintf("\nProgram Header %p Elf address %p\n", (uint64_t)program_header, (uint64_t)file);
+	// kprintf("\nProgram Header %p Elf address %p\n", (uint64_t)program_header, (uint64_t)file);
 	
 	int count = file->e_phnum;
-	
 	while(count > 0){
 		if(program_header->p_type != 0 && program_header->p_filesz > 0){
-			kprintf("Virtual addr: %p\ntype: %d\nFile size: %d\nEntry point: %x\nPOffset: %d\n", program_header->p_vaddr, program_header->p_type, program_header->p_filesz, file->e_entry, program_header->p_offset);
+			// kprintf("Virtual addr: %p\ntype: %d\nFile size: %d\nEntry point: %x\nPOffset: %d\n", program_header->p_vaddr, program_header->p_type, program_header->p_filesz, file->e_entry, program_header->p_offset);
 			uint64_t virtual_limit_sz = program_header->p_vaddr + program_header->p_filesz;
 			
 			// map those virtual addresses 
@@ -42,6 +41,20 @@ void read_elf(Elf64_Ehdr *file){
 		program_header = (Elf64_Phdr *)((uint64_t)program_header + file->e_phentsize); // program header entry size
 		count--;
 	}
+	uint64_t rflags, cr3;
+        __asm__ __volatile__ (
+        	"movq %%cr3, %%rax;"
+            "movq %%rax, %0;"
+            : "=m"(cr3)
+            :
+        );
+        __asm__ __volatile__ (
+            "pushf;"
+            "pop %0;"
+            : "=m"(rflags)
+            :
+        );
+	createTask((void *)file->e_entry, rflags, cr3, file);
 }
 
 void tarfs_read(){
@@ -53,7 +66,7 @@ void tarfs_read(){
 		
 		int size_of_file = octal_to_decimal(file->size, 11);
 		if(size_of_file > 0){
-			if(file->name[4] == 's' && file->name[5] == 'b'){
+			if(file->name[4] == 'h' && file->name[5] == 'e'){
 				kprintf("\n******\nFilename: %s\nMode: %p\nSize: %d\n", file->name, file->mode, octal_to_decimal(file->size, 11));
 				Elf64_Ehdr *something = (Elf64_Ehdr *)(file + 1);
 				read_elf(something);

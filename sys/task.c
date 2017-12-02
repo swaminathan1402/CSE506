@@ -188,12 +188,13 @@ void test_user_function()
 }
 
 
-void switch_to_ring_3()
+void switch_to_ring_3(uint64_t user_function)
 {
 	//uint64_t* user_fn_addr_ptr = (uint64_t *)test_user_function;
 	//uint64_t* user_page = (uint64_t *)get_free_user_page();
 	//changeUserPrivilegePage((uint64_t)user_page);
-	//memcpy(user_page,user_fn_addr_ptr,  0x30);  
+	//memcpy(user_page,user_fn_addr_ptr,  0x30);
+	uint64_t fn_to_execute = user_function; 
 	uint64_t* user_rsp= (uint64_t*)get_free_user_page();
 	user_rsp += 0x1000;
 	uint64_t current_rsp;
@@ -204,15 +205,12 @@ void switch_to_ring_3()
 	);
 					
 	set_tss_rsp((void*)current_rsp);
-	uint32_t current_rsp_lo = current_rsp &0x00000000FFFFFFFF;
-	uint32_t current_rsp_hi =(current_rsp &0xFFFFFFFF00000000)>32;
+	uint32_t current_rsp_lo = current_rsp & 0x00000000FFFFFFFF;
+	uint32_t current_rsp_hi =(current_rsp & 0xFFFFFFFF00000000)>32;
 	cpuSetMSR(0xC0000102,current_rsp_lo, current_rsp_hi);
-
-	tarfs_read();
-
+	kprintf("we are all set 3, 2, 1\n");
 	__asm__ __volatile__ (
-	"cli;"
-	"lea %0, %%r13;"
+	"movq %0, %%r13;"
 	"movq $0x23 , %%rax;"
 	"movq %%rax , %%ds;"
 	"movq %%rax , %%es;"
@@ -228,7 +226,7 @@ void switch_to_ring_3()
 	
 	"iretq;"
 	:
-	:"m"(test_user_function), "m"(user_rsp)
+	:"m"(fn_to_execute), "m"(user_rsp)
 	:
 	);
 }
