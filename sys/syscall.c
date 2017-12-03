@@ -41,7 +41,6 @@ void init_syscall()
 
 void syscall_handler()
 {
-	uint64_t rax,rdx,rsi ,rdi ,r10,r8, r9;
 	//Push general purpose registers onto userspace stack
 	__asm__ __volatile__(
 	"pushq %%rax;"
@@ -66,15 +65,18 @@ void syscall_handler()
 	);
 	dude = syscall_number;
 	//Switch to kernel stack and store user space stack on top of the kernel stack.u
+	//kprintf("II Kernel RSP:%p\nUser RSP:%p\n", kernel_rsp, u_rsp);
 	__asm__ __volatile__(
-	"movq   %%rsp ,%0;"
+	"movq  %%rsp ,%0;"
+	
 	"movq %1 , %%rsp;"
 	:"=m"(u_rsp)
 	:"m"(kernel_rsp)
 	:
 	);
-	kprintf("II Kernel RSP:%p\nUser RSP:%p\n", kernel_rsp, u_rsp);
+	//kprintf("II Kernel RSP:%p\nUser RSP:%p\n", kernel_rsp, u_rsp);
 
+	uint64_t rax,rdx,rsi ,rdi ,r10,r8, r9;
 	//Use kernel stack to store the system call no. and return the 
 	__asm__ __volatile__(
 	"movq %%rax, %0;"
@@ -118,7 +120,7 @@ void syscall_handler()
 	fd = (uint64_t)rdi;
 	buf= (char *)rsi;
 	count = (int )rdx;
-	kprintf("%s",  buf );
+	kprintf("%s\n",  buf );
 	break; 
 
 	case 2:// sys_open
@@ -130,7 +132,7 @@ void syscall_handler()
 
 	case 3: //sys_close
 	fd =(uint64_t)rdi;
-	kprintf("%d", fd);
+	//kprintf("%d", fd);
 	break;
 
 	case 8://sys_lseek 
@@ -171,7 +173,7 @@ void syscall_handler()
 	//Swap to user space stack and  perform sysretq
 
 
-	kprintf("III Kernel RSP:%p\nUser RSP:%p\n", kernel_rsp, u_rsp);
+	//kprintf("III Kernel RSP:%p\nUser RSP:%p\n", kernel_rsp, u_rsp);
 	__asm__ __volatile__(
 	"movq %%rsp , %0;"
 	"movq %1 , %%rsp;"
@@ -179,7 +181,7 @@ void syscall_handler()
 	:"m"(u_rsp)
 	:
 	);
-	kprintf("IV Kernel RSP:%p\nUser RSP:%p\n", kernel_rsp, u_rsp);
+	//kprintf("IV Kernel RSP:%p\nUser RSP:%p\n", kernel_rsp, u_rsp);
 
 	__asm__ __volatile__(
 	"pop %%rdi;"
@@ -189,6 +191,7 @@ void syscall_handler()
 	"pop %%rcx;"
 	"pop %%rbx;"
 	"pop %%rax;"
+	"addq $0x48, %%rsp;"
 	:
 	:
 	:
