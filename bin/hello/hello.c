@@ -11,14 +11,14 @@ int syscall_write(int fd, char *buffer, int count){
     __asm__(
 
         "movq $1, %%rax;"
-        "movq %1, %%rbx;"
-        "movq %2, %%rcx;"
+        "movq %1, %%rsi;"
+        "movq %2, %%rdi;"
         "movq %3, %%rdx;"
-        "syscall;"
+       	"int $0x80;"
         "movq %%rax, %0;"
         :"=r"(ret)
         :"r"(fd1), "r"(buffer1), "r"(count1)
-        :"rax", "rbx", "rcx", "rdx"
+        :"rax", "rsi", "rdi", "rdx"
     );
     return ret;
 }

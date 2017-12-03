@@ -41,32 +41,8 @@ void init_syscall()
 
 void syscall_handler()
 {
+
 uint64_t rax,rdx,rsi ,rdi ,r10,r8, r9;
-//Push general purpose registers onto userspace stack
-__asm__ __volatile__(
-"pushq %%rax;"
-"pushq %%rbx;"
-"pushq %%rcx;"
-"pushq %%rdx;"
-"pushq %%rbp;"
-"pushq %%rsi;"
-"pushq %%rdi;"
-:
-:
-:
-);
-
-
-//Switch to kernel stack and store user space stack on top of the kernel stack.u
-__asm__ __volatile__(
-"movq   %%rsp ,%0;"
-"movq %1 , %%rsp;"
-:"=m"(u_rsp)
-:"m"(kernel_rsp)
-:
-);
-
-//Use kernel stack to store the system call no. and return the 
 __asm__ __volatile__(
 "movq %%rax, %0;"
 "movq %%rdi,%1;"
@@ -79,8 +55,6 @@ __asm__ __volatile__(
 :
 :
 );
-
-//Perform  syscall based on rax
 unsigned int fd;
 char* buf ;
 size_t count;
@@ -141,8 +115,7 @@ case 9: //sys_mmap
  off =(uint64_t)r9;
 kprintf("%p, %d, %d, %d , %d, %d", addr, len, prot, flag, fd, off);
 break;
-
-
+                                                                
 case 11: //sys_munmap
  addr = (uint64_t)rdi;
  length= (size_t)rsi;
@@ -159,10 +132,40 @@ default :
 kprintf("Syscall not handled yet");
 break;
 }
+}
 
-//Swap to user space stack and  perform sysretq
 
 
+
+
+/*
+void syscall_handler()
+{
+
+//Push general purpose registers onto userspace stack
+__asm__ __volatile__(
+"pushq %%rax;"
+"pushq %%rbx;"
+"pushq %%rcx;"
+"pushq %%rdx;"
+"pushq %%rbp;"
+"pushq %%rsi;"
+"pushq %%rdi;"
+:
+:
+:
+);
+//Switch to kernel stack and store user space stack on top of the kernel stack.u
+__asm__ __volatile__(
+"movq   %%rsp ,%0;"
+"movq %1 , %%rsp;"
+:"=m"(u_rsp)
+:"m"(kernel_rsp)
+:
+);
+
+//Use kernel stack to store the system call no. and return the 
+//Perform  syscall based on rax
 __asm__ __volatile__(
 "movq %%rsp , %0;"
 "movq %1 , %%rsp;"
@@ -192,4 +195,4 @@ __asm__ __volatile__(
 );
 
 }
-
+*/
