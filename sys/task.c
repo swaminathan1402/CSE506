@@ -142,6 +142,23 @@ void createTask(
 	me->regs.rip = (uint64_t)main;
 	me->regs.cr3 = page_dir;
 	me->regs.rsp = (uint64_t)get_free_page() + 4096;  // create stack at the top of the page, so that it can grow downwards and not go to the previous page
+	
+       uint64_t *pointer_to_pml4e = (uint64_t *)get_free_page();
+       uint64_t *pointer_to_pdpe = (uint64_t *)get_free_page();
+       uint64_t *pointer_to_pde = (uint64_t *)get_free_page();
+       uint64_t *pointer_to_pte = (uint64_t *)get_free_page();
+
+	me->pml4e = (PML4E *)pointer_to_pml4e;
+	memset(me->pml4e, 0, 4096);
+	me->pdpe = (PDPE *)pointer_to_pdpe;
+	memset(me->pdpe, 0, 4096);
+	me->pde = (PDE *)pointer_to_pde;
+	memset(me->pde, 0, 4096);
+	me->pte = (PTE *)pointer_to_pte;
+	memset(me->pte, 0, 4096);
+
+	me->pml4e[511] = pml4e[511];
+
 
 	if(runningTask == NULL){
 		runningTask = me;
@@ -204,7 +221,8 @@ void switch_to_ring_3(uint64_t user_function)
 	:
 	:
 	);
-					
+	kernel_rsp=current_rsp; 
+	u_rsp=(uint64_t) user_rsp;				
 	set_tss_rsp((void*)current_rsp);
 	uint32_t current_rsp_lo = current_rsp & 0x00000000FFFFFFFF;
 	uint32_t current_rsp_hi =(current_rsp & 0xFFFFFFFF00000000)>>32;
