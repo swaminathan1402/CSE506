@@ -204,7 +204,8 @@ void switch_to_ring_3(uint64_t user_function)
 	:
 	:
 	);
-					
+	kernel_rsp=current_rsp; 
+	u_rsp=(uint64_t) user_rsp;				
 	set_tss_rsp((void*)current_rsp);
 	uint32_t current_rsp_lo = current_rsp & 0x00000000FFFFFFFF;
 	uint32_t current_rsp_hi =(current_rsp & 0xFFFFFFFF00000000)>>32;

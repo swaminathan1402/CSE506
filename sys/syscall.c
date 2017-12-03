@@ -59,12 +59,10 @@ __asm__ __volatile__(
 
 //Switch to kernel stack and store user space stack on top of the kernel stack.u
 __asm__ __volatile__(
-"swapgs;"
-"movq %%rsp , %%gs:8;"
-"movq %%gs:0 , %%rsp;"
-"pushq %%gs:8;"
-:
-:
+"movq   %%rsp ,%0;"
+"movq %1 , %%rsp;"
+:"=m"(u_rsp)
+:"m"(kernel_rsp)
 :
 );
 
@@ -98,7 +96,6 @@ unsigned long flag;
 unsigned long off ;
 size_t length;
 int* filedes;
-kprintf("Hello Syscall");
 
 switch (rax)
 {
@@ -164,23 +161,13 @@ break;
 }
 
 //Swap to user space stack and  perform sysretq
-uint64_t current_rsp;
+
 
 __asm__ __volatile__(
-"pop %%gs:8;"
 "movq %%rsp , %0;"
-:"=m"(current_rsp)
-:
-:
-);
-
-uint32_t current_rsp_lo = current_rsp & 0x00000000FFFFFFFFF;
-uint32_t current_rsp_hi= (current_rsp & 0xFFFFFFFF00000000)>>32;
-cpuSetMSR(0xC0000102, current_rsp_lo , current_rsp_hi);
-__asm__ __volatile__(
-"movq %%gs:8 , %%rsp;"
-:
-:
+"movq %1 , %%rsp;"
+:"=m"(u_rsp)
+:"m"(kernel_rsp)
 :
 );
 
@@ -196,7 +183,6 @@ __asm__ __volatile__(
 :
 :
 );
-while(1);
 //Perform sysretq
 __asm__ __volatile__(
 "sysretq;"
