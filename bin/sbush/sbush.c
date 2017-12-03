@@ -507,11 +507,12 @@ void aggregateEnvVariables(char *home_env){
 		j++;
 	}
 	temp_home[j] = '\0';
+	//syscall_write(1, temp_home, 18);
 
 	//strcpy(dollar_PATH, temp_path);
 	strcpy(HOME, temp_home);
 	strcpy(ROOTFS_BIN_PATH, HOME);
-	char *bpath = "/workdir/rootfs/bin/";
+	char *bpath = "/CSE506/rootfs/bin/";
 	strcat(ROOTFS_BIN_PATH, bpath);
 	//syscall_write(1, ROOTFS_BIN_PATH, strlen(ROOTFS_BIN_PATH));
 	//syscall_write(1, "\n", 1);
@@ -532,6 +533,7 @@ int main(int argc, char* argv[], char* envp[]){
         	envp_c++;
         }
 	char *h = env_parameter_list[13];
+	//syscall_write(1, h, 1024);
         aggregateEnvVariables(h);
 
 	if(argc > 1){
