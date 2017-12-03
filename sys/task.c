@@ -13,6 +13,7 @@ void yield(){
 	/*
 		1. Populate rdi, rsi with me and next respectively.
 		2. get the rip and store it in runningTask ->regs.rip
+r
 		3. Push rax ,rbx, rcx, rdx, flags
 		4. Change the stack pointer of runningTask to next stack by accessing task*(rsi)->regs.rsp
 		5. Change the rip with the next Task by accessing (task*(rsi))->regs.rip
@@ -206,7 +207,7 @@ void switch_to_ring_3(uint64_t user_function)
 					
 	set_tss_rsp((void*)current_rsp);
 	uint32_t current_rsp_lo = current_rsp & 0x00000000FFFFFFFF;
-	uint32_t current_rsp_hi =(current_rsp & 0xFFFFFFFF00000000)>32;
+	uint32_t current_rsp_hi =(current_rsp & 0xFFFFFFFF00000000)>>32;
 	cpuSetMSR(0xC0000102,current_rsp_lo, current_rsp_hi);
 	kprintf("we are all set 3, 2, 1\n");
 	__asm__ __volatile__ (
