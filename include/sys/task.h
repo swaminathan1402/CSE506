@@ -2,6 +2,7 @@
 #define _TASK_H
 #include<sys/defs.h>
 #include<sys/elf64.h>
+#include<sys/page_table.h>
 
 void initTasking();
 typedef struct {
@@ -11,6 +12,10 @@ typedef struct {
 typedef struct task{
 	registers regs;
 	struct task* next;
+	PML4E* pml4e;
+	PDPE* pdpe;
+	PDE* pde;
+	PTE* pte;
 	
 } task;
 

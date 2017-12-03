@@ -31,7 +31,7 @@ void idt_entry_table(int index, uint64_t function)
 {
 	idt[index].zerob=0;
 	idt[index].zeroq=0;
-	idt[index].type=0x8e;
+	idt[index].type=0xee;
 	idt[index].selector=0x8;
 	idt[index].offset_low= (function & 0xffff);
 	idt[index].offset_mid= (function & 0xffff0000)>>16;

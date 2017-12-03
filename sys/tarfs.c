@@ -24,23 +24,6 @@ void read_elf(Elf64_Ehdr *file){
 	Elf64_Phdr *program_header = (Elf64_Phdr *)((uint64_t)file + file->e_phoff);
 	// kprintf("\nProgram Header %p Elf address %p\n", (uint64_t)program_header, (uint64_t)file);
 	
-	int count = file->e_phnum;
-	while(count > 0){
-		if(program_header->p_type != 0 && program_header->p_filesz > 0){
-			// kprintf("Virtual addr: %p\ntype: %d\nFile size: %d\nEntry point: %x\nPOffset: %d\n", program_header->p_vaddr, program_header->p_type, program_header->p_filesz, file->e_entry, program_header->p_offset);
-			uint64_t virtual_limit_sz = program_header->p_vaddr + program_header->p_filesz;
-			
-			// map those virtual addresses 
-			for(uint64_t i = program_header->p_vaddr; i<virtual_limit_sz; i+=4096){
-				setMap(i, i, 1);
-				// setMap(program_header + program_header->p_offset + (i-program_header), i, 1);
-				uint64_t from_addr = (uint64_t)file + program_header->p_offset + (i - program_header->p_vaddr);
-				memcpy((void *)i, (void *)from_addr,  4096);
-			}
-		}
-		program_header = (Elf64_Phdr *)((uint64_t)program_header + file->e_phentsize); // program header entry size
-		count--;
-	}
 	uint64_t rflags, cr3;
         __asm__ __volatile__ (
         	"movq %%cr3, %%rax;"
@@ -55,6 +38,26 @@ void read_elf(Elf64_Ehdr *file){
             :
         );
 	createTask((void *)file->e_entry, rflags, cr3, file);
+	changeCR3(runningTask->pml4e, runningTask->pdpe, runningTask->pde, runningTask->pte, 1);
+	kprintf(" || time %p %p %p %p\n", pml4e, pdpe, pde, pte);
+	int count = file->e_phnum;
+	while(count > 0){
+		if(program_header->p_type != 0 && program_header->p_filesz > 0){
+			// kprintf("Virtual addr: %p\ntype: %d\nFile size: %d\nEntry point: %x\nPOffset: %d\n", program_header->p_vaddr, program_header->p_type, program_header->p_filesz, file->e_entry, program_header->p_offset);
+			uint64_t virtual_limit_sz = program_header->p_vaddr + program_header->p_filesz;
+			
+			// map those virtual addresses 
+			for(uint64_t i = program_header->p_vaddr; i<virtual_limit_sz; i+=4096){
+				setMap(i, i, 1);
+				uint64_t from_addr = (uint64_t)file + program_header->p_offset + (i - program_header->p_vaddr);
+				memcpy((void *)i, (void *)from_addr,  4096);
+			}
+		}
+		program_header = (Elf64_Phdr *)((uint64_t)program_header + file->e_phentsize); // program header entry size
+		count--;
+	}
+	changeCR3((PML4E *)kernel_pml4e, (PDPE *)kernel_pdpe, (PDE *)kernel_pde, (PTE *)kernel_pte, 0);
+	kprintf("%p %p %p %p\n", pml4e, pdpe, pde, pte);
 }
 
 void tarfs_read(){

@@ -85,6 +85,11 @@ PDPE *pdpe;
 PDE *pde ;
 PTE *pte;
 
-void init_pd(PTE*,PML4E *, uint64_t, int);
+uint64_t kernel_pml4e;
+uint64_t kernel_pdpe;
+uint64_t kernel_pde ;
+uint64_t kernel_pte;
 
+void init_pd(PTE*,PML4E *, uint64_t, int);
+void changeCR3(PML4E*, PDPE*, PDE*, PTE*, int);
 #endif

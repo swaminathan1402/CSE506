@@ -24,7 +24,7 @@ int syscall_write(int fd, char *buffer, int count){
 }
 
 int main(){
-syscall_write(0, "hello world\n", 11); 
+syscall_write(0, "hello world\n", 13); 
 while(1);
 return 0;
 }

@@ -41,9 +41,8 @@ void init_syscall()
 
 void syscall_handler()
 {
-kprintf("Hello Syscall");
-/*uint64_t rax,rdx,rsi ,rdi ,r10,r8, r9;
-
+uint64_t rax,rdx,rsi ,rdi ,r10,r8, r9;
+/*
 __asm__ __volatile __(
 "swapgs;"
 "movq %%rsp , %%gs:8; "
@@ -53,7 +52,7 @@ __asm__ __volatile __(
 :
 :
 :
-);
+);*/
 
 __asm__ __volatile__(
 "cli;"
@@ -91,28 +90,28 @@ unsigned long flag;
 unsigned long off ;
 size_t length;
 int* filedes;
-//kprintf("Hello Syscall");
+//kprintf("Hello Syscall %d %d %s %d\n", rax, rdi, rsi, rdx);
 switch (rax)
 {
 case 0: //Sys read 
 fd= (uint64_t)rdi;
 buf =(char *)rsi;
 count = (size_t)rdx;
-kprintf("%d, %d, %d ," fd, buf, count);
+//kprintf("%d, %d, %d ", fd, buf, count);
 break;	
 
 case 1: //sys write
 fd = (uint64_t)rdi;
 buf= (char *)rsi;
-count = (size_t )rdx;
-kprintf("%d, %d, %d ," fd, buf, count);
+count = (int )rdx;
+kprintf("%s",  buf );
 break; 
 
 case 2:// sys_open
 filename = (char *)rdi; 
 flags = (int)rsi;
 mode =(int)rdx;
-kprintf("%s, %d, %d ," filename, flags, mode);
+//kprintf("%s, %d, %d ", filename, flags, mode);
 break;	
 
 case 3: //sys_close
@@ -124,7 +123,7 @@ case 8://sys_lseek
 fd= (uint64_t)rdi;
 offset = (off_t)rsi;
 origin= (uint64_t)rdx;
-kprintf("%d, %d, %d ," fd, offset, origin);
+//kprintf("%d, %d, %d ", fd, offset, origin);
 break;
 
 case 9: //sys_mmap
@@ -134,18 +133,19 @@ case 9: //sys_mmap
  flag= (uint64_t)r10;
  fd = (uint64_t)r8;
  off =(uint64_t)r9;
-kprintf("%p, %d, %d, %d , %d, %d" addr, len, prot, flag, fd, off);
+//kprintf("%p, %d, %d, %d , %d, %d", addr, len, prot, flag, fd, off);
 break;
 
 
 case 11: //sys_munmap
  addr = (uint64_t)rdi;
  length= (size_t)rsi;
-kprintf("%p, %d" addr, buf, count);
+//kprintf("%p %d ", addr,length);
 break;
 
 case 22: //sys_pipe
  filedes= (int *)rdi;
+//kprintf("%p" , filedes);
 break ;
 
 
@@ -168,6 +168,6 @@ __asm__ __volatile__(
 :
 :
 );
-*/
+
 }
 

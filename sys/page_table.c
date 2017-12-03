@@ -4,6 +4,27 @@
 #include<sys/kprintf.h>
 
 
+void changeCR3(PML4E *new_pml4e, PDPE *new_pdpe, PDE *new_pde, PTE *new_pte, int idmap) {
+	pml4e = new_pml4e;
+	pdpe = new_pdpe;
+	pde = new_pde;
+	pte = new_pte;
+
+	if(idmap){
+		for(uint64_t i=0; i<1024;i++)
+		    setMap(i*4096, i*4096, 1); // kernel
+	}
+
+
+	__asm__ __volatile__(
+        	"movq %0, %%cr3;"
+        	:
+        	:"r"(new_pml4e)
+        );
+	//kprintf("%p %p %p %p\n", pml4e, pdpe, pde, pte);
+
+}
+
 void idpaging(PTE* first_pte, uint64_t from, int size){
 	// from = from & 0xfffffffffffff000;
 	from = from & 0xfffffffffffff000;
@@ -35,9 +56,6 @@ void init_pd(PTE* first_pte, PML4E* first_pml4e, uint64_t from, int size){
 	int i;
 	for(i=0; i<1024;i++)
 	    setMap(i*4096, i*4096, 1); // kernel
-	//for(int j=0; j<512;j++)
-	  //  setMap((j) *4096+ 0xffffff0000000000, (j)*4096+ 0xffffff0000000000, 1);
-	
 	__asm__ __volatile__(
         	"movq %0, %%cr3;"
         	:
