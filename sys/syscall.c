@@ -41,30 +41,35 @@ void init_syscall()
 
 void syscall_handler()
 {
-kprintf("Hello Syscall");
 uint64_t rax,rdx,rsi ,rdi ,r10,r8, r9;
-/*
-__asm__ __volatile __(
-"swapgs;"
-"movq %%rsp , %%gs:8; "
-"movq %%gs:0, %%rsp;"
-"push %%gs:8;"
-"swapgs;"
-:
-:
-:
-);*/
-
+//Push general purpose registers onto userspace stack
 __asm__ __volatile__(
-"cli;"
-"push %%rax;"
-"push %%rbx;"
-"push %%rcx;"
-"push %%rdx;"
-"push %%rbp;"
-"push %%rsi;"
-"push %%rdi;"
-"cld;"
+"pushq %%rax;"
+"pushq %%rbx;"
+"pushq %%rcx;"
+"pushq %%rdx;"
+"pushq %%rbp;"
+"pushq %%rsi;"
+"pushq %%rdi;"
+:
+:
+:
+);
+
+
+//Switch to kernel stack and store user space stack on top of the kernel stack.u
+__asm__ __volatile__(
+"swapgs;"
+"movq %%rsp , %%gs:8;"
+"movq %%gs:0 , %%rsp;"
+"pushq %%gs:8;"
+:
+:
+:
+);
+
+//Use kernel stack to store the system call no. and return the 
+__asm__ __volatile__(
 "movq %%rax, %0;"
 "movq %%rdi,%1;"
 "movq %%rsi, %2;"
@@ -76,6 +81,8 @@ __asm__ __volatile__(
 :
 :
 );
+
+//Perform  syscall based on rax
 unsigned int fd;
 char* buf ;
 size_t count;
@@ -91,7 +98,8 @@ unsigned long flag;
 unsigned long off ;
 size_t length;
 int* filedes;
-//kprintf("Hello Syscall");
+kprintf("Hello Syscall");
+
 switch (rax)
 {
 case 0: //Sys read 
@@ -105,7 +113,7 @@ case 1: //sys write
 fd = (uint64_t)rdi;
 buf= (char *)rsi;
 count = (size_t )rdx;
-kprintf("%d, %d, %d ", fd, buf, count);
+kprintf("%s, %d, %d ", fd, buf, count);
 break; 
 
 case 2:// sys_open
@@ -155,6 +163,26 @@ kprintf("Syscall not handled yet");
 break;
 }
 
+//Swap to user space stack and  perform sysretq
+uint64_t current_rsp;
+
+__asm__ __volatile__(
+"pop %%gs:8;"
+"movq %%rsp , %0;"
+:"=m"(current_rsp)
+:
+:
+);
+
+uint32_t current_rsp_lo = current_rsp & 0x00000000FFFFFFFFF;
+uint32_t current_rsp_hi= (current_rsp & 0xFFFFFFFF00000000)>>32;
+cpuSetMSR(0xC0000102, current_rsp_lo , current_rsp_hi);
+__asm__ __volatile__(
+"movq %%gs:8 , %%rsp;"
+:
+:
+:
+);
 
 __asm__ __volatile__(
 "pop %%rdi;"
@@ -164,6 +192,13 @@ __asm__ __volatile__(
 "pop %%rcx;"
 "pop %%rbx;"
 "pop %%rax;"
+:
+:
+:
+);
+while(1);
+//Perform sysretq
+__asm__ __volatile__(
 "sysretq;"
 :
 :
