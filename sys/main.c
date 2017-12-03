@@ -110,13 +110,9 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   
   
     uint64_t *pointer_to_pml4e = (uint64_t *)get_free_page();
-    // int *a = (int *)get_free_page();
     uint64_t *pointer_to_pdpe = (uint64_t *)get_free_page();
-    // int *b = (int *)get_free_page();
     uint64_t *pointer_to_pde = (uint64_t *)get_free_page();
-    // int *c = (int *)get_free_page();
     uint64_t *pointer_to_pte = (uint64_t *)get_free_page();
-    // kprintf("%p %p %p\n", a, b, c);
   
     pml4e = (PML4E *)pointer_to_pml4e;
     memset(pml4e, 0, 4096);
@@ -126,7 +122,12 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
     memset(pde, 0, 4096);
     pte = (PTE *)pointer_to_pte;
     memset(pte, 0, 4096);
-  
+ 
+    kernel_pml4e = (uint64_t)pml4e;
+    kernel_pdpe = (uint64_t)pdpe;
+    kernel_pde = (uint64_t)pde;
+    kernel_pte = (uint64_t)pte;
+ 
     (pml4e + 511)->page_directory_pointer_base_address = ((uint64_t)pointer_to_pdpe >> 12);
     (pml4e + 511)->p = 1; 
     (pml4e + 511)->rw = 1; 
@@ -155,9 +156,8 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
     kprintf("the size of kernel %x\n", size_of_kernel);
     
     init_pd(pte, pml4e, (uint64_t)physbase, size_of_kernel);
-    kprintf("shit\n");
-    int *c = (int *)get_free_page();
-    kprintf("oh wow %p\n", c);
+    //int *c = (int *)get_free_page();
+    //kprintf("oh wow %p\n", c);
  
     /* Testing yield in different processes */
 
@@ -210,13 +210,17 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   tarfs_read();
   kprintf("we are launching to ring3\n");
   __asm__ __volatile__ (
+	"movq %1, %%cr3;"
   	"movq %0, %%r11;"
   	"movq %%r11, %%rsp;"
       :
-      : "m"(runningTask->regs.rsp)
+      : "m"(runningTask->regs.rsp), "r"(runningTask->pml4e)
       :
   );
+  kprintf("new cr3 %p\n", runningTask->pml4e);
   switch_to_ring_3(runningTask->regs.rip);
+
+
     /* End of yield testing */
     
    //showAllFreePages();
