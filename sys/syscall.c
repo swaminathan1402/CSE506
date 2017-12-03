@@ -1,6 +1,7 @@
 #include <sys/defs.h>
 #include<sys/kprintf.h>
 #include<sys/syscall.h>
+#include<sys/terminal_driver.h>
 void cpuGetMSR(uint32_t msr, uint32_t*lo , uint32_t* hi)
 {
 
@@ -120,7 +121,8 @@ void syscall_handler()
 	fd = (uint64_t)rdi;
 	buf= (char *)rsi;
 	count = (int )rdx;
-	kprintf("%s\n",  buf );
+	//kprintf("%s\n",  buf );
+	terminal_write(0, buf, count);
 	break; 
 
 	case 2:// sys_open
@@ -167,6 +169,7 @@ void syscall_handler()
 
 	default :
 	kprintf("Syscall not handled yet");
+	while(1);
 	break;
 	}
 

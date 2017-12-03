@@ -1,8 +1,9 @@
 #include <sys/kprintf.h>
 #include <sys/memory.h>
 #include <sys/terminal_driver.h>
+#include <sys/defs.h>
 
-
+terminal_buffer_len = 0;
 int terminal_read(int fd, void* buffer, uint64_t buffer_len){
     memcpy(buffer, terminal_buffer, terminal_buffer_len);
     buffer_len = terminal_buffer_len;
@@ -14,7 +15,7 @@ int terminal_read(int fd, void* buffer, uint64_t buffer_len){
 int terminal_write(int fd, void* buffer, uint64_t buffer_len){
     char* output = (char*)buffer;
     output[buffer_len] = '\0';
-    kprintf(buffer);
+    kprintf("\n%s", output);
 }
 
 void terminal_enqueue(char c){

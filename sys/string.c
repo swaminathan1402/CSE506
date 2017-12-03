@@ -1,4 +1,14 @@
 #include <sys/string.h>
+int strlen(char *string){
+	if(string == NULL) return 0;
+	int index = 0;
+	while(string[index] != '\0'){
+		index++;
+	}
+
+	return index;
+}
+
 
 int strcmp(char *a, char *b){
         int lenA = strlen(a);
