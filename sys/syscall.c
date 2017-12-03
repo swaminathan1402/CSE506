@@ -41,133 +41,165 @@ void init_syscall()
 
 void syscall_handler()
 {
-uint64_t rax,rdx,rsi ,rdi ,r10,r8, r9;
-/*
-__asm__ __volatile __(
-"swapgs;"
-"movq %%rsp , %%gs:8; "
-"movq %%gs:0, %%rsp;"
-"push %%gs:8;"
-"swapgs;"
-:
-:
-:
-);*/
+	uint64_t rax,rdx,rsi ,rdi ,r10,r8, r9;
+	//Push general purpose registers onto userspace stack
+	__asm__ __volatile__(
+	"pushq %%rax;"
+	"pushq %%rbx;"
+	"pushq %%rcx;"
+	"pushq %%rdx;"
+	"pushq %%rbp;"
+	"pushq %%rsi;"
+	"pushq %%rdi;"
+	:
+	:
+	:
+	);
 
-__asm__ __volatile__(
-"cli;"
-"push %%rax;"
-"push %%rbx;"
-"push %%rcx;"
-"push %%rdx;"
-"push %%rbp;"
-"push %%rsi;"
-"push %%rdi;"
-"cld;"
-"movq %%rax, %0;"
-"movq %%rdi,%1;"
-"movq %%rsi, %2;"
-"movq %%rdx, %3;"
-"movq %%r10,%4;"
-"movq %%r9 , %5;"
-"movq %%r8 , %6;"
-:"=m"(rax),"=m"(rdi), "=m"(rsi), "=m"(rdx), "=m"(r10), "=m"(r9), "=m"(r8) 
-:
-:
-);
-unsigned int fd;
-char* buf ;
-size_t count;
-const char* filename; 
-int flags;
-int mode;
-off_t offset;
-unsigned int origin;
-unsigned long addr ;
-unsigned long len ;
-unsigned long prot;
-unsigned long flag;
-unsigned long off ;
-size_t length;
-int* filedes;
-//kprintf("Hello Syscall %d %d %s %d\n", rax, rdi, rsi, rdx);
-switch (rax)
-{
-case 0: //Sys read 
-fd= (uint64_t)rdi;
-buf =(char *)rsi;
-count = (size_t)rdx;
-//kprintf("%d, %d, %d ", fd, buf, count);
-break;	
+	int syscall_number;
+	int dude;
+	__asm__ __volatile__(
+		"movq %%rax, %0;"
+		:"=m"(syscall_number)
+		:
+		:
+	);
+	dude = syscall_number;
+	//Switch to kernel stack and store user space stack on top of the kernel stack.u
+	__asm__ __volatile__(
+	"movq   %%rsp ,%0;"
+	"movq %1 , %%rsp;"
+	:"=m"(u_rsp)
+	:"m"(kernel_rsp)
+	:
+	);
+	kprintf("II Kernel RSP:%p\nUser RSP:%p\n", kernel_rsp, u_rsp);
 
-case 1: //sys write
-fd = (uint64_t)rdi;
-buf= (char *)rsi;
-count = (int )rdx;
-kprintf("%s",  buf );
-break; 
+	//Use kernel stack to store the system call no. and return the 
+	__asm__ __volatile__(
+	"movq %%rax, %0;"
+	"movq %%rdi,%1;"
+	"movq %%rsi, %2;"
+	"movq %%rdx, %3;"
+	"movq %%r10,%4;"
+	"movq %%r9 , %5;"
+	"movq %%r8 , %6;"
+	:"=m"(rax),"=m"(rdi), "=m"(rsi), "=m"(rdx), "=m"(r10), "=m"(r9), "=m"(r8) 
+	:
+	:
+	);
 
-case 2:// sys_open
-filename = (char *)rdi; 
-flags = (int)rsi;
-mode =(int)rdx;
-//kprintf("%s, %d, %d ", filename, flags, mode);
-break;	
+	//Perform  syscall based on rax
+	unsigned int fd;
+	char* buf ;
+	size_t count;
+	const char* filename; 
+	int flags;
+	int mode;
+	off_t offset;
+	unsigned int origin;
+	unsigned long addr ;
+	unsigned long len ;
+	unsigned long prot;
+	unsigned long flag;
+	unsigned long off ;
+	size_t length;
+	int* filedes;
+	switch (dude)
+	{
+	case 0: //Sys read 
+	fd= (uint64_t)rdi;
+	buf =(char *)rsi;
+	count = (size_t)rdx;
+	//kprintf("%d, %d, %d ", fd, buf, count);
+	break;	
 
-case 3: //sys_close
-fd =(uint64_t)rdi;
-kprintf("%d", fd);
-break;
+	case 1: //sys write
+	fd = (uint64_t)rdi;
+	buf= (char *)rsi;
+	count = (int )rdx;
+	kprintf("%s",  buf );
+	break; 
 
-case 8://sys_lseek 
-fd= (uint64_t)rdi;
-offset = (off_t)rsi;
-origin= (uint64_t)rdx;
-//kprintf("%d, %d, %d ", fd, offset, origin);
-break;
+	case 2:// sys_open
+	filename = (char *)rdi; 
+	flags = (int)rsi;
+	mode =(int)rdx;
+	//kprintf("%s, %d, %d ", filename, flags, mode);
+	break;	
 
-case 9: //sys_mmap
- addr= (uint64_t)rdi;
- len =(uint64_t)rsi;
- prot=(uint64_t)rdx;
- flag= (uint64_t)r10;
- fd = (uint64_t)r8;
- off =(uint64_t)r9;
-//kprintf("%p, %d, %d, %d , %d, %d", addr, len, prot, flag, fd, off);
-break;
+	case 3: //sys_close
+	fd =(uint64_t)rdi;
+	kprintf("%d", fd);
+	break;
 
+	case 8://sys_lseek 
+	fd= (uint64_t)rdi;
+	offset = (off_t)rsi;
+	origin= (uint64_t)rdx;
+	//kprintf("%d, %d, %d ", fd, offset, origin);
+	break;
 
-case 11: //sys_munmap
- addr = (uint64_t)rdi;
- length= (size_t)rsi;
-//kprintf("%p %d ", addr,length);
-break;
-
-case 22: //sys_pipe
- filedes= (int *)rdi;
-//kprintf("%p" , filedes);
-break ;
-
-
-default :
-kprintf("Syscall not handled yet");
-break;
-}
+	case 9: //sys_mmap
+	 addr= (uint64_t)rdi;
+	 len =(uint64_t)rsi;
+	 prot=(uint64_t)rdx;
+	 flag= (uint64_t)r10;
+	 fd = (uint64_t)r8;
+	 off =(uint64_t)r9;
+	//kprintf("%p, %d, %d, %d , %d, %d", addr, len, prot, flag, fd, off);
+	break;
 
 
-__asm__ __volatile__(
-"pop %%rdi;"
-"pop %%rsi;"
-"pop %%rbp;"
-"pop %%rdx;"
-"pop %%rcx;"
-"pop %%rbx;"
-"pop %%rax;"
-"sysretq;"
-:
-:
-:
-);
+	case 11: //sys_munmap
+	 addr = (uint64_t)rdi;
+	 length= (size_t)rsi;
+	//kprintf("%p %d ", addr,length);
+	break;
+
+	case 22: //sys_pipe
+	 filedes= (int *)rdi;
+	//kprintf("%p" , filedes);
+	break ;
+
+
+	default :
+	kprintf("Syscall not handled yet");
+	break;
+	}
+
+	//Swap to user space stack and  perform sysretq
+
+
+	kprintf("III Kernel RSP:%p\nUser RSP:%p\n", kernel_rsp, u_rsp);
+	__asm__ __volatile__(
+	"movq %%rsp , %0;"
+	"movq %1 , %%rsp;"
+	:"=m"(kernel_rsp)
+	:"m"(u_rsp)
+	:
+	);
+	kprintf("IV Kernel RSP:%p\nUser RSP:%p\n", kernel_rsp, u_rsp);
+
+	__asm__ __volatile__(
+	"pop %%rdi;"
+	"pop %%rsi;"
+	"pop %%rbp;"
+	"pop %%rdx;"
+	"pop %%rcx;"
+	"pop %%rbx;"
+	"pop %%rax;"
+	:
+	:
+	:
+	);
+	//Perform sysretq
+	__asm__ __volatile__(
+	"sysretq;"
+	:
+	:
+	:
+	);
 
 }
 

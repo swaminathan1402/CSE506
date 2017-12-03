@@ -23,8 +23,10 @@ int syscall_write(int fd, char *buffer, int count){
     return ret;
 }
 
+
 int main(){
-syscall_write(0, "hello world\n", 13); 
+syscall_write(0, "hello world\n", 11); 
+syscall_write(0, "hello world\n", 11); 
 while(1);
 return 0;
 }
