@@ -5,7 +5,7 @@
 #include<sys/page_table.h>
 #include<sys/memory.h>
 #include<sys/task.h>
-
+#include<sys/string.h>
 int octal_to_decimal(char *str, int size){
 	int n = 0;
 	char *c = str;

@@ -17,10 +17,10 @@ int syscall_write(int fd, char *buffer, size_t count){
     __asm__ __volatile__(
 
         "movq $1, %%rax;"
-        "movq %1, %%rbx;"
-        "movq %2, %%rcx;"
+        "movq %1, %%rdi;"
+        "movq %2, %%rsi;"
         "movq %3, %%rdx;"
-        "syscall;"
+        "int $0x80;"
         "movq %%rax, %0;"
         :"=r"(ret)
         :"r"(fd1), "r"(buffer1), "r"(count1)

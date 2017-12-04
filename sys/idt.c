@@ -26,6 +26,7 @@ struct idtr_t
 extern void timer_wrapper();
 extern void keyboard_wrapper();
 extern void page_fault_wrapper();
+extern void syscall_wrapper();
 
 void idt_entry_table(int index, uint64_t function)
 {
@@ -48,6 +49,11 @@ void init_idt() {
 		{	
 			idt_entry_table(i,(uint64_t)page_fault_wrapper);	
 			
+		}
+		else if(i==0x80)
+		{
+			idt_entry_table(i, (uint64_t)syscall_wrapper);
+
 		}
 		else
 		 {

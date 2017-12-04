@@ -1,6 +1,6 @@
 #include <sys/kprintf.h>
 #include <sys/pic.h>
-
+#include <sys/terminal_driver.h>
 int shiftFlag = 0;
 int ctrlFlag = 0;
 int offset = 0;
@@ -21,6 +21,15 @@ int getCharfromCode(unsigned char scan_code1)
 	else if(scan_code1 == 0x9D){ //left control has been released
 		ctrlFlag = 0;
 		offset   = 0;
+	}
+	else if(scan_code1 == 0x1C){ // enter pressed
+		return -2;
+	}
+	else if(scan_code1 == 0x39){ // space pressed
+		return 32;
+	}
+	else if(scan_code1 == 0x0E){  // backspace pressed 
+		return 8;
 	}
 	/*
 	else if(scan_code1 == 0x1e){ // left ctrl
@@ -175,7 +184,6 @@ void keyboard_handler(){
 	int code = getCharfromCode(scan);
 	if(code > 0) {
 		map = (char)code;
-		//kprintf(" hello %c ", map);
 		char *glyph = (char *)0xb8000+160*25-20;
 		if(ctrlFlag){
 			*glyph = map;
@@ -187,6 +195,9 @@ void keyboard_handler(){
 		glyph -=2;
 		*glyph ='\0';		
 		}
+		terminal_enqueue(map);
+	} else if(code == -2){
+		terminal_enqueue('\n');
 	}
 	end_of_interrupt(0x0);	
 }

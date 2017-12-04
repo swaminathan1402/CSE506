@@ -13,19 +13,46 @@ int syscall_write(int fd, char *buffer, int count){
         "movq %1, %%rdi;"
         "movq %2, %%rsi;"
         "movq %3, %%rdx;"
-        "syscall;"
+       	"int $0x80;"
+        "movq %%rax, %0;"
+        :"=r"(ret)
+        :"r"(fd1), "r"(buffer1), "r"(count1)
+        :"rax", "rsi", "rdi", "rdx"
+    );
+    return ret;
+}
+int syscall_read(int fd, char *buffer, int count){
+   
+    long long int fd1 = (long long int) fd;
+    long long int buffer1 = (long long int) buffer;
+    long long int count1 = (long long int) count;
+    
+    long long int ret;
+    __asm__(
+
+        "movq $0, %%rax;"
+        "movq %1, %%rdi;"
+        "movq %2, %%rsi;"
+        "movq %3, %%rdx;"
+        "int $0x80;"
         "movq %%rax, %0;"
         :"=r"(ret)
         :"r"(fd1), "r"(buffer1), "r"(count1)
         :"rax", "rdi", "rsi", "rdx"
     );
+    if(fd == 0){
+	    int i = 0;
+	    while(buffer[i] != '\n') i++;
+	    buffer[i] = '\0';
+    }
     return ret;
 }
-
-
-int main(){
-syscall_write(0, "hello world\n", 9); 
-syscall_write(0, "hello world\n", 9); 
+int main(int argc, char *argv[], char *envp[]){
+syscall_write(0, "hello world\n", 11); 
+syscall_write(0, "hello world\n", 11); 
+char buffer[1024];
+syscall_read(1, buffer, 1024);
+syscall_write(0, buffer, 1024);
 while(1);
 return 0;
 }
