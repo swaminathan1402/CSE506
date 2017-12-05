@@ -6,6 +6,7 @@
 #include<sys/memory.h>
 #include<sys/task.h>
 #include<sys/string.h>
+#include<sys/page.h>
 #include<sys/filedirectory.h>
 int octal_to_decimal(char *str, int size){
 	int n = 0;
@@ -67,8 +68,16 @@ void tarfs_read(){
 	uint64_t start_addr = (uint64_t)&_binary_tarfs_start;
 	struct posix_header_ustar *file = (struct posix_header_ustar *)start_addr;
 	int index=0;
+	filedir* fileDescriptor= (filedir *)get_free_page();
+	kprintf("\n%p",fileDescriptor);
 	filedir* head = (filedir*)fileDescriptor+index;
 	head->parent=NULL;
+	head->filename[0]= 'r'; 
+	head->filename[1]='o';
+	head->filename[2]='o';
+	head->filename[3]='t';
+	head->filename[4]= '\0';
+	head->type=1;
 	index++;
 	while((uint64_t)file < (uint64_t)&_binary_tarfs_end){
 		
@@ -78,7 +87,7 @@ void tarfs_read(){
 				kprintf("\n******\nFilename: %s\nMode: %p\nSize: %d\n", file->name, file->mode, octal_to_decimal(file->size, 11));
 				//	Elf64_Ehdr *something = (Elf64_Ehdr *)(file + 1);
 				
-		if(file->name!=NULL)
+		if( strcmp(file->name,"")==0)
 			create_File_Descriptor_Entry(file->name, index++ ,size_of_file , head); 
 			//if(size_of_file >0)		
 			//read_elf(something);

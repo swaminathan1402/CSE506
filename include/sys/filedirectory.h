@@ -4,16 +4,16 @@
 
 typedef struct 
 {
-char filename[100];
-struct filedir* parent;
-struct filedir* root;
-struct filedir* children[10];
-uint64_t type; //0: directory , 1:file
+char filename[16];
+uint64_t parent;
+uint64_t root;
+uint64_t children[10];
+uint64_t type; //1: directory , 2:file
 //uint64_t start_point_addr;
 uint64_t child_count; 
 }filedir;
 
-filedir *fileDescriptor[100];
+filedir *fileDescriptor;
 
 
 void print_File_Descriptor();
