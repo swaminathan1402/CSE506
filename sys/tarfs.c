@@ -69,7 +69,7 @@ void tarfs_read(){
 		
 		int size_of_file = octal_to_decimal(file->size, 11);
 		if(size_of_file > 0){
-			if(file->name[4] == 'h' && file->name[5] == 'e'){
+			if(strcmp(file->name, "bin/hello") == 1){
 				kprintf("\n******\nFilename: %s\nMode: %p\nSize: %d\n", file->name, file->mode, octal_to_decimal(file->size, 11));
 				Elf64_Ehdr *something = (Elf64_Ehdr *)(file + 1);
 				read_elf(something);
