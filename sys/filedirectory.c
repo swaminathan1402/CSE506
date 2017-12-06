@@ -18,6 +18,7 @@ filedir* findParent(char* dir,int index, filedir *root)
 }
 
 filedir* create_file_entry(char *filename, int index, int filesz){
+	filename[strlen(filename)]='\0';
 	filedir* temp = (filedir*)fileDescriptor+index;
 	temp->filename = filename;
 	temp->parent = NULL;
@@ -40,6 +41,7 @@ char *extractParentFromFilename(char *filename){
     char new_parent[len];
     for(int j=0; j<len; j++)
         new_parent[j] = filename[j];
+	new_parent[len]= '\0';
     char *parent = new_parent;
     return parent;
 }
@@ -121,6 +123,7 @@ void print_File_Descriptor(filedir *root)
 	/*
 	int i=0;
 	while(i<=7)
+
 	{
 		kprintf("\nFilename :%s , Type: %d",(fileDescriptor+i)->filename,(fileDescriptor+i)->type);
 		i++;
