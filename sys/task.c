@@ -268,6 +268,7 @@ void switch_to_ring_3()
 void removeTask(){
 	// reclaim all the pages used by this task
 
+	changeCR3((PML4E *)kernel_pml4e, (PDPE *)kernel_pdpe, (PDE *)kernel_pde, (PTE *)kernel_pte, 0);
 	// removing the task from the runningTask list
 	task* temp = runningTask;
 	task* next = runningTask->next;
