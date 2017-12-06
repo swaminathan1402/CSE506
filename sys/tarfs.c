@@ -6,6 +6,8 @@
 #include<sys/memory.h>
 #include<sys/task.h>
 #include<sys/string.h>
+#include<sys/page.h>
+#include<sys/filedirectory.h>
 int octal_to_decimal(char *str, int size){
 	int n = 0;
 	char *c = str;
@@ -18,6 +20,7 @@ int octal_to_decimal(char *str, int size){
 	return n;
 }
 
+
 void read_elf(Elf64_Ehdr *file){
 	
 	
@@ -27,7 +30,7 @@ void read_elf(Elf64_Ehdr *file){
 	uint64_t rflags, cr3;
         __asm__ __volatile__ (
         	"movq %%cr3, %%rax;"
-            "movq %%rax, %0;"
+	         "movq %%rax, %0;"
             : "=m"(cr3)
             :
         );
@@ -64,17 +67,28 @@ void tarfs_read(){
 	
 	uint64_t start_addr = (uint64_t)&_binary_tarfs_start;
 	struct posix_header_ustar *file = (struct posix_header_ustar *)start_addr;
-	
+	int index=0;
+	filedir* fileDescriptor= (filedir *)get_free_page();
+	kprintf("\n%p",fileDescriptor);
+	filedir* head = (filedir*)fileDescriptor+index;
+	head->parent=NULL;
+	head->filename[0]= 'r'; 
+	head->filename[1]='o';
+	head->filename[2]='o';
+	head->filename[3]='t';
+	head->filename[4]= '\0';
+	head->type=1;
+	index++;
 	while((uint64_t)file < (uint64_t)&_binary_tarfs_end){
 		
 		int size_of_file = octal_to_decimal(file->size, 11);
-		if(size_of_file > 0){
-			if(strcmp(file->name, "bin/hello") == 1){
-				kprintf("\n******\nFilename: %s\nMode: %p\nSize: %d\n", file->name, file->mode, octal_to_decimal(file->size, 11));
-				Elf64_Ehdr *something = (Elf64_Ehdr *)(file + 1);
-				read_elf(something);
-			}
-		}
+		kprintf("\n******\nFilename: %s\nMode: %p\nSize: %d\n", file->name, file->mode, octal_to_decimal(file->size, 11));
+		if(strcmp(file->name,"")==0)
+			create_File_Descriptor_Entry(file->name, index++ ,size_of_file , head); 
+			//if(size_of_file >0)		
+			//read_elf(something);
+			//}
+	//	}
 
 		if(size_of_file == 0) {
 			file+=1;
@@ -88,4 +102,6 @@ void tarfs_read(){
 		}
 	}
 	//kprintf("finished traversing\n");
+	print_File_Descriptor();
+	while(1);
 }
