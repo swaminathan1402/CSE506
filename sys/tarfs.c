@@ -99,13 +99,4 @@ void tarfs_read(){
 
 		}
 	}
-	/*
-	print_File_Descriptor(head);
-	filedir *temp = head->children[0];
-	kprintf("Please|%s|: %d", temp->filename, temp->child_count);
-	for(int i=0; i<temp->child_count; i++){
-		filedir *crap = temp->children[i];
-		kprintf("|%s|",crap->filename);
-	}
-	*/
 }
