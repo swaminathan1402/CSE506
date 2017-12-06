@@ -10,8 +10,8 @@ __asm__ __volatile__(
 	:
 	:
 );
-kprintf("\nPage fault!!");
-kprintf("%p", faulting_address);
+//kprintf("\nPage fault!!");
+//kprintf("%p", faulting_address);
 setMap(faulting_address, faulting_address, 1);
 //while(1);
 

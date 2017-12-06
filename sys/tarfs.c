@@ -68,9 +68,12 @@ void tarfs_read(){
 	uint64_t start_addr = (uint64_t)&_binary_tarfs_start;
 	struct posix_header_ustar *file = (struct posix_header_ustar *)start_addr;
 	int index=0;
-	filedir* fileDescriptor= (filedir *)get_free_page();
+	fileDescriptor = (filedir *)get_free_pages(3);
 	kprintf("\n%p",fileDescriptor);
-	filedir* head = (filedir*)fileDescriptor+index;
+
+	filedir* head = create_file_entry("root/", index, 0);
+	//(filedir*)fileDescriptor+index;
+	/*
 	head->parent=NULL;
 	head->filename[0]= 'r'; 
 	head->filename[1]='o';
@@ -79,17 +82,18 @@ void tarfs_read(){
 	head->filename[4]= '\0';
 	head->type=1;
 	index++;
+	*/
 	while((uint64_t)file < (uint64_t)&_binary_tarfs_end){
 		
 		int size_of_file = octal_to_decimal(file->size, 11);
-		kprintf("\n******\nFilename: %s\nMode: %p\nSize: %d\n", file->name, file->mode, octal_to_decimal(file->size, 11));
-		if(strcmp(file->name,"")==0)
-			create_File_Descriptor_Entry(file->name, index++ ,size_of_file , head); 
-			//if(size_of_file >0)		
-			//read_elf(something);
-			//}
-	//	}
-
+		//kprintf("\n******Filename: %s Mode: %p Size: %d\n", file->name, file->mode, octal_to_decimal(file->size, 11));
+		Elf64_Ehdr *something = (Elf64_Ehdr *)(file + 1);
+		index++;	
+		if(strlen(file->name)!=0){
+			
+			//kprintf("Adding %s: %d", file->name, index);
+			create_File_Descriptor_Entry(file->name, index ,size_of_file , head); 
+		}
 		if(size_of_file == 0) {
 			file+=1;
 		}
@@ -101,7 +105,13 @@ void tarfs_read(){
 
 		}
 	}
-	//kprintf("finished traversing\n");
-	print_File_Descriptor();
+	//print_File_Descriptor(head);
+	filedir *temp = head->children[0];
+	kprintf("Please|%s|: %d", temp->filename, temp->child_count);
+	for(int i=0; i<temp->child_count; i++){
+		filedir *crap = temp->children[i];
+		kprintf("|%s|",crap->filename);
+	}
+	
 	while(1);
 }
