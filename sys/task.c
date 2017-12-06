@@ -19,6 +19,7 @@ r
 		5. Change the rip with the next Task by accessing (task*(rsi))->regs.rip
 		6. Pop rax rbx rcx rdx for the next task
 	*/
+	uint64_t fn_to_execute = (uint64_t)switch_to_ring_3;
 	__asm__ __volatile__ (
 		"movq %0, %%rdi;"
 		"movq %1, %%rsi;"
@@ -30,14 +31,13 @@ r
 
 
 	// storing the rip in runningTask
-	__asm__ __volatile__ (
-		"pop %%r13;"
-		"movq %%r13, 16(%%rdi);"
-		/*"movq %%r13, %0;"*/
-		:/*"=m"(runningTask->regs.rip)*/
-		:
-		:
-	);
+	//__asm__ __volatile__ (
+	//	"pop %%r13;"
+	//	"movq %%r13, 16(%%rdi);"
+	//	:/*"=m"(runningTask->regs.rip)*/
+	//	:
+	//	:
+	//);
 
 	// storing the regs in runningTask
 	__asm__  __volatile__ (
@@ -86,11 +86,18 @@ r
 		:
 	);
 
-
+	/*
 	__asm__ __volatile__ (
 		"call 16(%%rsi);"
 		:
-		: /*"m"(runningTask->regs.rip)*/
+		: 
+		:
+	);
+	*/
+	__asm__ __volatile__ (
+		"call %0;"
+		:
+		:"m"(fn_to_execute)
 		:
 	);
 }
@@ -126,23 +133,25 @@ void mainOne() {
 	yield();
 }
 void beIdle(){
+	kprintf("Awesome");
 	while(1){
-		yield();
+		//yield();
 	}
 
 }
 
+
 void createTask(
 		void (*main)(),  // function pointer
 		uint64_t rflags, 
-		uint64_t page_dir, 
-		Elf64_Ehdr *elf_header
+		uint64_t page_dir
 		){
 	task *me = (task *)get_free_page();
+	me->status = RUNNING_PROCESS_STATUS;
 	me->regs.rip = (uint64_t)main;
 	me->regs.cr3 = page_dir;
 	me->regs.rsp = (uint64_t)get_free_page() + 4096;  // create stack at the top of the page, so that it can grow downwards and not go to the previous page
-	
+	me->regs.user_rsp = (uint64_t)get_free_user_page() + 4096;	
        uint64_t *pointer_to_pml4e = (uint64_t *)get_free_page();
        uint64_t *pointer_to_pdpe = (uint64_t *)get_free_page();
        uint64_t *pointer_to_pde = (uint64_t *)get_free_page();
@@ -157,8 +166,8 @@ void createTask(
 	me->pte = (PTE *)pointer_to_pte;
 	memset(me->pte, 0, 4096);
 
-	me->pml4e[511] = pml4e[511];
 
+	me->pml4e[511] = pml4e[511];
 
 	if(runningTask == NULL){
 		runningTask = me;
@@ -206,28 +215,34 @@ void test_user_function()
 }
 
 
-void switch_to_ring_3(uint64_t user_function)
+void switch_to_ring_3()
 {
-	//uint64_t* user_fn_addr_ptr = (uint64_t *)test_user_function;
-	//uint64_t* user_page = (uint64_t *)get_free_user_page();
-	//changeUserPrivilegePage((uint64_t)user_page);
-	//memcpy(user_page,user_fn_addr_ptr,  0x30);
-	uint64_t fn_to_execute = user_function; 
-	uint64_t* user_rsp= (uint64_t*)get_free_user_page();
-	user_rsp += 0x1000;
+	changeCR3(runningTask->pml4e, runningTask->pdpe, runningTask->pde, runningTask->pte, 0);
+	__asm__ __volatile__ (
+        	"movq %0, %%r11;"
+        	"movq %%r11, %%rsp;"
+            :
+            : "m"(runningTask->regs.rsp)
+            :
+        );
+        kprintf("new cr3 %p and pointing to %p\n", runningTask->pml4e, runningTask->regs.rip);
+	uint64_t fn_to_execute =  runningTask->regs.rip;
+	//uint64_t* user_rsp= (uint64_t*)get_free_user_page();
+	//user_rsp += 0x1000;
+	uint64_t user_rsp = runningTask->regs.user_rsp;
 	uint64_t current_rsp;
 	__asm__ __volatile__("movq %%rsp, %0;"
 	:"=m" (current_rsp)
 	:
 	:
 	);
-	kernel_rsp=current_rsp; 
-	u_rsp=(uint64_t) user_rsp;				
+	//kernel_rsp=current_rsp; 
+	//u_rsp=(uint64_t) user_rsp;				
 	set_tss_rsp((void*)current_rsp);
 	uint32_t current_rsp_lo = current_rsp & 0x00000000FFFFFFFF;
 	uint32_t current_rsp_hi =(current_rsp & 0xFFFFFFFF00000000)>>32;
 	cpuSetMSR(0xC0000102,current_rsp_lo, current_rsp_hi);
-	kprintf("we are all set 3, 2, 1\n");
+	kprintf("we are all set 3, 2, 1 ... Launch !\n");
 	__asm__ __volatile__ (
 	"movq %0, %%r13;"
 	"movq $0x23 , %%rax;"
@@ -248,4 +263,20 @@ void switch_to_ring_3(uint64_t user_function)
 	:"m"(fn_to_execute), "m"(user_rsp)
 	:
 	);
+}
+
+void removeTask(){
+	// reclaim all the pages used by this task
+
+	// removing the task from the runningTask list
+	task* temp = runningTask;
+	task* next = runningTask->next;
+
+	while(temp->next != runningTask){
+		temp = temp->next;
+	}
+	temp->next = next;
+	runningTask = next;
+	kprintf("Changed the task");
+	yield();
 }

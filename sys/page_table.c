@@ -21,7 +21,7 @@ void changeCR3(PML4E *new_pml4e, PDPE *new_pdpe, PDE *new_pde, PTE *new_pte, int
         	:
         	:"r"(new_pml4e)
         );
-	//kprintf("%p %p %p %p\n", pml4e, pdpe, pde, pte);
+	//kprintf("CHANGED CR3 %p %p %p %p\n", pml4e, pdpe, pde, pte);
 
 }
 

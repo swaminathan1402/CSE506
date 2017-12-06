@@ -3,10 +3,13 @@
 #include<sys/defs.h>
 #include<sys/elf64.h>
 #include<sys/page_table.h>
-
+#define RUNNING_PROCESS_STATUS 1
+#define SLEEPING_PROCESS_STATUS 2
+#define EXIT_PROCESS_STATUS 3
+#define ZOMBIE_PROCESS_STATUS 4
 void initTasking();
 typedef struct {
-	uint64_t rsp, rbp, rip, cr3;
+	uint64_t rsp, rbp, rip, cr3, user_rsp;
 } registers;
 
 typedef struct task{
@@ -16,6 +19,7 @@ typedef struct task{
 	PDPE* pdpe;
 	PDE* pde;
 	PTE* pte;
+	int status;
 	
 } task;
 
@@ -26,13 +30,13 @@ task* lastTask;
 //task* idleTask;
 //task* userTask;
 
-void createTask(void(*)(), uint64_t, uint64_t, Elf64_Ehdr *);
+void createTask(void(*)(), uint64_t, uint64_t);
 void yield();
 void switchTo(registers *old, registers *current);
-
-void switch_to_ring_3(uint64_t);
+void createIdleTask();
+void switch_to_ring_3();
 void mainOne();
 void mainTwo();
 void beIdle();
-
+void removeTask();
 #endif

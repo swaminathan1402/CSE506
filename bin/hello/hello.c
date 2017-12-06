@@ -53,6 +53,5 @@ syscall_write(0, "hello world\n", 11);
 char buffer[1024];
 syscall_read(1, buffer, 1024);
 syscall_write(0, buffer, 1024);
-while(1);
 return 0;
 }

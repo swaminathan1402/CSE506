@@ -208,7 +208,11 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   */
 
   tarfs_read();
+  
+  read_elf(idle_elf);	// idle is elf type and global
+  read_elf(sbush_elf);  // sbush is elf type and global. We create Task here 
   kprintf("we are launching to ring3\n");
+  /*
   __asm__ __volatile__ (
 	"movq %1, %%cr3;"
   	"movq %0, %%r11;"
@@ -218,7 +222,8 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
       :
   );
   kprintf("new cr3 %p\n", runningTask->pml4e);
-  switch_to_ring_3(runningTask->regs.rip);
+  */
+  switch_to_ring_3();
 
 
     /* End of yield testing */

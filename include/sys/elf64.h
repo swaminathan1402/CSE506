@@ -40,4 +40,7 @@ typedef struct {
   Elf64_Xword   p_align;
 } Elf64_Phdr;
 
+void read_elf(Elf64_Ehdr *);
+Elf64_Ehdr *sbush_elf;
+Elf64_Ehdr *idle_elf;
 #endif

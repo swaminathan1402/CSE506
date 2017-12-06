@@ -8,6 +8,7 @@
 #include<sys/string.h>
 #include<sys/page.h>
 #include<sys/filedirectory.h>
+
 int octal_to_decimal(char *str, int size){
 	int n = 0;
 	char *c = str;
@@ -22,8 +23,7 @@ int octal_to_decimal(char *str, int size){
 
 
 void read_elf(Elf64_Ehdr *file){
-	
-	
+		
 	Elf64_Phdr *program_header = (Elf64_Phdr *)((uint64_t)file + file->e_phoff);
 	// kprintf("\nProgram Header %p Elf address %p\n", (uint64_t)program_header, (uint64_t)file);
 	
@@ -40,7 +40,7 @@ void read_elf(Elf64_Ehdr *file){
             : "=m"(rflags)
             :
         );
-	createTask((void *)file->e_entry, rflags, cr3, file);
+	createTask((void *)file->e_entry, rflags, cr3);
 	changeCR3(runningTask->pml4e, runningTask->pdpe, runningTask->pde, runningTask->pte, 1);
 	kprintf(" || time %p %p %p %p\n", pml4e, pdpe, pde, pte);
 	int count = file->e_phnum;
@@ -70,25 +70,19 @@ void tarfs_read(){
 	int index=0;
 	fileDescriptor = (filedir *)get_free_pages(3);
 	kprintf("\n%p",fileDescriptor);
-
 	filedir* head = create_file_entry("root/", index, 0);
-	//(filedir*)fileDescriptor+index;
-	/*
-	head->parent=NULL;
-	head->filename[0]= 'r'; 
-	head->filename[1]='o';
-	head->filename[2]='o';
-	head->filename[3]='t';
-	head->filename[4]= '\0';
-	head->type=1;
-	index++;
-	*/
 	while((uint64_t)file < (uint64_t)&_binary_tarfs_end){
 		
 		int size_of_file = octal_to_decimal(file->size, 11);
 		//kprintf("\n******Filename: %s Mode: %p Size: %d\n", file->name, file->mode, octal_to_decimal(file->size, 11));
 		Elf64_Ehdr *something = (Elf64_Ehdr *)(file + 1);
-		index++;	
+		index++;
+		if(strcmp(file->name, "bin/hello")==1){
+			sbush_elf = something;
+		}
+		if(strcmp(file->name, "bin/init")==1){
+			idle_elf = something;
+		}	
 		if(strlen(file->name)!=0){
 			
 			//kprintf("Adding %s: %d", file->name, index);
@@ -105,13 +99,13 @@ void tarfs_read(){
 
 		}
 	}
-	//print_File_Descriptor(head);
+	/*
+	print_File_Descriptor(head);
 	filedir *temp = head->children[0];
 	kprintf("Please|%s|: %d", temp->filename, temp->child_count);
 	for(int i=0; i<temp->child_count; i++){
 		filedir *crap = temp->children[i];
 		kprintf("|%s|",crap->filename);
 	}
-	
-	while(1);
+	*/
 }

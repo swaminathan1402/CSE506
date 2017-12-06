@@ -2,6 +2,7 @@
 #include<sys/kprintf.h>
 #include<sys/syscall.h>
 #include<sys/terminal_driver.h>
+#include<sys/task.h>
 void cpuGetMSR(uint32_t msr, uint32_t*lo , uint32_t* hi)
 {
 
@@ -130,6 +131,10 @@ case 22: //sys_pipe
 kprintf("%p" , filedes);
 break ;
 
+case 60:
+  kprintf("WE HAVE TO EXIT NOW\n");
+  removeTask();
+break;
 
 default :
 kprintf("Syscall not handled yet");
