@@ -22,7 +22,7 @@ int octal_to_decimal(char *str, int size){
 }
 
 
-void read_elf(Elf64_Ehdr *file){
+void read_elf(Elf64_Ehdr *file ,int index){
 		
 	Elf64_Phdr *program_header = (Elf64_Phdr *)((uint64_t)file + file->e_phoff);
 	// kprintf("\nProgram Header %p Elf address %p\n", (uint64_t)program_header, (uint64_t)file);
@@ -51,7 +51,7 @@ void read_elf(Elf64_Ehdr *file){
 			
 			// map those virtual addresses 
 			for(uint64_t i = program_header->p_vaddr; i<virtual_limit_sz; i+=4096){
-				setMap(i, i, 1);
+				setMap(i, i+index*0x10000, 1);
 				uint64_t from_addr = (uint64_t)file + program_header->p_offset + (i - program_header->p_vaddr);
 				memcpy((void *)i, (void *)from_addr,  4096);
 			}
