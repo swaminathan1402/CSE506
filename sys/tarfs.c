@@ -85,9 +85,11 @@ void tarfs_read(){
 	//	if(size_of_file > 0){
 			//if(file->name[4] == 'h' && file->name[5] == 'e'){
 				kprintf("\n******\nFilename: %s\nMode: %p\nSize: %d\n", file->name, file->mode, octal_to_decimal(file->size, 11));
-				//	Elf64_Ehdr *something = (Elf64_Ehdr *)(file + 1);
-				
-		if( strcmp(file->name,"")==0)
+				Elf64_Ehdr *something = (Elf64_Ehdr *)(file + 1);
+	index++;
+	//index++;	
+			
+			if( strcmp(file->name,"")==0)
 			create_File_Descriptor_Entry(file->name, index++ ,size_of_file , head); 
 			//if(size_of_file >0)		
 			//read_elf(something);
@@ -98,13 +100,13 @@ void tarfs_read(){
 			file+=1;
 		}
 		else {
-;			file += (1 + size_of_file/512);
+			file += (1 + size_of_file/512);
 			if(size_of_file  % 512 != 0){
 	                	file += 1;
                         }
 
 		}
-;	}
+	}
 	//kprintf("finished traversing\n");
 	print_File_Descriptor();
 	while(1);

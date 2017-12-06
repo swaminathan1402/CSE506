@@ -11,7 +11,7 @@ uint64_t children[10];
 uint64_t type; //1: directory , 2:file
 //uint64_t start_point_addr;
 uint64_t child_count; 
-}filedir;
+}__attribute__((packed))filedir;
 
 filedir *fileDescriptor;
 
