@@ -3,6 +3,7 @@
 #include<sys/syscall.h>
 #include<sys/terminal_driver.h>
 #include<sys/task.h>
+#include<sys/filedirectory.h>
 void cpuGetMSR(uint32_t msr, uint32_t*lo , uint32_t* hi)
 {
 
@@ -95,12 +96,29 @@ case 2:// sys_open
 filename = (char *)rdi; 
 flags = (int)rsi;
 mode =(int)rdx;
-kprintf("%s, %d, %d ", filename, flags, mode);
+kprintf("\n Opening:%s  Flags: %d , Mode: %d", filename, flags, mode);
+if(mode==0)
+{
+int fd =search(filename);
+kprintf("Fd: %d" ,fd); 
+if(fd!=-1)
+{
+increase_ref_count(fd);
+} 
+__asm__ __volatile__("movq %0, %%rax;"
+:
+:"m"(fd)
+:
+);
+
+
+}
 break;	
 
 case 3: //sys_close
 fd =(uint64_t)rdi;
-kprintf("%d", fd);
+kprintf(" Closing: %d", fd);
+
 break;
 
 case 8://sys_lseek 

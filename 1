@@ -1,4 +1,4 @@
-#include<sys/filedirectory.h>
+
 #include<sys/string.h>
 #include<sys/kprintf.h>
 
@@ -32,14 +32,6 @@ filedir* create_file_entry(char *filename, int index, int filesz ,uint64_t file)
 	return temp;
 
 }
-
-
-void increase_ref_count (int index)
-{
-filedir* temp = (filedir*) fileDescriptor +index;
-temp->ref_count++;
-}
-
 
 char *extractParentFromFilename(char *filename){
     int len = strlen(filename);
