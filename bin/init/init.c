@@ -22,11 +22,23 @@ int syscall_write(int fd, char *buffer, int count){
     return ret;
 }
 
-
+int yield(){
+	__asm__ __volatile__(
+		
+		"movq $24, %%rax;"
+		"int $0x80;"
+		:
+		:
+		:"rax"
+	);
+	return 1;
+}
 
 
 
 int main(){
 	syscall_write(0,"sbush>",6);
-	while(1);
+	while(1){
+		//yield();
+	}
 }

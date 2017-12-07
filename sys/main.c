@@ -211,7 +211,7 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   
   read_elf(idle_elf,0);	// idle is elf type and global
 //  read_elf(idle_elf);	// idle is elf type and global
-  read_elf(sbush_elf,1);  // sbush is elf type and global. We create Task here 
+  //read_elf(sbush_elf,1);  // sbush is elf type and global. We create Task here 
   kprintf("we are launching to ring3\n");
   /*
   __asm__ __volatile__ (

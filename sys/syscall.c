@@ -131,6 +131,10 @@ case 22: //sys_pipe
 kprintf("%p" , filedes);
 break ;
 
+case 24: // sys_yield
+  //yield();
+  break;
+
 case 60:
   kprintf("WE HAVE TO EXIT NOW\n");
   removeTask();
