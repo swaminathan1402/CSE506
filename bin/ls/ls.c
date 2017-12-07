@@ -37,14 +37,14 @@ int openDir (const char* file, int flags)
 	
 	__asm__ __volatile__(
 		"movq $2, %%rax;"
-		"movq %1 ,%%rbx;"
-		"movq %2, %%rcx;"
+		"movq %1 ,%%rdi;"
+		"movq %2, %%rsi;"
 		"movq $0 ,%%rdx;"
-		"syscall;"
+		"int $0x80;"
 		"movq %%rax, %0;"
 		:"=r"(ret)
 		:"r" (file1), "r"(flags1)
-		:"rax","rbx","rcx","rdx"
+		:"rax","rdi","rsi","rdx"
 	);
 	return ret;
 
@@ -57,8 +57,8 @@ int getdents(int fd, char *buffer){
 	long long int ret;
 	__asm__ __volatile__(
                 "movq $78, %%rax;"
-                "movq %1, %%rbx;"
-                "movq %2, %%rcx;"
+                "movq %1, %%rdi;"
+                "movq %2, %%rsi;"
                 "movq $1024,%%rdx;"
                 "syscall;"
                 "movq %%rax , %0"
@@ -110,12 +110,12 @@ int closeDir(int fd)
 	long long int ret;
 	__asm__(
 	   "movq  $3, %%rax;"
-	   "movq %1, %%rbx;"
+	   "movq %1, %%rdi;"
 	   "syscall;"
 	   "movq %%rax, %0;"
 	   :"=r"(ret)
 	   :"r" (fd1)
-	   :"rax","rbx"
+	   :"rax","rdi"
 	);
 	return ret;
 }
@@ -144,6 +144,7 @@ int main (int argc , char *argv[], char *envp[])
                     parameter_list[i][argv_c] = argv[0][argv_c];
                     argv_c++;
                 }	
+
 
 
 		fd = openDir(parameter_list[1],0);// O_RDONLY | O_DIRECTORY);

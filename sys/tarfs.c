@@ -70,7 +70,7 @@ void tarfs_read(){
 	int index=0;
 	fileDescriptor = (filedir *)get_free_pages(3);
 	kprintf("\n%p",fileDescriptor);
-	filedir* head = create_file_entry("root/", index, 0);
+	filedir* head = create_file_entry("root/", index, 0, 0);
 	while((uint64_t)file < (uint64_t)&_binary_tarfs_end){
 		
 		int size_of_file = octal_to_decimal(file->size, 11);
@@ -86,9 +86,10 @@ void tarfs_read(){
 		if(strlen(file->name)!=0){
 			
 			//kprintf("Adding %s: %d", file->name, index);
-			create_File_Descriptor_Entry(file->name, index ,size_of_file , head); 
+			create_File_Descriptor_Entry(file->name, index ,size_of_file , head, (uint64_t)file); 
 		}
 		if(size_of_file == 0) {
+
 			file+=1;
 		}
 		else {
