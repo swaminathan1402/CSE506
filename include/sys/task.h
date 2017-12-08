@@ -20,11 +20,14 @@ typedef struct task{
 	PDE* pde;
 	PTE* pte;
 	int status;
+	int pid;
 	
 } task;
 
 task* runningTask;
 task* lastTask;
+uint64_t parent_rsp;
+int pid;
 //task* mainTask;
 //task* otherTask;
 //task* idleTask;
@@ -39,4 +42,6 @@ void mainOne();
 void mainTwo();
 void beIdle();
 void removeTask();
+int fork();
+int createChildTask();
 #endif

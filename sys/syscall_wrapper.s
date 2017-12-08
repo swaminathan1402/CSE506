@@ -1,7 +1,8 @@
 .global syscall_wrapper
+.extern parent_rsp 
 .align 8 
 syscall_wrapper:
-
+movq %rsp, parent_rsp 
 push %rax
 push %rbx
 push %rcx

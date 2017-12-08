@@ -2,7 +2,7 @@
 #include<sys/memory.h> 
 #include<sys/page.h>
 #include<sys/kprintf.h>
-
+#include<sys/task.h>
 
 void changeCR3(PML4E *new_pml4e, PDPE *new_pdpe, PDE *new_pde, PTE *new_pte, int idmap) {
 	pml4e = new_pml4e;
@@ -77,6 +77,91 @@ void changeUserPrivilegePage(uint64_t virtual_addr){
 	(some_pdpe+pdpe_index)->us=1;
 	(some_pde+pde_index)->us=1;
 	(some_pte+pte_index)->us = 1;
+}
+
+void deepCopyPageTable(task *child_task){
+	// walk thru the page table of running task and deep copy stuff
+	PML4E *parent_pml4e = runningTask->pml4e;
+	PDPE *parent_pdpe = runningTask->pdpe;
+	PDE *parent_pde = runningTask->pde;
+	PTE *parent_pte = runningTask->pte;
+
+	PML4E *child_pml4e = child_task->pml4e;
+	PDPE *child_pdpe = child_task->pdpe;
+	PDE *child_pde = child_task->pde;
+	PTE *child_pte = child_task->pte;
+
+	for(int pml4e_index=0; pml4e_index<511; pml4e_index++){
+		if((parent_pml4e + pml4e_index)->p == 0){
+			continue;
+		} else{
+			if((child_pml4e+ pml4e_index)->p == 0){
+				uint64_t *some_page = (uint64_t *)get_free_page();
+				memset(some_page, 0, 4096);
+				(child_pml4e + pml4e_index)->page_directory_pointer_base_address = (uint64_t)some_page >> 12;
+				(child_pml4e + pml4e_index)->p = 1;
+				(child_pml4e + pml4e_index)->us = 1;
+				(child_pml4e + pml4e_index)->rw = 1;  // set it to 0 TODO
+			}
+
+			parent_pdpe = (PDPE *)(uint64_t)((parent_pml4e + pml4e_index)->page_directory_pointer_base_address << 12);
+			child_pdpe = (PDPE *)(uint64_t)((child_pml4e + pml4e_index)->page_directory_pointer_base_address << 12); 
+
+			for(int pdpe_index=0; pdpe_index < 512; pdpe_index++){
+				if((parent_pdpe + pdpe_index)->p == 0){
+					continue;
+				} else {
+
+					if((child_pdpe + pdpe_index)->p == 0){
+						uint64_t *temp_page = (uint64_t *)get_free_page();
+						memset(temp_page, 4096, 0);
+						(child_pdpe + pdpe_index)->page_directory_base_address =(uint64_t)temp_page >> 12;
+						(child_pdpe + pdpe_index)->p = 1;
+						(child_pdpe + pdpe_index)->rw = 1;
+						(child_pdpe + pdpe_index)->us = 1;
+
+					}
+					parent_pde = (PDE *)(uint64_t)((parent_pdpe + pdpe_index)->page_directory_base_address << 12);
+					child_pde = (PDE *)(uint64_t)((child_pdpe + pml4e_index)->page_directory_base_address << 12);
+					for(int pde_index=0; pde_index < 512; pde_index++){
+						if((parent_pde + pde_index)->p == 0){
+							continue;
+						} else {
+							if((child_pde + pde_index)->p == 0){
+								uint64_t *temp_page = (uint64_t *)get_free_page();
+								memset(temp_page, 4096, 0);
+								(child_pde + pde_index)->page_table_base_address =(uint64_t)temp_page >> 12;
+								(child_pde + pde_index)->p = 1;
+								(child_pde + pde_index)->rw = 1;
+								(child_pde + pde_index)->us = 1;
+
+							}
+							parent_pte = (PTE *)(uint64_t)((parent_pde + pde_index)->page_table_base_address << 12);
+							child_pte = (PTE *)(uint64_t)((child_pde + pde_index)->page_table_base_address << 12);
+
+							for(int pte_index = 0; pte_index < 512; pte_index++){
+								if((parent_pte + pte_index)->p == 0){
+									continue;
+								} else {
+									if((child_pte + pte_index)->p == 0){
+										uint64_t *temp_page = (uint64_t *)get_free_page();
+										memset(temp_page, 4096, 0);
+										(child_pte + pde_index)->physical_address =(parent_pte + pte_index)->physical_address;
+										(child_pte + pde_index)->p = 1;
+										(child_pte + pde_index)->rw = 1;
+										(child_pte + pde_index)->us = 1;
+
+									}
+									
+								}
+							}
+
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 void setMap(uint64_t virtual_addr, uint64_t physical_addr, int user_accessible){

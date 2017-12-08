@@ -141,17 +141,46 @@ void beIdle(){
 }
 
 
+int fork() {
+
+	int child_pid = createChildTask();
+	// add the new child to the task queue;
+	return child_pid;
+}
+
+int createChildTask(){
+	// create new child task
+	// deep copy the page tables with parents page tables
+	// create a kernel stack
+	// the kernel stack will contain the contents of parent kernel stack[contains the stuff we push before jumping to ring 3]
+	// the copied stack also contains the rsp of the user
+	// question is, do i need to copy the contents of the user stack as well
+	pid++;
+	task *childTask = (task *)get_free_page();
+	childTask->status = RUNNING_PROCESS_STATUS;
+	childTask->regs.rip = NULL; 
+	childTask->regs.cr3 = 0;
+	childTask->regs.rsp = (uint64_t)get_free_page() + 4096;  // create stack at the top of the page, so that it can grow downwards and not go to the previous page
+	childTask->regs.user_rsp = (uint64_t)get_free_user_page() + 4096;	
+	childTask->pid = pid;
+
+	return childTask->pid;
+	
+}
+
 void createTask(
 		void (*main)(),  // function pointer
 		uint64_t rflags, 
 		uint64_t page_dir
 		){
+	pid++;
 	task *me = (task *)get_free_page();
 	me->status = RUNNING_PROCESS_STATUS;
 	me->regs.rip = (uint64_t)main;
 	me->regs.cr3 = page_dir;
 	me->regs.rsp = (uint64_t)get_free_page() + 4096;  // create stack at the top of the page, so that it can grow downwards and not go to the previous page
 	me->regs.user_rsp = (uint64_t)get_free_user_page() + 4096;	
+	me->pid = pid;
        uint64_t *pointer_to_pml4e = (uint64_t *)get_free_page();
        uint64_t *pointer_to_pdpe = (uint64_t *)get_free_page();
        uint64_t *pointer_to_pde = (uint64_t *)get_free_page();
@@ -168,7 +197,7 @@ void createTask(
 
 
 	me->pml4e[511] = pml4e[511];
-
+	me->regs.cr3 = (uint64_t)me->pml4e;
 	if(runningTask == NULL){
 		runningTask = me;
 		lastTask = me;
@@ -218,6 +247,7 @@ void test_user_function()
 void switch_to_ring_3()
 {
 	changeCR3(runningTask->pml4e, runningTask->pdpe, runningTask->pde, runningTask->pte, 0);
+        kprintf("new cr3 %p and pointing to %p\n", runningTask->pml4e, runningTask->regs.rip);
 	__asm__ __volatile__ (
         	"movq %0, %%r11;"
         	"movq %%r11, %%rsp;"
@@ -225,7 +255,6 @@ void switch_to_ring_3()
             : "m"(runningTask->regs.rsp)
             :
         );
-        kprintf("new cr3 %p and pointing to %p\n", runningTask->pml4e, runningTask->regs.rip);
 	uint64_t fn_to_execute =  runningTask->regs.rip;
 	//uint64_t* user_rsp= (uint64_t*)get_free_user_page();
 	//user_rsp += 0x1000;
@@ -250,7 +279,7 @@ void switch_to_ring_3()
 	"movq %%rax , %%es;"
 	"movq %%rax , %%fs;"
 	"movq %%rax , %%gs;"
-	"movq %1, %%rax;"
+	"movq %1, %%rax;"  // change to user rsp 
 
         "push $0x23;"  // data segment is at offset 32.. last two bits should be 2. 32 or 3
 	"push %%rax;"

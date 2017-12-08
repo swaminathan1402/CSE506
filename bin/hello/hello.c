@@ -69,10 +69,29 @@ int syscall_read(int fd, char *buffer, int count){
     }
     return ret;
 }
-int main(int argc, char *argv[], char *envp[]){
-syscall_write(0, "hello world\n", 11); 
-syscall_write(0, "hello world\n", 11); 
+int syscall_fork(){
+    long long int ret;
+    __asm__ __volatile__(
+        "movq $57, %%rax;"
+        "int $0x80;"
+        "movq %%rax, %0;"
+        :"=r"(ret)
+        :
+        :"rax"
+    );
+    return ret;
 
+}
+int main(int argc, char *argv[], char *envp[]){
+  //syscall_write(0, "hello world\n", 11); 
+  //syscall_write(0, "hello world\n", 11); 
+  int pid = syscall_fork();
+  if (pid == 0){
+    syscall_write(0, "child process\n", 14);
+  } else {
+    syscall_write(0, "parent process\n", 15);
+  }
+/*
 char buffer[1024];
 syscall_read(1, buffer, 1024);
 syscall_write(0, buffer, 1024);
@@ -82,5 +101,6 @@ char fdchar[5] ="Fd:";
 fdchar[3]= fd+48;               
 fdchar[4]= '\n';                
 syscall_write(0 , fdchar, 4);
+*/
 return ;
 }

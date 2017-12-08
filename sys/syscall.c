@@ -153,6 +153,18 @@ case 24: // sys_yield
   //yield();
   break;
 
+case 57:
+  kprintf("forking");
+  int child_process_id = fork();
+  __asm__ __volatile__(
+	"movq %0, %%rax;"
+	:
+	:"m"(child_process_id)
+	:
+  );
+
+  break;
+
 case 60:
   kprintf("WE HAVE TO EXIT NOW\n");
   removeTask();

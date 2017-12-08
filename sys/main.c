@@ -108,7 +108,7 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
     kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
   
   
-  
+    pid = 0;  // pid generation
     uint64_t *pointer_to_pml4e = (uint64_t *)get_free_page();
     uint64_t *pointer_to_pdpe = (uint64_t *)get_free_page();
     uint64_t *pointer_to_pde = (uint64_t *)get_free_page();
