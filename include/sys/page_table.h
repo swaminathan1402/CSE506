@@ -92,4 +92,5 @@ uint64_t kernel_pte;
 
 void init_pd(PTE*,PML4E *, uint64_t, int);
 void changeCR3(PML4E*, PDPE*, PDE*, PTE*, int);
+void deepCopyPageTable(uint64_t);
 #endif

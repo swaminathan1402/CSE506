@@ -79,7 +79,8 @@ void changeUserPrivilegePage(uint64_t virtual_addr){
 	(some_pte+pte_index)->us = 1;
 }
 
-void deepCopyPageTable(task *child_task){
+void deepCopyPageTable(uint64_t child){
+	task *child_task = (task *)child;
 	// walk thru the page table of running task and deep copy stuff
 	PML4E *parent_pml4e = runningTask->pml4e;
 	PDPE *parent_pdpe = runningTask->pdpe;
@@ -90,7 +91,6 @@ void deepCopyPageTable(task *child_task){
 	PDPE *child_pdpe = child_task->pdpe;
 	PDE *child_pde = child_task->pde;
 	PTE *child_pte = child_task->pte;
-
 	for(int pml4e_index=0; pml4e_index<511; pml4e_index++){
 		if((parent_pml4e + pml4e_index)->p == 0){
 			continue;
@@ -138,23 +138,22 @@ void deepCopyPageTable(task *child_task){
 							}
 							parent_pte = (PTE *)(uint64_t)((parent_pde + pde_index)->page_table_base_address << 12);
 							child_pte = (PTE *)(uint64_t)((child_pde + pde_index)->page_table_base_address << 12);
-
+							
 							for(int pte_index = 0; pte_index < 512; pte_index++){
 								if((parent_pte + pte_index)->p == 0){
 									continue;
 								} else {
 									if((child_pte + pte_index)->p == 0){
-										uint64_t *temp_page = (uint64_t *)get_free_page();
-										memset(temp_page, 4096, 0);
-										(child_pte + pde_index)->physical_address =(parent_pte + pte_index)->physical_address;
-										(child_pte + pde_index)->p = 1;
-										(child_pte + pde_index)->rw = 1;
-										(child_pte + pde_index)->us = 1;
+										(child_pte + pte_index)->p = 1;
+										(child_pte + pte_index)->rw = 1;
+										(child_pte + pte_index)->us = 1;
 
 									}
+									(child_pte + pte_index)->physical_address =(parent_pte + pte_index)->physical_address;
 									
 								}
 							}
+							
 
 						}
 					}

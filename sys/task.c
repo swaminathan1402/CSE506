@@ -13,7 +13,7 @@ void yield(){
 	/*
 		1. Populate rdi, rsi with me and next respectively.
 		2. get the rip and store it in runningTask ->regs.rip
-r
+
 		3. Push rax ,rbx, rcx, rdx, flags
 		4. Change the stack pointer of runningTask to next stack by accessing task*(rsi)->regs.rsp
 		5. Change the rip with the next Task by accessing (task*(rsi))->regs.rip
@@ -163,7 +163,64 @@ int createChildTask(){
 	childTask->regs.rsp = (uint64_t)get_free_page() + 4096;  // create stack at the top of the page, so that it can grow downwards and not go to the previous page
 	childTask->regs.user_rsp = (uint64_t)get_free_user_page() + 4096;	
 	childTask->pid = pid;
+        uint64_t *pointer_to_pml4e = (uint64_t *)get_free_page();
+        uint64_t *pointer_to_pdpe = (uint64_t *)get_free_page();
+        uint64_t *pointer_to_pde = (uint64_t *)get_free_page();
+        uint64_t *pointer_to_pte = (uint64_t *)get_free_page();
 
+        childTask->pml4e = (PML4E *)pointer_to_pml4e;
+        memset(childTask->pml4e, 0, 4096);
+        childTask->pdpe = (PDPE *)pointer_to_pdpe;
+        memset(childTask->pdpe, 0, 4096);
+        childTask->pde = (PDE *)pointer_to_pde;
+        memset(childTask->pde, 0, 4096);
+        childTask->pte = (PTE *)pointer_to_pte;
+        memset(childTask->pte, 0, 4096);
+        childTask->pml4e[511] = pml4e[511];
+        childTask->regs.cr3 = (uint64_t)childTask->pml4e;
+	
+	//changeCR3(childTask->pml4e,childTask->pdpe,childTask->pde,childTask->pte, 1);
+	//changeCR3((PML4E *)kernel_pml4e, (PDPE *)kernel_pdpe, (PDE *)kernel_pde, (PTE *)kernel_pte, 0);
+	
+	deepCopyPageTable((uint64_t)childTask);
+	
+	//Copy kernel stack of runningTask  on child and move rsp to align with parent's current rsp
+
+	uint64_t start_address = (parent_rsp >>12)<<12;
+	memcpy (childTask->regs.rsp - 4096 ,start_address  , 4096);
+	
+	uint64_t offset =(start_address+4096 - parent_rsp);  
+	childTask->regs.rsp = childTask->regs.rsp- offset;
+
+	uint64_t *new_rip = *(uint64_t *)parent_rsp;
+	childTask->regs.rip = (uint64_t)new_rip;
+	
+	task *nextTask = runningTask->next;
+	runningTask->next = childTask;
+	childTask->next = nextTask;
+	kprintf("DUDE %p and %p\n", childTask->regs.rip, childTask->regs.rsp);
+	__asm__ __volatile__(
+        "movq %%rsp, %%r11;"
+        "movq %1, %%rsi;"
+        "movq %2, %%rdi;"
+        "movq %0 ,%%rsp;"
+        "movq $1 ,%%rax;"	
+        "push %%rax;"
+        "movq $2 ,%%rbx;"	
+        "push %%rbx;"
+        "movq $3 ,%%rcx;"	
+        "push %%rcx;"
+        "movq $4 , %%rdx;" 	
+        "push %%rdx;"
+        "push %%rdi;"
+        "pushf;"
+        "push %%rsi;"
+        "movq %%r11, %%rsp;"
+        :
+        :"m"(childTask->regs.rsp), "m"(childTask->next), "m"(childTask)
+        :"memory"
+        );
+        childTask->regs.rsp -= 56;
 	return childTask->pid;
 	
 }
@@ -195,9 +252,9 @@ void createTask(
 	me->pte = (PTE *)pointer_to_pte;
 	memset(me->pte, 0, 4096);
 
-
 	me->pml4e[511] = pml4e[511];
 	me->regs.cr3 = (uint64_t)me->pml4e;
+
 	if(runningTask == NULL){
 		runningTask = me;
 		lastTask = me;
@@ -268,6 +325,7 @@ void switch_to_ring_3()
 	//kernel_rsp=current_rsp; 
 	//u_rsp=(uint64_t) user_rsp;				
 	set_tss_rsp((void*)current_rsp);
+	runningTask->regs.rsp= current_rsp;
 	uint32_t current_rsp_lo = current_rsp & 0x00000000FFFFFFFF;
 	uint32_t current_rsp_hi =(current_rsp & 0xFFFFFFFF00000000)>>32;
 	cpuSetMSR(0xC0000102,current_rsp_lo, current_rsp_hi);
@@ -286,12 +344,18 @@ void switch_to_ring_3()
 	"pushf;"
 	"push $0x2B;" // data segment is at offset 40... last two bits should be 2. 40 or 3
 	"push %%r13;"
-	
-	"iretq;"
 	:
 	:"m"(fn_to_execute), "m"(user_rsp)
 	:
 	);
+
+	__asm__ __volatile__(
+	"iretq; "
+	:	
+	:
+	:
+	);
+	
 }
 
 void removeTask(){
@@ -306,7 +370,26 @@ void removeTask(){
 		temp = temp->next;
 	}
 	temp->next = next;
+	//runningTask = next;
+	kprintf("Changed the task from %d to %d and prev is %d\n", runningTask->pid, next->pid, temp->pid);
+
+	//yield(); // this is only supposed to switch the stack
+	__asm__ __volatile__ (
+		"movq %0, %%rdi;"
+		"movq %1, %%rsi;"
+		:
+		:"m"(runningTask), "m"(runningTask->next)
+		:
+	);
 	runningTask = next;
-	kprintf("Changed the task");
-	yield();
+	// switch the rsp's
+
+	__asm__ __volatile__ (
+		"movq (%%rsi), %%rsp;"  // change the stack
+		:
+		:
+		:
+	);
+	switch_to_ring_3(runningTask->regs.rip);
+
 }
