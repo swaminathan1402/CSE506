@@ -41,4 +41,5 @@ int main(){
 	while(1){
 		//yield();
 	}
+	return 0;
 }

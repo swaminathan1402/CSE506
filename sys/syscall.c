@@ -165,8 +165,19 @@ case 57:
 
   break;
 
+case 59:
+  filename = (char *)rdi;
+  kprintf("execvping %s\n", filename);
+  exec(filename);
+  break;
+  /*
+  argv = (char *)rsi;
+  envp = (char *)rdx;
+  */
+
+
 case 60:
-  kprintf("WE HAVE TO EXIT NOW\n");
+  //kprintf("WE HAVE TO EXIT NOW\n");
   removeTask();
 break;
 

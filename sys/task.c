@@ -148,6 +148,13 @@ int fork() {
 	return child_pid;
 }
 
+int exec(char *filename){
+
+	Elf64_Ehdr *the_elf = findElfByName(filename);
+	load_binary(the_elf, 3);
+	switch_to_ring_3();
+	return 0;
+}
 int createChildTask(){
 	// create new child task
 	// deep copy the page tables with parents page tables
@@ -163,6 +170,7 @@ int createChildTask(){
 	childTask->regs.rsp = (uint64_t)get_free_page() + 4096;  // create stack at the top of the page, so that it can grow downwards and not go to the previous page
 	childTask->regs.user_rsp = (uint64_t)get_free_user_page() + 4096;	
 	childTask->pid = pid;
+	childTask->isChild = 1;
         uint64_t *pointer_to_pml4e = (uint64_t *)get_free_page();
         uint64_t *pointer_to_pdpe = (uint64_t *)get_free_page();
         uint64_t *pointer_to_pde = (uint64_t *)get_free_page();
@@ -179,14 +187,12 @@ int createChildTask(){
         childTask->pml4e[511] = pml4e[511];
         childTask->regs.cr3 = (uint64_t)childTask->pml4e;
 	
-	//changeCR3(childTask->pml4e,childTask->pdpe,childTask->pde,childTask->pte, 1);
-	//changeCR3((PML4E *)kernel_pml4e, (PDPE *)kernel_pdpe, (PDE *)kernel_pde, (PTE *)kernel_pte, 0);
 	
 	deepCopyPageTable((uint64_t)childTask);
 	
 	//Copy kernel stack of runningTask  on child and move rsp to align with parent's current rsp
 
-	uint64_t start_address = (parent_rsp >>12)<<12;
+	uint64_t start_address = (parent_rsp >>12)<<12;  //aligning purpose
 	memcpy (childTask->regs.rsp - 4096 ,start_address  , 4096);
 	
 	uint64_t offset =(start_address+4096 - parent_rsp);  
@@ -194,17 +200,27 @@ int createChildTask(){
 
 	uint64_t *new_rip = *(uint64_t *)parent_rsp;
 	childTask->regs.rip = (uint64_t)new_rip;
+
+
+	// Copy the complete user stack
+	uint64_t user_rsp_start_addr = *((uint64_t *)(parent_rsp + 24));
+	int size_of_user_stack = runningTask->regs.user_rsp - user_rsp_start_addr;
+	//kprintf("the user rsp start addr %p %d\n", user_rsp_start_addr, size_of_user_stack);
+
+	childTask->regs.user_rsp -= size_of_user_stack;
+	memcpy(childTask->regs.user_rsp, user_rsp_start_addr, size_of_user_stack);
+
 	
 	task *nextTask = runningTask->next;
 	runningTask->next = childTask;
 	childTask->next = nextTask;
-	kprintf("DUDE %p and %p\n", childTask->regs.rip, childTask->regs.rsp);
+	//kprintf("DUDE %p and %p\n", childTask->regs.rip, childTask->regs.rsp);
 	__asm__ __volatile__(
         "movq %%rsp, %%r11;"
         "movq %1, %%rsi;"
         "movq %2, %%rdi;"
         "movq %0 ,%%rsp;"
-        "movq $1 ,%%rax;"	
+        "movq $0 ,%%rax;"	
         "push %%rax;"
         "movq $2 ,%%rbx;"	
         "push %%rbx;"
@@ -238,6 +254,7 @@ void createTask(
 	me->regs.rsp = (uint64_t)get_free_page() + 4096;  // create stack at the top of the page, so that it can grow downwards and not go to the previous page
 	me->regs.user_rsp = (uint64_t)get_free_user_page() + 4096;	
 	me->pid = pid;
+	me->isChild = 0;
        uint64_t *pointer_to_pml4e = (uint64_t *)get_free_page();
        uint64_t *pointer_to_pdpe = (uint64_t *)get_free_page();
        uint64_t *pointer_to_pde = (uint64_t *)get_free_page();
@@ -304,7 +321,7 @@ void test_user_function()
 void switch_to_ring_3()
 {
 	changeCR3(runningTask->pml4e, runningTask->pdpe, runningTask->pde, runningTask->pte, 0);
-        kprintf("new cr3 %p and pointing to %p\n", runningTask->pml4e, runningTask->regs.rip);
+        //kprintf("new cr3 %p and pointing to %p\n", runningTask->pml4e, runningTask->regs.rip);
 	__asm__ __volatile__ (
         	"movq %0, %%r11;"
         	"movq %%r11, %%rsp;"
@@ -329,7 +346,7 @@ void switch_to_ring_3()
 	uint32_t current_rsp_lo = current_rsp & 0x00000000FFFFFFFF;
 	uint32_t current_rsp_hi =(current_rsp & 0xFFFFFFFF00000000)>>32;
 	cpuSetMSR(0xC0000102,current_rsp_lo, current_rsp_hi);
-	kprintf("we are all set 3, 2, 1 ... Launch !\n");
+	//kprintf("we are all set 3, 2, 1 ... Launch !\n");
 	__asm__ __volatile__ (
 	"movq %0, %%r13;"
 	"movq $0x23 , %%rax;"
@@ -348,7 +365,15 @@ void switch_to_ring_3()
 	:"m"(fn_to_execute), "m"(user_rsp)
 	:
 	);
-
+	
+	if(runningTask->isChild == 1){
+		__asm__ __volatile__(
+			"movq $0, %%rax;"
+			:
+			:
+			:
+		);
+	}
 	__asm__ __volatile__(
 	"iretq; "
 	:	
@@ -371,7 +396,7 @@ void removeTask(){
 	}
 	temp->next = next;
 	//runningTask = next;
-	kprintf("Changed the task from %d to %d and prev is %d\n", runningTask->pid, next->pid, temp->pid);
+	//kprintf("Changed the task from %d to %d and prev is %d\n", runningTask->pid, next->pid, temp->pid);
 
 	//yield(); // this is only supposed to switch the stack
 	__asm__ __volatile__ (

@@ -21,6 +21,7 @@ typedef struct task{
 	PTE* pte;
 	int status;
 	int pid;
+	int isChild;
 	
 } task;
 
@@ -44,4 +45,5 @@ void beIdle();
 void removeTask();
 int fork();
 int createChildTask();
+int exec(char *);
 #endif

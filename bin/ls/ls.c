@@ -122,6 +122,7 @@ int closeDir(int fd)
 
 int main (int argc , char *argv[], char *envp[])
 {
+	/*
         long long int fd;
         const char *filename =".";
 	char parameter_list[argc][1024];
@@ -152,5 +153,7 @@ int main (int argc , char *argv[], char *envp[])
 	        readDir(fd);
 	        closeDir(fd);
         }
+	*/
+	syscall_write(0, "awesome\n",9);
         return 0;
 }
