@@ -1,4 +1,5 @@
 #include<stdio.h>
+#include<string.h>
 int syscall_write(int fd, char *buffer, int count){
 
 
@@ -22,24 +23,9 @@ int syscall_write(int fd, char *buffer, int count){
     return ret;
 }
 
-int yield(){
-	__asm__ __volatile__(
-		
-		"movq $24, %%rax;"
-		"int $0x80;"
-		:
-		:
-		:"rax"
-	);
-	return 1;
-}
+int main(int argc, char *argv[], char *envp[]) {
 
-
-
-int main(){
-	syscall_write(0,"sbush>",6);
-	while(1){
-		yield();
-	}
-	return 0;
+  char *message = argv[1];
+  syscall_write(0, message, strlen(message));
+  return 0;
 }

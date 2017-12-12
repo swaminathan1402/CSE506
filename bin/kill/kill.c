@@ -1,4 +1,6 @@
 #include<stdio.h>
+
+
 int syscall_write(int fd, char *buffer, int count){
 
 
@@ -22,24 +24,24 @@ int syscall_write(int fd, char *buffer, int count){
     return ret;
 }
 
-int yield(){
+int syscall_kill_pid(int pid){
+	long long int ret;
 	__asm__ __volatile__(
-		
-		"movq $24, %%rax;"
+		"movq $124, %%rax;"
+		"movq %1, %%rdi;"
 		"int $0x80;"
-		:
-		:
-		:"rax"
+		"movq %%rax, %0;"
+		:"=r"(ret)
+		:"m"(pid)
+		:"rax","rdi"
 	);
-	return 1;
+	return (signed)ret;
 }
 
-
-
-int main(){
-	syscall_write(0,"sbush>",6);
-	while(1){
-		yield();
-	}
-	return 0;
+int main(int argc, char *argv[], char *envp[]){
+  int kill_pid = argv[1] - '0';
+  int status = syscall_kill_pid(kill_pid);
+  if(status != -1)
+  	syscall_write(0, "[User]: Killed!\n",17);
+  return 0;
 }

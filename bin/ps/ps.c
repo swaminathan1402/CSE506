@@ -22,24 +22,22 @@ int syscall_write(int fd, char *buffer, int count){
     return ret;
 }
 
-int yield(){
+int syscall_ps(){
+	long long int ret;
 	__asm__ __volatile__(
-		
-		"movq $24, %%rax;"
+		"movq $123, %%rax;"
 		"int $0x80;"
-		:
+		"movq %%rax, %0;"
+		:"=r"(ret)
 		:
 		:"rax"
 	);
-	return 1;
+	return ret;
 }
 
-
-
 int main(){
-	syscall_write(0,"sbush>",6);
-	while(1){
-		yield();
-	}
-	return 0;
+  int pid = syscall_ps();
+  if(pid != 0)
+  	syscall_write(0, "ps written\n",11);
+  return 0;
 }
