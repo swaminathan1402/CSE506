@@ -25,6 +25,22 @@ void changeCR3(PML4E *new_pml4e, PDPE *new_pdpe, PDE *new_pde, PTE *new_pte, int
 
 }
 
+uint64_t checkCOW( uint64_t faulting_address)
+{
+	uint64_t temp;
+	int pml4e_index = (faulting_address & 0x0000ff8000000000) >> 39;
+ 	int pdpe_index = (faulting_address & 0x0000007fc0000000) >> 30;
+ 	int pde_index = (faulting_address & 0x000000003fe00000) >> 21;  
+ 	int pte_index = (faulting_address & 0x00000000001ff000) >> 12;
+	
+	PML4E *parent_pml4e = runningTask->pml4e;
+	PDPE *some_pdpe = (PDPE*)(uint64_t)((parent_pml4e+pml4e_index)->page_directory_pointer_base_address << 12);
+	PDE *some_pde = (PDE *)(uint64_t)((some_pdpe + pdpe_index)->page_directory_base_address << 12);
+	PTE *some_pte = (PTE *)(uint64_t)((some_pde + pde_index)->page_table_base_address << 12);      
+        temp = (uint64_t)(some_pte + pte_index)->cow;
+	return temp;
+}	
+
 void idpaging(PTE* first_pte, uint64_t from, int size){
 	// from = from & 0xfffffffffffff000;
 	from = from & 0xfffffffffffff000;
@@ -133,7 +149,7 @@ void deepCopyPageTable(uint64_t child){
 								(child_pde + pde_index)->page_table_base_address =(uint64_t)temp_page >> 12;
 								(child_pde + pde_index)->p = 1;
 								(child_pde + pde_index)->rw = 1;
-								(child_pde + pde_index)->us = 1;
+				;				(child_pde + pde_index)->us = 1;
 
 							}
 							parent_pte = (PTE *)(uint64_t)((parent_pde + pde_index)->page_table_base_address << 12);
@@ -145,9 +161,10 @@ void deepCopyPageTable(uint64_t child){
 								} else {
 									if((child_pte + pte_index)->p == 0){
 										(child_pte + pte_index)->p = 1;
-										(child_pte + pte_index)->rw = 1;
+										(child_pte + pte_index)->rw = 0;
 										(child_pte + pte_index)->us = 1;
-
+										(child_pte +pte_index)->cow=1;
+										(parent_pte+ pte_index)->cow=1; 	
 									}
 									(child_pte + pte_index)->physical_address =(parent_pte + pte_index)->physical_address;
 									
