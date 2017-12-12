@@ -10,9 +10,9 @@ push %rcx
 push %rdx
 push %rbp 
 push %rsi 
-push %rdi 
- 
+push %rdi  
 call page_fault
+
 pop %rdi
 pop %rdi 
 pop %rsi 
@@ -21,6 +21,8 @@ pop %rdx
 pop %rcx
 pop %rbx
 pop %rax
+
+
 sti 
 iretq
 

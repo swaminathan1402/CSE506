@@ -95,4 +95,6 @@ void init_pd(PTE*,PML4E *, uint64_t, int);
 void changeCR3(PML4E*, PDPE*, PDE*, PTE*, int);
 void deepCopyPageTable(uint64_t);
 uint64_t checkCOW();
+void setCOW(uint64_t , uint64_t);
+void setWritable(uint64_t , uint64_t);
 #endif

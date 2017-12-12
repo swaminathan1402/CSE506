@@ -23,7 +23,7 @@ if(!(err_code & 0x1 ) && (err_code& 0x4))
 else if(!(err_code & 0x1) && !(err_code & 0x4) )
 {
 		kprintf("Page not present in supervisor mode");
-		setMap(faulting_address , faulting_address ,0);
+		setMap(faulting_address , faulting_address ,1);
 }
 else if(err_code& 0x2)
 {
@@ -34,8 +34,10 @@ else if(err_code& 0x2)
 		kprintf("COW bit is set" );
 	    	uint64_t copy_on_write_page=get_free_page();		
 	   	memcpy(copy_on_write_page , (faulting_address & 0xfffffffffffff000)  ,4096 ) ;
-		setMap( faulting_address, copy_on_write_page, 1);
-	}	
+		setWritable( faulting_address, copy_on_write_page);
+		setCOW(faulting_address, 0);
+	}
+	reloadCR3();	
 }
 
 //while(1);

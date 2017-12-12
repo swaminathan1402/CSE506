@@ -7,7 +7,7 @@
 #define RUNNING_PROCESS_STATUS 1
 #define SLEEPING_PROCESS_STATUS 2
 #define EXIT_PROCESS_STATUS 3
-#define ZOMBIE_PROCESS_STATUS 4
+ #define ZOMBIE_PROCESS_STATUS 4
 void initTasking();
 typedef struct {
 	uint64_t rsp, rbp, rip, cr3, user_rsp;
