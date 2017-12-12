@@ -118,24 +118,41 @@ int syscall_exit(int status) {
 	return ret;
 
 }
+int syscall_waitpid(int pid, int *status, int options){
+	long long int pid1 = (long long int) pid;
+	long long int options1 = (long long int) options;
+	long long int ret;
 
+	__asm__ __volatile__(
+		"movq $61,%%rax;"
+		"movq %1,%%rdi;"
+		"movq %2,%%rsi;"
+		"movq %3, %%rdx;"
+		"int $0x80;"
+		"movq %%rax, %0;"
+		: "=r" (ret)
+		: "r"(pid1), "r"(status), "r"(options1)
+		: "rax", "rdi", "rsi", "rdx"
+	);
+	return ret;
 
-
-
-
-
+}
 
 int main(int argc, char *argv[], char *envp[]){
   //syscall_write(0, "hello world\n", 11); 
   //syscall_write(0, "hello world\n", 11); 
   int pid = syscall_fork();
   if (pid == 0){
-    // syscall_write(0, "child process\n", 14);
-    char *command_args[] = {"bin/ls", (char *)0, (char *)0};
-    syscall_execvpe("bin/ls", command_args, (char *)0); // TODO
+    //syscall_write(0, "child process\n", 14);
+    char *command_args[] = {"bin/echo", "hello mister karey ka sister", (char *)0};
+    syscall_execvpe("bin/echo", command_args, (char *)0); // TODO
 
   } else {
-    syscall_write(0, "parent process\n", 15);
+    syscall_write(0, "parentprocess1\n", 15);
+    int status;
+    int wait_status = syscall_waitpid(pid, &status, (char *)0);
+    if(wait_status > 0)
+    	syscall_write(0, "parentprocess2\n", 15);
   }
 /*
 char buffer[1024];

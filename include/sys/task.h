@@ -15,6 +15,7 @@ typedef struct {
 typedef struct task{
 	registers regs;
 	struct task* next;
+	struct task* prev;
 	PML4E* pml4e;
 	PDPE* pdpe;
 	PDE* pde;
@@ -46,4 +47,7 @@ void removeTask();
 int fork();
 int createChildTask();
 int exec(char *);
+int kill_process(int);
+void temp_yield();
+void waiting_on_pid(int);
 #endif

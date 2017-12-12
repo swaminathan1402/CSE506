@@ -59,11 +59,12 @@ __asm__ __volatile__(
 :
 );
 unsigned int fd;
-char* buf ;
+char* buf, arguments ;
 size_t count;
 const char* filename; 
 int flags;
-int mode;
+int mode, waiting_pid;
+int ps_pid, process_to_kill;
 off_t offset;
 unsigned int origin;
 unsigned long addr ;
@@ -151,6 +152,14 @@ break ;
 
 case 24: // sys_yield
   //yield();
+    __asm__ __volatile__ (
+	"sti"
+	:
+	:
+	:
+    );
+  //kprintf("yield");
+  temp_yield();
   break;
 
 case 57:
@@ -167,8 +176,9 @@ case 57:
 
 case 59:
   filename = (char *)rdi;
-  kprintf("execvping %s\n", filename);
-  exec(filename);
+  arguments = *(uint64_t *)rsi;
+  kprintf("execvping %s %s\n", filename, arguments);
+  //exec(filename);
   break;
   /*
   argv = (char *)rsi;
@@ -180,6 +190,37 @@ case 60:
   //kprintf("WE HAVE TO EXIT NOW\n");
   removeTask();
 break;
+
+
+case 61: // waitpid
+  waiting_pid = (int *)rdi;
+  waiting_on_pid(rdi);
+  break;
+
+case 123:  // ps
+  ps_pid = runningTask->pid;
+  kprintf("[Kernel]: pid is %d\n", ps_pid);
+  __asm__ __volatile__(
+	"movq %0, %%rax;"
+	:
+	:"m"(ps_pid)
+	:
+  );
+  break;
+
+case 124: //kill
+  process_to_kill = (int *)rdi;
+  kprintf("[Kernel]: Killing %d\n", process_to_kill);
+  int status = kill_process(process_to_kill);
+  kprintf("[Kernel]: Kill Status %d\n", status);
+  __asm__ __volatile__(
+	"movq %0, %%rax;"
+	:
+	:"m"(status)
+	:
+  );
+  break;
+  
 
 default :
 kprintf("Syscall not handled yet");

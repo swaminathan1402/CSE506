@@ -39,7 +39,7 @@ int yield(){
 int main(){
 	syscall_write(0,"sbush>",6);
 	while(1){
-		//yield();
+		yield();
 	}
 	return 0;
 }

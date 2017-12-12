@@ -155,6 +155,24 @@ int exec(char *filename){
 	switch_to_ring_3();
 	return 0;
 }
+
+void waiting_on_pid(int child_pid){
+
+	runningTask->status = SLEEPING_PROCESS_STATUS;
+	task *child = runningTask->next;
+	task *prev = runningTask->prev;
+	task *nextTask = child->next;
+
+	prev->next = child;
+	child->prev = prev;
+	child->next = runningTask;
+	runningTask->prev = child;
+	runningTask->next = nextTask;
+	nextTask->prev = runningTask;
+
+	temp_yield();
+}
+
 int createChildTask(){
 	// create new child task
 	// deep copy the page tables with parents page tables
@@ -198,9 +216,9 @@ int createChildTask(){
 	uint64_t offset =(start_address+4096 - parent_rsp);  
 	childTask->regs.rsp = childTask->regs.rsp- offset;
 
+
 	uint64_t *new_rip = *(uint64_t *)parent_rsp;
 	childTask->regs.rip = (uint64_t)new_rip;
-
 
 	// Copy the complete user stack
 	uint64_t user_rsp_start_addr = *((uint64_t *)(parent_rsp + 24));
@@ -210,10 +228,17 @@ int createChildTask(){
 	childTask->regs.user_rsp -= size_of_user_stack;
 	memcpy(childTask->regs.user_rsp, user_rsp_start_addr, size_of_user_stack);
 
-	
+	/*
 	task *nextTask = runningTask->next;
 	runningTask->next = childTask;
 	childTask->next = nextTask;
+	*/
+	task *nextTask = runningTask->next;
+	childTask->next = nextTask;
+	childTask->prev = runningTask;
+	runningTask->next = childTask;
+	nextTask->prev = childTask;
+
 	//kprintf("DUDE %p and %p\n", childTask->regs.rip, childTask->regs.rsp);
 	__asm__ __volatile__(
         "movq %%rsp, %%r11;"
@@ -276,9 +301,12 @@ void createTask(
 		runningTask = me;
 		lastTask = me;
 	}
+
 	me->next = runningTask;
+	runningTask->prev = me;
 	runningTask = me;
 	lastTask->next = runningTask;
+	runningTask->prev = lastTask;
 
 	__asm__ __volatile__(
 	"movq %%rsp, %%r11;"
@@ -374,6 +402,15 @@ void switch_to_ring_3()
 			:
 		);
 	}
+	if(runningTask->status == SLEEPING_PROCESS_STATUS){
+		__asm__ __volatile__(
+			"movq $8, %%rax;"
+			:
+			:
+			:
+		);
+
+	}
 	__asm__ __volatile__(
 	"iretq; "
 	:	
@@ -383,11 +420,33 @@ void switch_to_ring_3()
 	
 }
 
+int kill_process(int pid){
+	int limit = 43;
+	int count = 0;
+	task *temp = runningTask;
+	while(temp->pid != pid && count < limit){
+		temp = temp->next;
+		count++;
+	}
+	if(count >= limit) {
+		return -1;
+	}
+	else {
+		task *prev_temp = temp;
+		while(prev_temp->next != temp){
+			prev_temp = prev_temp->next;
+		}
+
+		prev_temp->next = temp->next;
+	}
+	return pid;
+}
+
 void removeTask(){
 	// reclaim all the pages used by this task
 
 	changeCR3((PML4E *)kernel_pml4e, (PDPE *)kernel_pdpe, (PDE *)kernel_pde, (PTE *)kernel_pte, 0);
-	// removing the task from the runningTask list
+	/*
 	task* temp = runningTask;
 	task* next = runningTask->next;
 
@@ -395,7 +454,10 @@ void removeTask(){
 		temp = temp->next;
 	}
 	temp->next = next;
-	//runningTask = next;
+	*/
+
+	runningTask->prev->next = runningTask->next;
+	runningTask->next->prev = runningTask->prev;
 	//kprintf("Changed the task from %d to %d and prev is %d\n", runningTask->pid, next->pid, temp->pid);
 
 	//yield(); // this is only supposed to switch the stack
@@ -406,9 +468,43 @@ void removeTask(){
 		:"m"(runningTask), "m"(runningTask->next)
 		:
 	);
-	runningTask = next;
+	runningTask = runningTask->next;
 	// switch the rsp's
 
+	__asm__ __volatile__ (
+		"movq (%%rsi), %%rsp;"  // change the stack
+		:
+		:
+		:
+	);
+	switch_to_ring_3(runningTask->regs.rip);
+
+}
+
+void temp_yield(){
+
+	uint64_t *new_rip = *(uint64_t *)parent_rsp;
+	runningTask->regs.rip = (uint64_t)new_rip;
+
+
+	uint64_t user_rsp_start_addr = *((uint64_t *)(parent_rsp + 24));
+	//int size_of_user_stack = runningTask->regs.user_rsp - user_rsp_start_addr;
+
+	//childTask->regs.user_rsp -= size_of_user_stack;
+
+
+	runningTask->regs.user_rsp = user_rsp_start_addr;
+
+
+	changeCR3((PML4E *)kernel_pml4e, (PDPE *)kernel_pdpe, (PDE *)kernel_pde, (PTE *)kernel_pte, 0);
+	__asm__ __volatile__ (
+		"movq %0, %%rdi;"
+		"movq %1, %%rsi;"
+		:
+		:"m"(runningTask), "m"(runningTask->next)
+		:
+	);
+	runningTask = runningTask->next;
 	__asm__ __volatile__ (
 		"movq (%%rsi), %%rsp;"  // change the stack
 		:
