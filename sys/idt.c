@@ -42,7 +42,6 @@ void idt_entry_table(int index, uint64_t function)
 
 void init_idt() {
 	for(int i=0; i<256; i++){
-		kprintf("dude the i value is %d\n",i);
 		if(i == 33){
 			idt_entry_table(i, (uint64_t)keyboard_wrapper);
 		} else if(i==14)

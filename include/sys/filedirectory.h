@@ -23,4 +23,5 @@ void create_File_Descriptor_Entry(char* ,int,int, filedir*,uint64_t );
 int search(char *);
 filedir* findParent(char* ,int, filedir* ); 
 void increase_ref_count(int );
+void decrease_ref_count(int );
 #endif

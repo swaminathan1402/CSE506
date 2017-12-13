@@ -60,7 +60,7 @@ int getdents(int fd, char *buffer){
                 "movq %1, %%rdi;"
                 "movq %2, %%rsi;"
                 "movq $1024,%%rdx;"
-                "syscall;"
+                "int $0x80;"
                 "movq %%rax , %0"
                 :"=r"(ret)
                 :"r"(fd1),"m"(buf)

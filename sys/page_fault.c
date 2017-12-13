@@ -17,8 +17,9 @@ kprintf("\nErrcode : %p", err_code);
 if(!(err_code & 0x1 ) && (err_code& 0x4))
 //kprintf("\nPage fault!!");
 {
-	kprintf("\nPage not present in user mode");
+	kprintf("\nPage not present in user mode %p", faulting_address);
 	setMap(faulting_address, faulting_address, 1);
+	reloadCR3();	
 }
 else if(!(err_code & 0x1) && !(err_code & 0x4) )
 {

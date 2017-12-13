@@ -4,7 +4,7 @@ void _start(void) {
   char* argv[] = {"None"};
   char* envp[] = {"None"};
 
-__asm__(
+/*__asm__(
     "addq $0x28,%%rsp;"
     "movq (%%rsp),%%rdi;"
     "movq 8(%%rsp), %%rsi;"
@@ -16,17 +16,16 @@ __asm__(
     :
     :"memory"
   );
-	
+*/	
   main(argc, argv, envp);
   __asm__(
-     "movl $60, %%eax;"
-	"movl $1, %%ebx;"
-	"syscall;"
+     "movq $60, %%rax;"
+	"movq $1, %%rbx;"
+	"int $0x80;"
 	:
 	:
 	:
 	);
-
 }
 
 

@@ -146,13 +146,15 @@ int main(int argc, char *argv[], char *envp[]){
     //syscall_write(0, "child process\n", 14);
     //char *command_args[] = {"bin/echo", "hello mister karey ka sister", (char *)0};
     //syscall_execvpe("bin/echo", command_args, (char *)0); // TODO
-	syscall_write(0 , "childprocess\n" , 13);
-  } else {
+
+  	syscall_write(0 , "childprocess\n" , 13);
+ } else {
     syscall_write(0, "parentprocess1\n", 15);
 //    int status;
   //  int wait_status = syscall_waitpid(pid, &status, (char *)0);
    // if(wait_status > 0)
     	syscall_write(0, "parentprocess2\n", 15);
+    	syscall_write(0, "finished\n", 15);
   }
 /*
 char buffer[1024];

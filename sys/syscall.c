@@ -74,7 +74,6 @@ unsigned long flag;
 unsigned long off ;
 size_t length;
 int* filedes;
-
 switch (rax)
 {
 case 0: //Sys read 
@@ -112,14 +111,13 @@ __asm__ __volatile__("movq %0, %%rax;"
 :
 );
 
-
 }
 break;	
 
 case 3: //sys_close
 fd =(uint64_t)rdi;
-kprintf(" Closing: %d", fd);
-
+decrease_ref_count(fd);
+kprintf("Closing: %d", fd);
 break;
 
 case 8://sys_lseek 
@@ -187,7 +185,7 @@ case 59:
 
 
 case 60:
-  //kprintf("WE HAVE TO EXIT NOW\n");
+  kprintf("WE HAVE TO EXIT NOW\n");
   removeTask();
 break;
 
@@ -196,6 +194,9 @@ case 61: // waitpid
   waiting_pid = (int *)rdi;
   waiting_on_pid(rdi);
   break;
+
+case 78 ://sys_getdents
+break;
 
 case 123:  // ps
   ps_pid = runningTask->pid;

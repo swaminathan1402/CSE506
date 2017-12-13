@@ -89,10 +89,10 @@ void setWritable(uint64_t faulting_address ,uint64_t copy_on_write_page)
  	PDE *some_pde = (PDE *)(uint64_t)((some_pdpe + pdpe_index)->page_directory_base_address << 12);
  	PTE *some_pte = (PTE *)(uint64_t)((some_pde + pde_index)->page_table_base_address << 12);      
 
-       (some_pte+pte_index)->physical_address = copy_on_write_page>>12;
        (some_pte+pte_index)->rw=1;
 	(some_pte+pte_index)->us=1;
 	(some_pte+pte_index)->p=1;
+       (some_pte+pte_index)->physical_address = copy_on_write_page>>12;
 }
 
 void idpaging(PTE* first_pte, uint64_t from, int size){
