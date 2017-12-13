@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syscall.h>
 #define DOT '.'
 #define TEST '1'
 #define	_W_INT(i)	(i)
@@ -11,8 +12,8 @@
 #define PROT_WRITE 0x02
 #define MAP_PRIVATE 0x0000
 
-char shell[255] = "\nsbush>";
-char *shell_text = "\nsbush";
+char shell[255] = "sbush>";
+char *shell_text = "sbush";
 char *shell_sign = ">";
 char *space = " ";
 char *bin_string = "/bin/";
@@ -31,247 +32,11 @@ char *getBaseName(char *);
 void runScripts(char arguments[10][1024]);
 void parseExportArguments(char *);
 
-int syscall_chdir(const char *filename){
-	long long int filename1 = (long long int) filename;
-	long long int ret;
-	__asm__ (
-	"movq $80, %%rax;"
-	"movq %1,%%rbx;"
-	"syscall;"
-	"movq %%rax, %0;"
-	:"=r"(ret)
-	:"r"(filename1)
-	:"rax", "rbx"
-	);
-	return ret;
-}
-
-size_t syscall_read(int fd, char *buffer, size_t count){
-   
-    long long int fd1 = (long long int) fd;
-    long long int buffer1 = (long long int) buffer;
-    long long int count1 = (long long int) count;
-    
-    long long int ret;
-    __asm__(
-
-        "movq $0, %%rax;"
-        "movq %1, %%rbx;"
-        "movq %2, %%rcx;"
-        "movq %3, %%rdx;"
-        "syscall;"
-        "movq %%rax, %0;"
-        :"=r"(ret)
-        :"r"(fd1), "r"(buffer1), "r"(count1)
-        :"rax", "rbx", "rcx", "rdx"
-    );
-    if(fd == 0){
-	    int i = 0;
-	    while(buffer[i] != '\n') i++;
-	    buffer[i] = '\0';
-    }
-    return ret;
-}
-
-int syscall_write(int fd, char *buffer, size_t count){
-
-
-    long long int fd1 = (long long int) fd;
-    long long int buffer1 = (long long int) buffer;
-    long long int count1 = (long long int) count;
-    long long int ret;
-
-
-    __asm__(
-
-        "movq $1, %%rax;"
-        "movq %1, %%rbx;"
-        "movq %2, %%rcx;"
-        "movq %3, %%rdx;"
-        "syscall;"
-        "movq %%rax, %0;"
-        :"=r"(ret)
-        :"r"(fd1), "r"(buffer1), "r"(count1)
-        :"rax", "rbx", "rcx", "rdx"
-    );
-    return ret;
-}
-
-
-char* syscall_getcwd (char *buf , size_t size) {
-
-	long long int buf1 = (long long int) buf;
-	long long int size1 = (long long int) size;
-	__asm__ __volatile__(
-
-		"movq $79, %%rax;"
-		"movq %1,%%rbx;"
-		"movq %2,%%rcx;"
-		"syscall;"
-		"movq %%rax, %0;"
-		:"=m"(buf1)
-		:"r"(buf1), "r"(size1)
-		:"rax", "rbx", "rcx"
-	);
-	//syscall_write(1, buf, strlen(buf));
-	return buf;
-}
-
-int syscall_dup2(unsigned int old_fd, unsigned int new_fd){
-        long long int old_fd1 = (long long int) old_fd;
-	long long int new_fd1 = (long long int) new_fd;
-
-	long long int ret;
-
-        __asm__ __volatile__(
-                "movq $33, %%rax;"
-                "movq %1, %%rbx;"
-                "movq %2, %%rcx;"
-                "syscall;"
-                "movq %%rax, %0;"
-                : "=r"(ret)
-                : "r"(old_fd1), "r"(new_fd1)
-                : "rax", "rbx", "rcx"
-        );
-        return ret;
-}
-
-
-int syscall_pipe(int *filedes) {
-	long long int ret;
-	long long int filedes1 = (long long int)filedes;
-
-        __asm__ __volatile__("movq $22 , %%rax;"
-        "movq %1,%%rbx;"
-        "syscall;"
-        "movq %%rax, %0;"
-        :"=r"(ret)
-        :"r"(filedes1)
-        :"rax", "rbx"
-        );
-        return ret;
-
-}
-
-pid_t syscall_fork(){
-    long long int ret;
-    __asm__ __volatile__(
-        "movq $57, %%rax;"
-        "syscall;"
-        "movq %%rax, %0;"
-        :"=r"(ret)
-        :
-        :"rax"
-    );
-    return ret;
-
-}
-
-pid_t syscall_waitpid(pid_t pid, int *status, int options){
-	long long int pid1 = (long long int) pid;
-	long long int options1 = (long long int) options;
-	long long int ret;
-
-	__asm__ __volatile__(
-		"movq $61,%%rax;"
-		"movq %1,%%rbx;"
-		"movq %2,%%rcx;"
-		"movq %3, %%rdx;"
-		"syscall;"
-		"movq %%rax, %0;"
-		: "=r" (ret)
-		: "r"(pid1), "r"(status), "r"(options1)
-		: "rax", "rbx", "rcx", "rdx"
-	);
-	return ret;
-
-}
-
-int syscall_execvpe(const char *filename , char *const argv[], char *const envp[] ){
-	long long int filename1= (long long int)filename;
-	long long int argv1 = (long long int) argv;	
-	long long int envp1= (long long int) envp;	
-	long long int ret;
-	__asm__ __volatile__(
-		"movq $59, %%rax;"
-		"movq %1,%%rbx;"
-		"movq %2,%%rcx;"
-		"movq %3,%%rdx;"
-		"syscall;"
-		"movq %%rax, %0;"
-		:"=r" (ret)
-		:"r" (filename1), "r"(argv1), "r" (envp1)
-		:"rax", "rbx", "rcx", "rdx"
-	);
-	return ret;
-	
-}
-
-int syscall_exit(int status) {
-	long long int status1 = (long long int) status;
-	long long int ret;
-	__asm__(
-	"movq $60, %%rax;"
-	"movq %1, %%rbx;"
-	"syscall;"
-	"movq %%rax, %0;"
-	: "=r"(ret)
-	: "r"(status1)
-	:"rax", "rbx"
-	);
-	return ret;
-
-}
-
-int syscall_close(unsigned int fd)
-{
-    long long int ret;
-    long long int fd1 = (long long int) fd;
-
-     __asm__("movq $3,%%rax;"
-	"movq %1,%%rbx;"
-        "syscall;"
-	"movq %%rax, %0;"
-	:"=r"(ret)
-	:"r"(fd1)
-	:"rax", "rbx"
-	);
-	return ret;
-}
-
-int syscall_open (const char* file, int flags) {
-	// returns the file descriptor
-	long long int file1 =(long long int) file;
-	long long int flags1 = (long long int)flags;
-	long long int ret;
-	
-	__asm__ __volatile__(
-		"movq $2, %%rax;"
-		"movq %1 ,%%rbx;"
-		"movq %2, %%rcx;"
-		"movq $0 ,%%rdx;"
-		"syscall;"
-		"movq %%rax, %0;"
-		:"=r"(ret)
-		:"r" (file1), "r"(flags1)
-		:"rax","rbx","rcx","rdx"
-	);
-	return ret;
-}
-
-/*
-void* malloc (size_t size){
-	size_t *mem_pointer;
-	mem_pointer = syscall_mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE , 0, 0);
-	*mem_pointer = size;
-	return (void*)(&mem_pointer[1]);
-}
-*/
-
 
 char *commandParser(){
 	char buffer[200] = "\0";
-	syscall_read(0, buffer, 200); // 100
+	//syscall_read(0, buffer, 200); // 100
+	scanf("%s", buffer);
 	char *cmd = sanitize(buffer);
 	return cmd;
 }
@@ -331,8 +96,10 @@ void handle_pipes(char *command, int numberOfCommands){
 				args = NULL;
 			char *command_args[] = {function, args, (char *)0};
 			char final_command[1024];
+			printf("function before strcmp: %s\n", function);
 			if(strcmp(function, "ls") == 1 || strcmp(function, "cat") == 1) {
 				strcpy(final_command, ROOTFS_BIN_PATH);
+				printf("ls final command: %s", final_command);
 			} else {
 				strcpy(final_command, bin_string);
 			}
@@ -356,7 +123,10 @@ void handle_pipes(char *command, int numberOfCommands){
 
 void runBinary(char *command, char *args, int bgprocess){
 	int status;
+	printf("About to call fork");
 	pid_t pid = syscall_fork();
+	while(1);
+	printf("About to call fork");
 	if(pid == 0){
 		char *arguments = args;
 		if(strlen(args) == 0) {
@@ -370,21 +140,18 @@ void runBinary(char *command, char *args, int bgprocess){
 			strcpy(final_command, bin_string);
 		}
 		strcat(final_command, command);
+		printf("Final command: %s\n", final_command);
 		int ret = syscall_execvpe(final_command, cmd_arr, NULL);
 		syscall_exit(ret);
 	} else if(pid > 0){
 		if(bgprocess == 1){
-			//syscall_write(1, shell, strlen(shell));
 			return;
 		}
 		if(syscall_waitpid(pid, &status, 0) > 0){
 			if(WIFEXITED(status) && !WEXITSTATUS(status)){
-				//syscall_write(1, "exited clean\n", 13);
-				//syscall_write(1, shell, strlen(shell));
 			} else{
-				//syscall_write(1, "didnt go wel\n", 13);
-				//syscall_write(1, shell, strlen(shell));
 			}
+
 		}
 	} 
 }
@@ -397,7 +164,6 @@ void interpretCommand(char *command){
 	char arguments[40] = "\0";
 	strcpy(tempCommand, command);
 	if(strlen(command) == 0){
-		//syscall_write(1, shell, strlen(shell));
 		return;
 	}
 	else if(strcmp(tempCommand, "exit") == 1){
@@ -410,7 +176,6 @@ void interpretCommand(char *command){
 		handle_pipes(command, isCommandsPiped);
 		/*
 		char *msg = "commands are piped \n";
-		syscall_write(1, msg, strlen(msg));
 		*/
 		return;
 	}
@@ -457,27 +222,30 @@ void interpretCommand(char *command){
 		}*/
 		if(ret != 0) {
 			char *error_msg = "sbush: cd: No such file or directory\n";
-			syscall_write(1, error_msg, strlen(error_msg));
-			//syscall_write(1, shell, strlen(shell));
+			printf("%s", error_msg);
 		}
 		return;
 	}
 	if(strcmp(function, "pwd") == 1){
 		char buffer[1024];
 		char *dir = syscall_getcwd(buffer, 1024);
-		syscall_write(1, dir, strlen(dir));
+		printf("%s", dir);
 		return;
 	} 
 	if(strcmp (function, "export")==1)
 	{		
 		parseExportArguments(arguments);
 		return;
-		//syscall_write(1, shell, strlen(shell));	
 	}
 
 	else {
+	printf("Works till here");
 		runBinary(function, arguments, runAsBackgroundProcess);
+	printf("Works till here");
+	while(1);
+		return;
 	}
+	return;
 }
 void aggregateEnvVariables(char *home_env){
 	/*
@@ -507,18 +275,16 @@ void aggregateEnvVariables(char *home_env){
 		j++;
 	}
 	temp_home[j] = '\0';
-	//syscall_write(1, temp_home, 18);
 
 	//strcpy(dollar_PATH, temp_path);
 	strcpy(HOME, temp_home);
 	strcpy(ROOTFS_BIN_PATH, HOME);
-	char *bpath = "/CSE506/rootfs/bin/";
+	char *bpath = "/temp/CSE506/rootfs/bin/";
 	strcat(ROOTFS_BIN_PATH, bpath);
-	//syscall_write(1, ROOTFS_BIN_PATH, strlen(ROOTFS_BIN_PATH));
-	//syscall_write(1, "\n", 1);
-	//syscall_write(1, dollar_PATH, strlen(dollar_PATH));
+	//printf("PATH: %s",ROOTFS_BIN_PATH);
 }
 int main(int argc, char* argv[], char* envp[]){
+        //printf("S");
 	int envp_c = 0;
         char env_parameter_list[15][1024];
         for(int i=0; i<15; i++){
@@ -533,7 +299,6 @@ int main(int argc, char* argv[], char* envp[]){
         	envp_c++;
         }
 	char *h = env_parameter_list[13];
-	//syscall_write(1, h, 1024);
         aggregateEnvVariables(h);
 
 	if(argc > 1){
@@ -551,8 +316,7 @@ int main(int argc, char* argv[], char* envp[]){
 			parameter_list[i][argv_c] = argv[0][argv_c];
 			argv_c++;
 		}
-		
-		syscall_write(1, parameter_list[1], strlen(parameter_list[1]));
+		printf("%s", parameter_list[1]);
 		runScripts(parameter_list);
 		return 0;
 	}
@@ -563,19 +327,16 @@ int main(int argc, char* argv[], char* envp[]){
 	//strcpy(ROOTFS_BIN_PATH, HOME);
 	//strcat(ROOTFS_BIN_PATH, b);
 
-	//syscall_write(1, HOME, strlen(HOME));
-	//syscall_write(1, dollar_PATH, strlen(dollar_PATH));
-	//syscall_write(1, ROOTFS_BIN_PATH, strlen(ROOTFS_BIN_PATH));
 
-	syscall_write(1, shell, strlen(shell));
+	printf("%s", shell);
 //	strcpy(dollar_PATH ,envp[9]);  //PATH is in envp[9]
 	while(run_status){
 		//char buffer[1024];
 		//int size = syscall_read(0, buffer, 1024);
-		//syscall_write(1, buffer, size);
 		char *command = commandParser();
+                //printf("CMD Output: %s", command);
 		interpretCommand(command);
-		syscall_write(1, shell, strlen(shell));
+		printf("%s", shell);
 	}
 	return 0;
 }
@@ -645,7 +406,7 @@ char *sanitize(char *command){
  void modifyShellPrompt(char *to, char *type){
 	if(ps1_enabled==1)	
 	{
-		syscall_write(1, shell, strlen(shell));
+		printf("%s", shell);
 		return;
 	}
 		
@@ -656,7 +417,6 @@ char *sanitize(char *command){
 		strcat(shell, space);
 		strcat(shell, temp);
 		strcat(shell, shell_sign);
-		//syscall_write(1, shell, strlen(shell));
 		
 	}
  }
@@ -687,9 +447,7 @@ char *getBaseName(char *directory){
 	int counter = 0;
 	for(int i=j+1; i<=last_mark; i++)
 		name[counter++] = directory[i];
-	//syscall_write(1, "\nname=\n", 11);
 	name[counter] = '\0';
-	//syscall_write(1, name, counter);
 	char *basename = (void *)0;	
 	// if the name contains only '..', then we need to get the basename of the directory
 	if((strlen(name) == 2) && (name[0] == DOT) && (name[1] == DOT)){
@@ -698,8 +456,6 @@ char *getBaseName(char *directory){
 	} else {
 		basename = name;
 	}
-	//syscall_write(1, "\nbasename=\n", 11);
-	//syscall_write(1, basename, strlen(basename));
 	return basename;	
 }
 
@@ -790,8 +546,7 @@ void runScripts(char arguments[10][1024]){
 				temp[j] = '\0';
 				char *generated_command = sanitize(temp);
 				interpretCommand(generated_command);
-				syscall_write(1, "\n", strlen("\n"));
-				//syscall_write(1, generated_command, strlen(generated_command));
+				printf("\n"); 
 			}
 			j = 0;
 			line_number++;

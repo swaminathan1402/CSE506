@@ -43,6 +43,7 @@ int syscall_write(int fd, char *buffer, int count){
     );
     return ret;
 }
+
 int syscall_read(int fd, char *buffer, int count){
    
     long long int fd1 = (long long int) fd;
@@ -109,7 +110,7 @@ int syscall_exit(int status) {
 	__asm__(
 	"movq $60, %%rax;"
 	"movq %1, %%rbx;"
-	"syscall;"
+	"int $0x80;"
 	"movq %%rax, %0;"
 	: "=r"(ret)
 	: "r"(status1)
@@ -143,9 +144,9 @@ int main(int argc, char *argv[], char *envp[]){
   //syscall_write(0, "hello world\n", 11); 
   int pid = syscall_fork();
   if (pid == 0){
-    //syscall_write(0, "child process\n", 14);
-    char *command_args[] = {"bin/echo", "hello mister karey ka sister", (char *)0};
-    syscall_execvpe("bin/echo", command_args, (char *)0); // TODO
+    syscall_write(0, "child process\n", 14);
+    //char *command_args[] = {"bin/echo", "hello mister karey ka sister", (char *)0};
+    //syscall_execvpe("bin/echo", command_args, (char *)0); // TODO
 
   } else {
     syscall_write(0, "parentprocess1\n", 15);

@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <string.h>
 
 int strlen(char *string){
@@ -55,4 +56,15 @@ void *memset(void *array, int c, size_t n){
     }
     return array;
 
+}
+
+void *memcpy(void *dst, void *src, size_t n )
+{
+    unsigned char *temp = dst;
+    unsigned char *temp2 = src;
+    //printf("Src: %s", src);
+    while(n--) {
+	*temp++ = *temp2++;
+    }
+    return dst;	
 }

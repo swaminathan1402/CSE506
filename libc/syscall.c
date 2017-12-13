@@ -4,108 +4,8 @@
 
 
 // works
-int syscall_write(int fd, const void *msg , size_t size)
-{
-	int ret;
-	  __asm__("movl $1,%%eax;"
-	    "movl %1,%%ebx;"
-	    "movl %2,%%ecx;"
-	    "movl %3,%%edx;"
-	    "syscall;"
-	    :"=a"(ret)
-   	    :"ir"(fd),"m"(msg) ,"m"(size)
-	    :
-		);
-	return ret;
-}
-
-int syscall_open (const char *filename, int flags, int mode)
-{
-	int ret;	
-	__asm__(
-		"movl $2, %%eax;"
-		"movl %1,%%ebx;"
-		"movl %2,%%ecx;"
-		"movl %3,%%edx;"
-		"syscall;"
-		:"=a"(ret)
-		:"m"(filename),"m"(flags),"m"(mode)
-		:
-		);
-	return ret;
-}
 
 
-int syscall_close(unsigned int fd)
-{
-	int ret;
-     __asm__("movl $3,%%eax;"
-	"movl %1,%%ebx;"
-        "syscall;"
-	:"=a"(ret)
-	:"ir"(fd)
-	:
-	);
-	return ret;
-}
-
-size_t syscall_read(int fd, void *msg ,size_t size)
-{
-	size_t ret;
-	__asm__(
-	"movl $0, %%eax;"
-       	"movl %1, %%ebx;"
-	"movl %2,%%ecx;"
-	"movl %3,%%edx;"
-	"syscall;"
-	:"=a"(ret)
-	:"ir"(fd),"m"(msg),"m"(size)
-	:
-	);
-	return ret;
-}
-
-int syscall_unlink( const char *pathname)
-{
-
-	int ret;
-     __asm__("movl $87, %%eax;"
-	"movl %1,%%ebx;"
-	"syscall;"
-	: "=a"(ret)
-	: "m"(pathname)
-	:
-	);
-	return ret;
-}
-
-int syscall_chdir(const char *filename)
-{
-	int ret;
-	__asm__ (
-	"movl $80, %%eax;"
-	"movl %1,%%ebx;"
-	"syscall;"
-	:"=a"(ret)
-	:"m"(filename)
-	:
-	);
-	return ret;
-}
-
-char* syscall_getcwd ( char *buf , size_t size)
-{
-	__asm__ (
-	"movl $79, %%eax;"
-	"movl %0,%%ebx;"
-	"movl %1,%%ecx;"
-	"syscall;"
-	:"=m"(buf) 
-	:"m"(buf), "m"(size)
-	:
-	);
-	return buf;
-}
 
 void* syscall_mmap ( unsigned long addr, unsigned long len, unsigned long prot, unsigned long flags, unsigned long fd, unsigned long offset){
 	void *ret;    
@@ -142,57 +42,57 @@ int syscall_munmap( unsigned long addr, size_t len)
     return ret;
 }
 
-pid_t syscall_fork()
-{
-	pid_t ret;
+
+
+int syscall_fork(){
+    long long int ret;
+    __asm__ __volatile__(
+        "movq $57, %%rax;"
+        "int $0x80;"
+        "movq %%rax, %0;"
+        :"=r"(ret)
+        :
+        :"rax"
+    );
+    return ret;
+}
+
+int syscall_exit(int status) {
+	long long int status1 = (long long int) status;
+	long long int ret;
 	__asm__(
-	"movl $57, %%eax;"
-	"syscall;"
-	"movl %%eax, %0;"
-	:"=a"(ret)
-	:
-	:
+	"movq $60, %%rax;"
+	"movq %1, %%rbx;"
+	"int $0x80;"
+	"movq %%rax, %0;"
+	: "=r"(ret)
+	: "r"(status1)
+	:"rax", "rbx"
 	);
 	return ret;
-}
 
-// doesnt work
-int syscall_execvpe( const char *filename , char *const argv[], char *const envp[]  )
-{
-
-	int ret;
-	__asm__ (
-	"movl $59, %%eax;"
-	"movl %1,%%ebx;"
-	"movl %2,%%ecx;"
-	"movl %3,%%edx;"
-	"syscall;"
-	:"=a" (ret)
-	:"m" (filename), "m"(argv), "m" (envp)
-	:
-	);
-	return ret;
 }
 
 
-//TODO pid_t issue
-pid_t syscall_waitpid(pid_t pid, int *status, int options) {
-	pid_t ret;
-	__asm__(
-		"movl $61,%%eax;"
-		"movl %1,%%ebx;"
-		"movl %2,%%ecx;"
-		"movl %3, %%edx;"
-		"syscall;"
-		"movl %%eax, %0;"
-		: "=m" (ret)
-		: "m"(pid), "m"(status), "m"(options)
-		:
+int syscall_waitpid(int pid, int *status, int options){
+	long long int pid1 = (long long int) pid;
+	long long int options1 = (long long int) options;
+	long long int ret;
+
+	__asm__ __volatile__(
+		"movq $61,%%rax;"
+		"movq %1,%%rdi;"
+		"movq %2,%%rsi;"
+		"movq %3, %%rdx;"
+		"int $0x80;"
+		"movq %%rax, %0;"
+		: "=r" (ret)
+		: "r"(pid1), "r"(status), "r"(options1)
+		: "rax", "rdi", "rsi", "rdx"
 	);
 	return ret;
+
 }
-
-
 
 pid_t syscall_getpid()
 {
@@ -264,19 +164,6 @@ int syscall_pipe(int *filedes)
 	return ret;
 }
 
-int syscall_exit(int status){
-	int ret;
-	__asm__(
-	"movl $60, %%eax;"
-	"movl %1, %%ebx;"
-	"syscall;"
-	: "=a"(ret)
-	: "m"(status)
-	:
-	);
-	return ret;
-}
-
 int syscall_dup2(unsigned int old_fd, unsigned int new_fd){
 	int ret;
 	__asm__(
@@ -307,88 +194,173 @@ int syscall_getdents(int fd, char *buffer, unsigned int count){
 	return ret;
 }
 
+
+int syscall_chdir(const char *filename){
+	long long int filename1 = (long long int) filename;
+	long long int ret;
+	__asm__ (
+	"movq $80, %%rax;"
+	"movq %1,%%rbx;"
+	"syscall;"
+	"movq %%rax, %0;"
+	:"=r"(ret)
+	:"r"(filename1)
+	:"rax", "rbx"
+	);
+	return ret;
+}
 /*
-int main ()
+size_t syscall_read(int fd, char *buffer, size_t count){
+   
+    long long int fd1 = (long long int) fd;
+    long long int buffer1 = (long long int) buffer;
+    long long int count1 = (long long int) count;
+    
+    long long int ret;
+    __asm__(
+
+        "movq $0, %%rax;"
+        "movq %1, %%rbx;"
+        "movq %2, %%rcx;"
+        "movq %3, %%rdx;"
+        "syscall;"
+        "movq %%rax, %0;"
+        :"=r"(ret)
+        :"r"(fd1), "r"(buffer1), "r"(count1)
+        :"rax", "rbx", "rcx", "rdx"
+    );
+    if(fd == 0){
+	    int i = 0;
+	    while(buffer[i] != '\n') i++;
+	    buffer[i] = '\0';
+    }
+    return ret;
+}
+*/
+
+int syscall_read(int fd, char *buffer, int count){
+   
+    long long int fd1 = (long long int) fd;
+    long long int buffer1 = (long long int) buffer;
+    long long int count1 = (long long int) count;
+    
+    long long int ret;
+    __asm__ __volatile(
+        "movq $0, %%rax;"
+        "movq %1, %%rdi;"
+        "movq %2, %%rsi;"
+        "movq %3, %%rdx;"
+        "int $0x80;"
+        "movq %%rax, %0;"
+        :"=r"(ret)
+        :"r"(fd1), "r"(buffer1), "r"(count1)
+        :"rax", "rdi", "rsi", "rdx"
+    );
+    if(fd == 0){
+	    int i = 0;
+	    while(buffer[i] != '\n') i++;
+	    buffer[i] = '\0';
+    }
+    return ret;
+}
+
+
+int syscall_write(int fd, char *buffer, int count){
+
+
+    long long int fd1 = (long long int) fd;
+    long long int buffer1 = (long long int) buffer;
+    long long int count1 = (long long int) count;
+    long long int ret;
+
+
+    __asm__ __volatile__(
+        "movq $1, %%rax;"
+        "movq %1, %%rdi;"
+        "movq %2, %%rsi;"
+        "movq %3, %%rdx;"
+       	"int $0x80;"
+        "movq %%rax, %0;"
+        :"=r"(ret)
+        :"r"(fd1), "r"(buffer1), "r"(count1)
+        :"rax", "rsi", "rdi", "rdx"
+    );
+    return ret;
+}
+char* syscall_getcwd (char *buf , size_t size) {
+
+	long long int buf1 = (long long int) buf;
+	long long int size1 = (long long int) size;
+	__asm__ __volatile__(
+
+		"movq $79, %%rax;"
+		"movq %1,%%rbx;"
+		"movq %2,%%rcx;"
+		"syscall;"
+		"movq %%rax, %0;"
+		:"=m"(buf1)
+		:"r"(buf1), "r"(size1)
+		:"rax", "rbx", "rcx"
+	);
+	return buf;
+}
+
+
+
+int syscall_execvpe(const char *filename , char *const argv[], char *const envp[] ){
+	long long int filename1= (long long int)filename; // random_binary 
+	long long int argv1 = (long long int) argv;
+	long long int envp1= (long long int) envp;	
+	long long int ret;
+	__asm__ __volatile__(
+		"movq $59, %%rax;"
+		"movq %1,%%rdi;"
+		"movq %2,%%rsi;"
+		"movq %3,%%rdx;"
+		"int $0x80;"
+		"movq %%rax, %0;"
+		:"=r" (ret)
+		:"r" (filename1), "r"(argv1), "r" (envp1)
+		:"rax", "rdi", "rsi", "rdx"
+	);
+	return ret;
+	
+}
+
+
+
+int syscall_close(unsigned int fd)
 {
-	// pid works: verified
-	pid_t pidOne = syscall_getpid();
-	printf("pid: %d\n", pidOne);
+    long long int ret;
+    long long int fd1 = (long long int) fd;
 
-	// cwd works: verified
-	char *buffer = (char *)malloc(1024);
-	int cwd = syscall_getcwd(buffer, 1024);
-	printf("getcwd: %s %d\n", buffer, cwd);
-	// execvpe works: verified
-	char *ls[] = {"ls", "-ltr", NULL};
-	char *cmd = "/bin/ls";
-	int ok = syscall_execvpe(cmd, ls, NULL);
-	printf("\n execvpe: %d", ok);
-
-	// pipe works: verified
-	int fd[2];
-	int p = syscall_pipe(fd);
-	printf("\npipe: %d", p);
-
-	// write: working: verfied
-	char *q = "hello world\n";
-	syscall_write(1, q, strlen(q));
-
-	// chdir: Works: verified
-	const char *filename = "/home";
-	int s = syscall_chdir(filename);
-	printf("\nchdir: %d", s);
-	// read: not working 
-	char msg[1024] = "can you read me ?";
-	int o = syscall_read(1, msg, strlen(msg));
-	printf("%d \n", o);
-
-	pid_t pid = syscall_fork();
-	printf("%d is generated\n", pid);
-	int status;
-	if(pid == 0){
-		char *ls[] = {"ls", "-ltr", NULL};
-		char *cmd = "/bin/ls";
-		int ret = syscall_execvpe(cmd, ls, NULL);
-		syscall_exit(ret);
-	} else if(pid > 0){
-		printf("%d\n", pid);
-		if(syscall_waitpid(pid, &status, 0) > 0){
-			syscall_write(1, "it worked\n", 10);
-		} else {
-			syscall_write(1, "it didnt\n", 10);
-		}
-		//printf("%d\n", syscall_waitpid(pid, &status, 0));
-	}
-return 0;
-*/
-
-/*
-void* malloc (size_t size){
-    size_t *mem_pointer;
-    mem_pointer = syscall_mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
-
-    *mem_pointer = size;
-    return (void*)(&mem_pointer[1]);
+     __asm__("movq $3,%%rax;"
+	"movq %1,%%rbx;"
+        "syscall;"
+	"movq %%rax, %0;"
+	:"=r"(ret)
+	:"r"(fd1)
+	:"rax", "rbx"
+	);
+	return ret;
 }
-*/
-/*
-void free (void* mem_pointer){
-    int *pointer_length = (int*)mem_pointer;
-    size_t size;
 
-    size = *pointer_length;
-    syscall_munmap((void*)pointer_length, size);
-    printf("Custom Free Call\n");
+int syscall_open (const char* file, int flags) {
+	// returns the file descriptor
+	long long int file1 =(long long int) file;
+	long long int flags1 = (long long int)flags;
+	long long int ret;
+	
+	__asm__ __volatile__(
+		"movq $2, %%rax;"
+		"movq %1 ,%%rbx;"
+		"movq %2, %%rcx;"
+		"movq $0 ,%%rdx;"
+		"syscall;"
+		"movq %%rax, %0;"
+		:"=r"(ret)
+		:"r" (file1), "r"(flags1)
+		:"rax","rbx","rcx","rdx"
+	);
+	return ret;
 }
-*/
-
-/*
-int main ()
-{
-    char* test = (char*)malloc(1024*sizeof(char*));
-    char* tester = "Copy This sjnc d noidcjcn ca jnocnvobuabdvubqubvaubvobjbvbjavb bub";
-    strcpy(test, tester);
-    printf("Test: %s\n", test);
-    return 0;
-}
-*/

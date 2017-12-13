@@ -2,7 +2,7 @@
 #include <syscall.h>
 
 int opendir(const char *name){
-	int fd = syscall_open(name, 0, 0);
+	int fd = syscall_open(name, 0);
 	return fd;
 }
 

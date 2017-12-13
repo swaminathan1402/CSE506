@@ -7,7 +7,7 @@ int open(const char *pathname, int flags){
 	int status = syscall(2, pathname, flags, 0);  // Might Erro
 	return status;
 	*/
-	int status = syscall_open(pathname, flags, 0);	
+	int status = 0;
 	return status;
 }
 
@@ -16,7 +16,7 @@ int close(int fd){
 	int status = syscall(3, fd);
 	return status;
 	*/
-	int status = syscall_close(fd);
+	int status = 0;
 	return status;
 }
 
@@ -25,7 +25,7 @@ ssize_t read(int fd, void *buf, size_t count){
 	int status = syscall(0, fd, buf, count);
 	return status;
 	*/
-	int status = syscall_read(fd, buf, count);
+	int status = 0;
 	return status;
 }
 
@@ -34,7 +34,7 @@ ssize_t write(int fd, const void *buf, size_t count){
 	int status = syscall(1, fd, buf, count);
 	return status;
 	*/
-	int status = syscall_write(fd, buf, count);
+	int status = 0;
 	return status;
 }
 
@@ -43,7 +43,7 @@ int unlink(const char *pathname) {
 	int status = syscall(87, pathname);
 	return status;
 	*/
-	int status = syscall_unlink(pathname);
+	int status = 0;
 	return status;
 }
 
@@ -52,7 +52,7 @@ int chdir(const char *path){
 	int status = syscall(80, path);
 	return status;
 	*/
-	int status = syscall_chdir(path);
+	int status = 0;
 	return status;
 }
 
@@ -61,8 +61,8 @@ char *getcwd(char *buff, size_t size){
 	syscall(79, buff, size);
 	return buff;
 	*/
-	syscall_getcwd(buff, size);
-	return buff;	
+	int status = 0;
+	return status;	
 	
 }
 
@@ -71,8 +71,8 @@ pid_t fork() {
 	int pid = syscall(57);
 	return pid;
 	*/
-	pid_t pid = syscall_fork();
-	return pid;
+	int status = 0;
+	return status;
 }
 
 int execvpe(const char *file, char *const argv[], char *const envp[]) {
@@ -80,7 +80,7 @@ int execvpe(const char *file, char *const argv[], char *const envp[]) {
 	int status = syscall(59, file, argv, envp);	
 	return status;
 	*/
-	int status = syscall_execvpe(file, argv, envp);
+	int status = 0;
 	return status;
 }
 

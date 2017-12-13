@@ -5,6 +5,7 @@
 #include <string.h>
 #define O_DIRECTORY 00200000
 #define O_RDONLY 0x0000
+
 int syscall_write(int fd, char *buffer, size_t count){
 
 
@@ -28,6 +29,7 @@ int syscall_write(int fd, char *buffer, size_t count){
     );
     return ret;
 }
+
 
 int openDir (const char* file, int flags)
 {
@@ -120,9 +122,11 @@ int closeDir(int fd)
 	return ret;
 }
 
+
+
 int main (int argc , char *argv[], char *envp[])
 {
-	/*
+
         long long int fd;
         const char *filename =".";
 	char parameter_list[argc][1024];
@@ -153,7 +157,8 @@ int main (int argc , char *argv[], char *envp[])
 	        readDir(fd);
 	        closeDir(fd);
         }
-	*/
+	
 	syscall_write(0, "awesome\n",9);
         return 0;
 }
+

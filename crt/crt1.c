@@ -3,7 +3,7 @@ void _start(void) {
  int argc = -7;
   char* argv[] = {"None"};
   char* envp[] = {"None"};
-
+/*
 __asm__(
     "addq $0x28,%%rsp;"
     "movq (%%rsp),%%rdi;"
@@ -16,12 +16,12 @@ __asm__(
     :
     :"memory"
   );
-	
+*/
   main(argc, argv, envp);
   __asm__(
-     "movl $60, %%eax;"
-	"movl $1, %%ebx;"
-	"syscall;"
+     "movq $60, %%rax;"
+	"movq $1, %%rbx;"
+	"int $0x80;"
 	:
 	:
 	:

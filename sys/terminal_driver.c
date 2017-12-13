@@ -13,7 +13,6 @@ int terminal_read(int fd, void* buffer, uint64_t buffer_len){
 	:
 	:
     );
-    kprintf("\n syscall enabled \n");
     while(!done_flag);
     memcpy(buffer, terminal_buffer, terminal_buffer_len);
     buffer_len = terminal_buffer_len;

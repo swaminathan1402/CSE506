@@ -78,7 +78,7 @@ void tarfs_read(){
 		//kprintf("\n******Filename: %s Mode: %p Size: %d\n", file->name, file->mode, octal_to_decimal(file->size, 11));
 		Elf64_Ehdr *something = (Elf64_Ehdr *)(file + 1);
 		index++;
-		if(strcmp(file->name, "bin/hello")==1){
+		if(strcmp(file->name, "bin/sbush")==1){
 			sbush_elf = something;
 		}
 		if(strcmp(file->name, "bin/init")==1){

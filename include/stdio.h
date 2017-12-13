@@ -6,6 +6,7 @@ static const int EOF = -1;
 int putchar(int c);
 int puts(const char *s);
 int printf(const char *format, ...);
+int scanf(const char *fmt, void* pointer);
 
 char *gets(char *s);
 char getchar();
