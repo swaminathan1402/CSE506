@@ -87,7 +87,7 @@ void tarfs_read(){
 		if(strlen(file->name)!=0){
 			
 			//kprintf("Adding %s: %d", file->name, index);
-			create_File_Descriptor_Entry(file->name, index ,size_of_file , head, (uint64_t)file); 
+			create_File_Descriptor_Entry(file->name, index ,size_of_file , head, (uint64_t)file+512); 
 		}
 		if(size_of_file == 0) {
 

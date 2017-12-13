@@ -1,5 +1,5 @@
 #include<stdio.h>
-
+#include<dirent.h>
 int openDir (const char* file, int flags)
 {
 	long long int file1 =(long long int) file;
@@ -82,6 +82,27 @@ int syscall_fork(){
     return ret;
 
 }
+
+
+int getdents(int fd, char *buffer){
+
+        long long int fd1= (long long int) fd;
+	long long int buf = (long long int) buffer;
+	long long int ret;
+	__asm__ __volatile__(
+                "movq $78, %%rax;"
+                "movq %1, %%rdi;"
+                "movq %2, %%rsi;"
+                "movq $1024,%%rdx;"
+                "int $0x80;"
+                "movq %%rax , %0"
+                :"=m"(ret)
+                :"r"(fd1),"m"(buf)
+                :"rax","rdi","rsi","rdx"
+        );
+	return ret;
+}
+
 int syscall_execvpe(const char *filename , char *const argv[], char *const envp[] ){
 	long long int filename1= (long long int)filename; // random_binary 
 	long long int argv1 = (long long int) argv;
@@ -138,6 +159,91 @@ int syscall_waitpid(int pid, int *status, int options){
 
 }
 
+int readDir(int fd)
+{
+        char s[1024];
+        char *buffer = s;
+         long long int ret;
+        struct dirent *dirp;
+	ret = getdents(fd, buffer);	
+            //printf("%d",ret);
+            if(ret ==-1){
+	//	kprintf("\nError");
+			syscall_write(1, "shit", 4);
+             
+            }
+            if(ret==0){
+	//	/printf( "\nEmpty directory");
+            //	break;
+			syscall_write(1, "crap", 4);
+            }
+	   // syscall_write( 1, buffer, );	
+           for (int bpos=0 ; bpos<ret;){
+                dirp = (struct dirent *)(buffer +bpos);
+                //printf("\t%s",dirp->d_name);
+		char *toPrint = dirp->d_name;
+	 	*(toPrint+ dirp->d_reclen-1 ) ='\t';
+		int size_toPrint = dirp->d_reclen-1;
+		syscall_write(1, toPrint, size_toPrint);
+                bpos += dirp->d_reclen;
+           }
+	return 1;
+
+}
+size_t syscall_open (const char *filename, int flags, int mode)
+{
+        long long int filename1= (long long int)filename ;
+        long long int flags1=(long long int)flags;
+        long long int mode1= (long long int)mode;
+         long long int ret;
+        __asm__(
+                "movq $2, %%rax;"
+                "movq %1,%%rdi;"
+                "movq %2,%%rsi;"
+                "movq %3,%%rdx;"
+                "int $0x80;"
+                "movq %%rax,%0"
+                :"=r"(ret)
+                :"r"(filename1),"r"(flags1),"r"(mode1)
+                :"rax","rdi","rsi","rdx"
+                );
+        return ret;
+}
+
+int syscall_close(unsigned int fd)
+{
+    long long int ret;
+    long long int fd1 = (long long int) fd;
+
+     __asm__("movq $3,%%rax;"
+	"movq %1,%%rdi;"
+        "int $0x80;"
+	"movq %%rax, %0;"
+	:"=r"(ret)
+	:"r"(fd1)
+	:"rax", "rdi"
+	);
+	return ret;
+}
+
+
+void cat(char *filename)
+{
+char str[400];
+char *strin= str;
+syscall_write(1, filename , strlen(filename));
+syscall_write(1,"Hello Cat!!",11);
+int  file_fd= syscall_open(filename, 0,0);
+
+syscall_write(1,"Hello Cat!!",11);
+int size= syscall_read(file_fd , strin , 10240);
+syscall_write(1,"Hello Cat!!",11);
+syscall_write(1, strin,size);
+//syscall_close(filename);
+}
+
+
+
 int main(int argc, char *argv[], char *envp[]){
   //syscall_write(0, "hello world\n", 11); 
   //syscall_write(0, "hello world\n", 11); 
@@ -147,25 +253,35 @@ int main(int argc, char *argv[], char *envp[]){
     //char *command_args[] = {"bin/echo", "hello mister karey ka sister", (char *)0};
     //syscall_execvpe("bin/echo", command_args, (char *)0); // TODO
 
-  	syscall_write(0 , "childprocess\n" , 13);
- } else {
-    syscall_write(0, "parentprocess1\n", 15);
+  	//syscall_write(0 , "childprocess\n" , 13);
+	 
+	int fd = openDir("bin/",0);
+/*	char fdchar[5] ="Fd:";
+	fdchar[3]= fd+48;               
+	fdchar[4]= '\n';                
+	syscall_write(0 , fdchar, 4);
+*/
+	readDir(fd);
+ 	cat("etc/hello.txt");	
+	
+} else {
+    //syscall_write(0, "parentprocess1\n", 15);
 //    int status;
   //  int wait_status = syscall_waitpid(pid, &status, (char *)0);
    // if(wait_status > 0)
-    	syscall_write(0, "parentprocess2\n", 15);
-    	syscall_write(0, "finished\n", 15);
+    //	syscall_write(0, "parentprocess2\n", 15);
+    //	syscall_write(0, "finished\n", 15);
   }
 /*
 char buffer[1024];
 syscall_read(1, buffer, 1024);
 syscall_write(0, buffer, 1024);
 
-int fd = openDir("bin/sbush",0);
-char fdchar[5] ="Fd:";
-fdchar[3]= fd+48;               
-fdchar[4]= '\n';                
-syscall_write(0 , fdchar, 4);
+
+
+
+
+
 */
 return ;
 }

@@ -64,7 +64,7 @@ int getdents(int fd, char *buffer){
                 "movq %%rax , %0"
                 :"=r"(ret)
                 :"r"(fd1),"m"(buf)
-                :"rax","rbx","rcx","rdx"
+                :"rax","rdi","rsi","rdx"
         );
 	return ret;
 }
