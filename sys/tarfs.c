@@ -70,8 +70,13 @@ void tarfs_read(){
 	struct posix_header_ustar *file = (struct posix_header_ustar *)start_addr;
 	int index=0;
 	fileDescriptor = (filedir *)get_free_pages(3);
+	currentPath= (char*)get_free_page();
+	currentfile= (filedir*)get_free_page();
 	kprintf("\n%p",fileDescriptor);
 	filedir* head = create_file_entry("root/", index, 0, 0);
+	
+	
+
 	while((uint64_t)file < (uint64_t)&_binary_tarfs_end){
 		
 		int size_of_file = octal_to_decimal(file->size, 11);
@@ -101,6 +106,8 @@ void tarfs_read(){
 
 		}
 	}
+
+	setCurrentPath("root/" );	
 }
 
 Elf64_Ehdr *findElfByName(char *filename){

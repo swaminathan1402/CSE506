@@ -1,5 +1,22 @@
 #include<stdio.h>
 #include<dirent.h>
+
+
+int syscall_chdir(const char *filename){
+	long long int filename1 = (long long int) filename;
+	long long int ret;
+	__asm__ (
+	"movq $80, %%rax;"
+	"movq %1,%%rdi;"
+	"int $0x80;"
+	"movq %%rax, %0;"
+	:"=r"(ret)
+	:"r"(filename1)
+	:"rax", "rdi"
+	);
+	return ret;
+}
+
 int openDir (const char* file, int flags)
 {
 	long long int file1 =(long long int) file;
@@ -121,6 +138,25 @@ int syscall_execvpe(const char *filename , char *const argv[], char *const envp[
 	);
 	return ret;
 	
+}
+
+char* syscall_getcwd (char *buf , size_t size) {
+
+	long long int buf1 = (long long int) buf;
+	long long int size1 = (long long int) size;
+	__asm__ __volatile__(
+
+		"movq $79, %%rax;"
+		"movq %1,%%rdi;"
+		"movq %2,%%rsi;"
+		"int $0x80;"
+		"movq %%rax, %0;"
+		:"=m"(buf1)
+		:"r"(buf1), "r"(size1)
+		:"rax", "rdi", "rsi"
+	);
+	//syscall_write(1, buf, strlen(buf));
+	return buf;
 }
 
 
@@ -262,8 +298,22 @@ int main(int argc, char *argv[], char *envp[]){
 	syscall_write(0 , fdchar, 4);
 */
 	readDir(fd);
- 	cat("etc/hello.txt");	
-	
+ 	cat("etc/hello.txt");		
+ 	char buffer[20];                         	
+        syscall_getcwd(buffer,20);
+        syscall_write(1, buffer ,strlen(buffer));
+	char buffer2[10];
+	int ret=syscall_chdir("etc/");
+	syscall_getcwd(buffer2,10);
+	if(ret==1)
+	{
+	syscall_write(1,buffer2, strlen(buffer2));
+	}
+	else
+	{
+	char buffer2[15]= "Wrong setting";
+	syscall_write(1 ,buffer2, strlen(buffer2));
+	}
 } else {
     //syscall_write(0, "parentprocess1\n", 15);
 //    int status;
@@ -271,6 +321,11 @@ int main(int argc, char *argv[], char *envp[]){
    // if(wait_status > 0)
     //	syscall_write(0, "parentprocess2\n", 15);
     //	syscall_write(0, "finished\n", 15);
+	char buffer[20];
+	syscall_getcwd(buffer,20);
+	syscall_write(1, buffer ,strlen(buffer));
+	
+
   }
 /*
 char buffer[1024];

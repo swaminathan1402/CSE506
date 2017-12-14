@@ -219,7 +219,29 @@ __asm__ __volatile__(
 :"m"(ret)
 :
 );
+break;
 
+case 79: //sys_getcwd(); 
+buf=(char*)rdi ; 
+count=(size_t)rsi;
+buf =getCurrentPath(buf, count);
+__asm__ __volatile__(
+"movq %0 , %%rax"
+:
+:"m"(buf)
+:
+);
+break;
+
+case 80: //sys_chdir();
+buf= (char*)rdi;
+ret =setCurrentPath(buf);
+__asm__ __volatile__(
+"movq %0 , %%rax"
+:
+:"m"(ret)
+:
+);
 break;
 
 case 123:  // ps

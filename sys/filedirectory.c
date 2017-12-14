@@ -161,7 +161,37 @@ void create_File_Descriptor_Entry(char* filename, int index ,int filesz, filedir
 	return;	
 }
 
-char*  converttoString(uint64_t address)
+char* getCurrentPath(char* buffer ,int count)
+{
+	if(count>strlen(currentPath))
+	{
+	memcpy(buffer, currentPath,count);
+	}
+	else
+	{
+	memcpy(buffer, currentPath,strlen(currentPath));
+	buffer[strlen(currentPath)]='\0';
+	}
+	return buffer; 
+}
+
+int  setCurrentPath(char* buffer)
+{
+        int index = search(buffer);
+		
+	if(index==-1)
+	{
+	kprintf("\nFile not present\n");
+	return -1;
+	}
+	filedir* temp=(filedir*)fileDescriptor+index;
+	currentfile = temp; 
+	memcpy(currentPath, buffer, strlen(buffer));
+	currentPath[strlen(buffer)]='\0';
+	return 1;
+	
+}
+/*char*  converttoString(uint64_t address)
 {
 int i=0;
 int temp;
@@ -241,7 +271,7 @@ char string[9];
  string[8]='\0';
 return string;
 }
-
+*/
 
 int readDents(int index, char* buffer)
 {

@@ -16,7 +16,8 @@ uint64_t filesz;
 }__attribute__((packed))filedir;
 
 filedir *fileDescriptor;
-
+filedir* currentfile;
+char* currentPath ;
 
 void print_File_Descriptor(filedir *);
 filedir* create_file_entry(char *, int, int, uint64_t);
@@ -27,4 +28,6 @@ void increase_ref_count(int );
 void decrease_ref_count(int );
 int readDents(int , char*);
 int readFromFile(int , char* ,int );
+char* getCurrentPath(char*, int);
+int setCurrentPath(char*);
 #endif
