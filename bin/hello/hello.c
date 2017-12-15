@@ -292,15 +292,18 @@ int main(int argc, char *argv[], char *envp[]){
     //char *command_args[] = {"bin/echo", "hello mister karey ka sister", (char *)0};
     //syscall_execvpe("bin/echo", command_args, (char *)0); // TODO
     //syscall_write(0 , "childprocess\n" , 13);
-    int fd = openDir("bin/",0);
+
+    //int fd = openDir("bin/",0);
 /*	char fdchar[5] ="Fd:";
 	fdchar[3]= fd+48;               
 	fdchar[4]= '\n';                
 	syscall_write(0 , fdchar, 4);
 */
 	
-	readDir(fd);
- 	cat("text_files/text2.txt");
+	//readDir(fd);
+ 	//cat("text_files/text2.txt");
+
+
 	/*
  	char buffer[20];	
         syscall_getcwd(buffer,20);
@@ -329,9 +332,12 @@ int main(int argc, char *argv[], char *envp[]){
 	*/
 	
 } else {
-	char buffer[20];
-	syscall_getcwd(buffer,20);
-	syscall_write(1, buffer ,strlen(buffer));
+	//char buffer[20];
+	//syscall_getcwd(buffer,20);
+	//syscall_write(1, buffer ,strlen(buffer));
+	int status; 
+	int ret = syscall_waitpid(pid, &status, NULL);
+	syscall_write(0, "good process\n", 12);
 	
 
   }

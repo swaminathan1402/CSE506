@@ -6,12 +6,13 @@
 #include<sys/mm_struct.h>
 #define RUNNING_PROCESS_STATUS 1
 #define SLEEPING_PROCESS_STATUS 2
-#define EXIT_PROCESS_STATUS 3
- #define ZOMBIE_PROCESS_STATUS 4
+#define ZOMBIE_PROCESS_STATUS 3
+#define ORPHAN_PROCESS_STATUS 4
 void initTasking();
 typedef struct {
 	uint64_t rsp, rbp, rip, cr3, user_rsp;
 } registers;
+
 
 typedef struct task{	
 	registers regs;
@@ -23,9 +24,18 @@ typedef struct task{
 	PTE* pte;
 	int status;
 	int pid;
-       struct mm_struct *mm ;
+        struct mm_struct *mm ;
 	int isChild;
+	struct task *parent;  //for pid inheritance
+	struct task *child;	
 } task;
+
+typedef struct tasklist{
+int pid ;
+task* entry;
+struct tasklist* next; 
+}tasklist;
+
 
 task* runningTask;
 task* lastTask;
@@ -35,6 +45,11 @@ int pid;
 //task* otherTask;
 //task* idleTask;
 //task* userTask;
+
+tasklist* runningProcessList;
+tasklist*  zombieProcessList;
+tasklist* waitProcessList;
+
 
 void createTask(void(*)(), uint64_t, uint64_t);
 void yield();
@@ -46,9 +61,18 @@ void mainTwo();
 void beIdle();
 void removeTask();
 int fork();
-int createChildTask();
+task* createChildTask();
 int exec(char *);
+
+void getprocessList();
+
 int kill_process(int);
 void temp_yield();
 void waiting_on_pid(int);
+void addtozombieList(task*);
+void addtowaitList( task*);
+void addtorunningList( task*);
+void removefromOtherList(task*);
+void clean_zombies();
+void free(task *);
 #endif

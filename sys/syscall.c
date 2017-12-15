@@ -157,7 +157,7 @@ kprintf("%p %d ", addr,length);
 break;
 
 case 22: //sys_ps
-// getprocessList();
+ getprocessList();
 break ;
 
 
@@ -198,7 +198,7 @@ case 59:
 
 
 case 60:
-  kprintf("WE HAVE TO EXIT NOW\n");
+  // kprintf("WE HAVE TO EXIT NOW\n");
   removeTask();
 break;
 
@@ -268,6 +268,9 @@ case 124: //kill
   );
   break;
   
+case 130: // clean zombies
+	clean_zombies();
+	break;
 
 default :
 kprintf("Syscall not handled yet");

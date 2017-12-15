@@ -206,7 +206,11 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   uint64_t do_page_fault = *ptr;
   kprintf("%d" , do_page_fault);   
   */
+							
 
+	 zombieProcessList= (tasklist*) get_free_page();
+	 runningProcessList= (tasklist*) get_free_page();
+	 waitProcessList= (tasklist*) get_free_page();	
   tarfs_read();
   
   read_elf(idle_elf,0);	// idle is elf type and global
