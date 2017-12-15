@@ -72,7 +72,8 @@ typedef struct {
 	uint8_t d:1;
 	uint8_t pat:1;
 	uint8_t g:1;
-	uint8_t avl:3;
+	uint8_t avl:2;
+	uint8_t cow:1;
 	uint64_t physical_address: 40;
 	uint16_t available: 11;
 	uint8_t nx:1;
@@ -93,4 +94,8 @@ uint64_t kernel_pte;
 void init_pd(PTE*,PML4E *, uint64_t, int);
 void changeCR3(PML4E*, PDPE*, PDE*, PTE*, int);
 void deepCopyPageTable(uint64_t);
+uint64_t checkCOW();
+void setCOW(uint64_t , uint64_t);
+void setWritable(uint64_t , uint64_t);
+void reloadCR3();
 #endif

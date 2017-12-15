@@ -2,7 +2,6 @@
 #include <sys/vm_area_struct.h>
 #include <sys/page.h>
 
-
 struct mm_struct* get_mm_struct(){
     struct mm_struct* new_mm_struct = (struct mm_struct*)get_free_page();
     new_mm_struct->head = NULL;
