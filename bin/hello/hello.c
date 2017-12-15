@@ -298,7 +298,7 @@ int main(int argc, char *argv[], char *envp[]){
 	syscall_write(0 , fdchar, 4);
 */
 	readDir(fd);
- 	cat("etc/");		
+ 	cat("etc/hello.txt");		
  	char buffer[20];                         	
         syscall_getcwd(buffer,20);
         syscall_write(1, buffer ,strlen(buffer));

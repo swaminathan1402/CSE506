@@ -47,6 +47,8 @@ int readfromFile(int index, char* buffer, int count )
 		char* file_ptr= (char*)temp->entry_pointer;
 		for( i =0; i<temp->filesz;i++){
 			*(buffer +i)= *(file_ptr + i);
+			if(i==count)
+			break;
 		}
 		return temp->filesz;
 	}

@@ -157,7 +157,7 @@ kprintf("%p %d ", addr,length);
 break;
 
 case 22: //sys_ps
-// getprocessList();
+ getprocessList();
 break ;
 
 
