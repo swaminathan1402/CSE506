@@ -7,7 +7,7 @@
 #include <sys/syscall.h>
 #include <sys/tarfs.h>
 #include <sys/elf64.h>
-
+#include<sys/mm_struct.h>
 void yield(){
 
 	/*
@@ -266,6 +266,63 @@ int createChildTask(){
 	
 }
 
+void addVMAtoTask(task* me ,struct vm_area_struct* new_vma )
+{
+	
+	struct vm_area_struct* vm_area_temp1;
+	struct vm_area_struct*  vm_area_temp;
+	if(me->mm ==NULL)
+	{
+	me-> mm->head= new_vma;
+	new_vma->prev= NULL;
+	new_vma->next =NULL;
+	} 
+	else
+	{
+	//Scenario 1:Nothing is present in the memory needed by the  VMA
+		vm_area_temp1 = ( struct vm_area_struct*)me->mm ->head;
+		if(vm_area_temp1->vm_start < new_vma->vm_end)
+		{	
+			me->mm->head= new_vma;
+			new_vma->next = vm_area_temp1;
+			new_vma->prev= NULL;
+			return ;
+		} 
+		while(vm_area_temp1->vm_start <new_vma->vm_start)
+		 {    
+			vm_area_temp1= vm_area_temp1->next ;	 
+		 }	
+		vm_area_temp = vm_area_temp1-> next;
+		vm_area_temp1->next= new_vma;
+		new_vma->prev= vm_area_temp1;
+		if(vm_area_temp->vm_start >new_vma->vm_end && vm_area_temp1->vm_end< new_vma->vm_end)
+		{
+		//Scenario 1:Insert in middle
+		new_vma->next = vm_area_temp;
+		vm_area_temp->prev= new_vma;
+		}
+		else if(vm_area_temp->vm_start >new_vma->vm_end &&vm_area_temp1->vm_end> new_vma->vm_start) 
+		{
+		//Scenario 2: Something is present			
+		//Check permissions  if same
+			if(vm_area_temp1->vm_page_prot == new_vma->vm_page_prot)
+			{
+			//Case 3: Replace pages of previous vma
+			 vm_area_temp1->vm_end = ( vm_area_temp1->vm_end > new_vma->vm_end ) ?vm_area_temp1->vm_end: new_vma->vm_end;
+			}	
+			else
+			{
+			//Case 2:Insert at end by truncating  and assume  that pages of not same permissions	
+			vm_area_temp1->vm_end = new_vma->vm_start;
+			vm_area_temp1->next = new_vma;
+			new_vma->prev= vm_area_temp1;
+			new_vma->next= vm_area_temp;
+			vm_area_temp-> prev= new_vma;
+			}
+		}
+	}	
+}
+
 void createTask(
 		void (*main)(),  // function pointer
 		uint64_t rflags, 
@@ -296,6 +353,7 @@ void createTask(
 
 	me->pml4e[511] = pml4e[511];
 	me->regs.cr3 = (uint64_t)me->pml4e;
+	me->mm =NULL ; 
 
 	if(runningTask == NULL){
 		runningTask = me;

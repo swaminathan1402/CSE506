@@ -15,4 +15,6 @@ void showAllFreePages();
 freelist *get_free_page();
 freelist *get_free_pages(int numPages);
 freelist *get_free_user_page();
+
+uint64_t err_code;
 #endif

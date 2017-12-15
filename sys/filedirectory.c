@@ -40,6 +40,12 @@ filedir* temp = (filedir*) fileDescriptor +index;
 temp->ref_count++;
 }
 
+void decrease_ref_count(int index)
+{
+filedir* temp = (filedir*) fileDescriptor +index;
+temp->ref_count--;
+}
+
 
 char *extractParentFromFilename(char *filename){
     int len = strlen(filename);
@@ -134,6 +140,15 @@ void create_File_Descriptor_Entry(char* filename, int index ,int filesz, filedir
 	}
 	return;	
 }
+
+//void readContents( )
+
+
+
+
+
+
+
 
 
 void print_File_Descriptor(filedir *root)
