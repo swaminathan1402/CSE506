@@ -156,10 +156,10 @@ case 11: //sys_munmap
 kprintf("%p %d ", addr,length);
 break;
 
-case 22: //sys_pipe
- filedes= (int *)rdi;
-kprintf("%p" , filedes);
+case 22: //sys_ps
+// getprocessList();
 break ;
+
 
 case 24: // sys_yield
   //yield();

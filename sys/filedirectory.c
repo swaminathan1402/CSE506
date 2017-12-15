@@ -177,14 +177,43 @@ char* getCurrentPath(char* buffer ,int count)
 
 int  setCurrentPath(char* buffer)
 {
-        int index = search(buffer);
-		
+	
+      filedir* temp;
+	if(strcmp (buffer, "..")==1)
+	{
+		if(strcmp(currentfile->filename, "root/")==1)
+		return -1;
+		else
+		{
+		temp =currentfile->parent;
+		memcpy(buffer,temp->filename,strlen(temp->filename) );
+		}
+
+	}
+	else if(strcmp(buffer, "/")==1 ||strcmp(buffer, "...")==1)
+	{
+		if(strcmp (currentfile->filename , "root/")==1)
+		return -1;
+		else 
+		{
+			temp= currentfile->root;
+			memcpy(buffer, temp->filename ,strlen(temp->filename));
+		}
+	}
+	else
+ 	{ 
+	int index = search(buffer);	
 	if(index==-1)
 	{
 	kprintf("\nFile not present\n");
 	return -1;
 	}
-	filedir* temp=(filedir*)fileDescriptor+index;
+	 temp=(filedir*)fileDescriptor+index;
+	}
+
+	if(temp->type==2)
+	return -1;
+	
 	currentfile = temp; 
 	memcpy(currentPath, buffer, strlen(buffer));
 	currentPath[strlen(buffer)]='\0';

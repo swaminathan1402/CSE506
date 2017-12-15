@@ -268,12 +268,12 @@ void cat(char *filename)
 char str[400];
 char *strin= str;
 syscall_write(1, filename , strlen(filename));
-syscall_write(1,"Hello Cat!!",11);
+//syscall_write(1,"Hello Cat!!",11);
 int  file_fd= syscall_open(filename, 0,0);
 
-syscall_write(1,"Hello Cat!!",11);
+//syscall_write(1,"Hello Cat!!",11);
 int size= syscall_read(file_fd , strin , 10240);
-syscall_write(1,"Hello Cat!!",11);
+//syscall_write(1,"Hello Cat!!",11);
 syscall_write(1, strin,size);
 //syscall_close(filename);
 }
@@ -298,12 +298,12 @@ int main(int argc, char *argv[], char *envp[]){
 	syscall_write(0 , fdchar, 4);
 */
 	readDir(fd);
- 	cat("etc/hello.txt");		
+ 	cat("etc/");		
  	char buffer[20];                         	
         syscall_getcwd(buffer,20);
         syscall_write(1, buffer ,strlen(buffer));
 	char buffer2[10];
-	int ret=syscall_chdir("etc/");
+	int ret=syscall_chdir("usr/");
 	syscall_getcwd(buffer2,10);
 	if(ret==1)
 	{
@@ -314,6 +314,21 @@ int main(int argc, char *argv[], char *envp[]){
 	char buffer2[15]= "Wrong setting";
 	syscall_write(1 ,buffer2, strlen(buffer2));
 	}
+	ret=syscall_chdir("..");
+	syscall_getcwd(buffer2,10 );
+	syscall_write(1,buffer2,10);
+		ret=syscall_chdir("bin/");
+        	syscall_getcwd(buffer2,10 );
+        	syscall_write(1,buffer2,10);
+		ret=syscall_chdir("/");
+        	syscall_getcwd(buffer2,10 );
+        	syscall_write(1,buffer2,10);
+
+
+
+
+
+	
 } else {
     //syscall_write(0, "parentprocess1\n", 15);
 //    int status;

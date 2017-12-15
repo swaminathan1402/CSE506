@@ -36,6 +36,6 @@ struct vm_area_struct{
 };
 
 struct vm_area_struct* get_vm_area_struct();
-struct vm_area_struct* init_vm_area_struct(uint64_t, uint64_t, uint64_t, int, struct vm_area_struct*, struct vm_area_struct*);
+struct vm_area_struct* init_vm_area_struct(uint64_t, uint64_t,uint64_t, uint64_t, int, struct vm_area_struct*, struct vm_area_struct*);
 void print_vma_content(struct vm_area_struct* vma);
 #endif
