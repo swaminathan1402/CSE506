@@ -239,6 +239,9 @@ int createChildTask(){
 	runningTask->next = childTask;
 	nextTask->prev = childTask;
 
+        uint64_t next_task = (uint64_t)childTask->next;
+        uint64_t self_task = (uint64_t)childTask;
+
 	//kprintf("DUDE %p and %p\n", childTask->regs.rip, childTask->regs.rsp);
 	__asm__ __volatile__(
         "movq %%rsp, %%r11;"
@@ -258,7 +261,7 @@ int createChildTask(){
         "push %%rsi;"
         "movq %%r11, %%rsp;"
         :
-        :"m"(childTask->regs.rsp), "m"(childTask->next), "m"(childTask)
+        :"m"(childTask->regs.rsp), "m"(next_task), "m"(self_task)
         :"memory"
         );
         childTask->regs.rsp -= 56;
