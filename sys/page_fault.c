@@ -13,12 +13,12 @@ __asm__ __volatile__(
 	:
 );
 
-setMap(faulting_address, faulting_address, 1);
-kprintf("\nErrcode : %p", err_code);
-/*
+//setMap(faulting_address, faulting_address, 1);
+//kprintf("\nErrcode : %p", err_code);
 if(!(err_code & 0x1 ) && (err_code& 0x4))
 {
 	kprintf("\nPage not present in user mode %p ", faulting_address);
+	//kprintf("\nPage not present in user mode %p", faulting_address);
 	setMap(faulting_address, faulting_address, 1);
 	reloadCR3();	
 }
@@ -42,8 +42,6 @@ else if(err_code & 0x2)
 	}
 	reloadCR3();	
 }
-*/
 
-//while(1);
 
 }

@@ -1,7 +1,7 @@
 #include<sys/filedirectory.h>
 #include<sys/string.h>
 #include<sys/kprintf.h>
-
+#include<sys/memory.h>
 filedir* findParent(char* dir,int index, filedir *root)
 {
 	for(int i=0;i<index;i++) 
@@ -29,15 +29,41 @@ filedir* create_file_entry(char *filename, int index, int filesz ,uint64_t file)
 		temp->type = 1; // directory
 	else
 		temp->type = 2; // file 
-	return temp;
+	temp->filesz= filesz;
 
+	return temp;
 }
 
+int readfromFile(int index, char* buffer, int count )
+{
+	int i ;
+	filedir* temp = (filedir*)fileDescriptor+index;
+	if(temp->type==1)
+	{
+	return 0; 
+	}
+	else 
+	{
+		char* file_ptr= (char*)temp->entry_pointer;
+		for( i =0; i<temp->filesz;i++){
+			*(buffer +i)= *(file_ptr + i);
+		}
+		return temp->filesz;
+	}
+
+
+}
 
 void increase_ref_count (int index)
 {
 filedir* temp = (filedir*) fileDescriptor +index;
 temp->ref_count++;
+}
+
+void decrease_ref_count(int index)
+{
+filedir* temp = (filedir*) fileDescriptor +index;
+temp->ref_count--;
 }
 
 
@@ -135,8 +161,193 @@ void create_File_Descriptor_Entry(char* filename, int index ,int filesz, filedir
 	return;	
 }
 
+char* getCurrentPath(char* buffer ,int count)
+{
+	if(count>strlen(currentPath))
+	{
+	memcpy(buffer, currentPath,count);
+	}
+	else
+	{
+	memcpy(buffer, currentPath,strlen(currentPath));
+	buffer[strlen(currentPath)]='\0';
+	}
+	return buffer; 
+}
 
-void print_File_Descriptor(filedir *root)
+int  setCurrentPath(char* buffer)
+{
+	
+      filedir* temp;
+	if(strcmp (buffer, "..")==1)
+	{
+		if(strcmp(currentfile->filename, "root/")==1)
+		return -1;
+		else
+		{
+		temp =currentfile->parent;
+		memcpy(buffer,temp->filename,strlen(temp->filename) );
+		}
+
+	}
+	else if(strcmp(buffer, "/")==1 ||strcmp(buffer, "...")==1)
+	{
+		if(strcmp (currentfile->filename , "root/")==1)
+		return -1;
+		else 
+		{
+			temp= currentfile->root;
+			memcpy(buffer, temp->filename ,strlen(temp->filename));
+		}
+	}
+	else
+ 	{ 
+	int index = search(buffer);	
+	if(index==-1)
+	{
+	kprintf("\nFile not present\n");
+	return -1;
+	}
+	 temp=(filedir*)fileDescriptor+index;
+	}
+
+	if(temp->type==2)
+	return -1;
+	
+	currentfile = temp; 
+	memcpy(currentPath, buffer, strlen(buffer));
+	currentPath[strlen(buffer)]='\0';
+	return 1;
+	
+}
+/*char*  converttoString(uint64_t address)
+{
+int i=0;
+int temp;
+char string[9]; 
+	while(address!=0)
+	{
+	 	 temp= (address & 0xf) ;
+		switch(temp)
+		{
+		case 0:
+		string[i]='0';
+		break;
+
+		case 1: 
+		string[i]='1';
+		break;
+
+		case 2:
+		string[i]='2';
+		break;
+
+		case 3:
+		string[i]='3';
+		break;
+
+		case 4:
+		string[i]='4';
+		break;
+
+		case 5:
+		string[i]='5';
+		break;
+
+		case 6:
+		string[i]='6';
+		break;
+
+		case 7:
+		string[i]='7';
+		break;
+
+		case 8:
+		string[i]='8';
+		break;
+
+		case 9:
+		string[i]='9';
+		break;
+
+		case 10:
+		string[i]='a';
+		break;
+
+		case 11:
+		string[i]='b';
+		break;
+
+		case 12:
+		string[i]='c';
+		break;
+
+		case 13:
+		string[i]='d';
+		break;
+		
+		case 14:
+		string[i]='e';
+		break;
+		
+		case 15:
+		string[i]='f';
+		break;
+	}	
+	address= address>>4;
+	i++;
+	}	
+ string[8]='\0';
+return string;
+}
+*/
+
+int readDents(int index, char* buffer)
+{
+	char *temp_please = buffer;
+	filedir* temp = (filedir*)fileDescriptor+ index;
+	int bPos=0;
+	int i,j;
+	if(temp->child_count==0)
+	{
+	 return 0;
+	}
+	for(i=0;i< temp->child_count; i++)
+	{
+		//char* tempString =converttoString((uint64_t)temp->children[i]); 
+	//	memcpy(buffer,tempString ,8); 
+	//	bPos =bPos+8;
+	//	buffer+=8;
+	//	*(buffer) =i;	
+	//	bPos= bPos+8;
+	//	buffer+=8;
+
+		filedir* temp1 = (filedir*)temp->children[i];
+		*(buffer+bPos)=strlen(temp1->filename) +1;
+		bPos++;
+		//buffer+=1;
+		//bPos+=1;
+		//kprintf("ls %s\n", temp->filename);
+		
+
+		for(j =0 ; j< strlen(temp1->filename);j++)
+		{
+		*(buffer+bPos) = temp1->filename[j]; 
+		//kprintf("dude %s %s\n", buffer, *(temp1->filename+j));
+		bPos++;
+		//buffer++;	
+		
+		}
+	//	*(buffer+bPos) ='\0';
+		//bPos+= strlen(temp1->filename);	
+	//	bPos++;
+	}
+	//kprintf("dude %s \n", buffer);
+	return bPos;		
+}
+
+
+void print_File_Descriptor(filedir* root)
 {
 	kprintf("|Filename :%s , Type: %d Child count: %d|", root->filename, root->type, root->child_count);
 	int child_count = root->child_count;
