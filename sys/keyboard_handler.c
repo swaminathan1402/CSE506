@@ -90,6 +90,10 @@ int getCharfromCode(unsigned char scan_code1)
 		if(shiftFlag) return 41;
 		return 48;
 	}
+	else if(scan_code1 == 0x0C){
+	    if(shiftFlag) return 95;
+	    return 45;
+	}
 	else if(scan_code1 == 0x10){
 		return 113 - offset;
 	}
@@ -189,7 +193,14 @@ void keyboard_handler(){
 			*glyph = map;
 			glyph-=2;
 			*glyph = '^';
-		} else {
+		} else if(map == '\b'){
+                    *glyph = 'x';
+                    glyph -=2;
+                    *glyph ='\0';		
+		    
+		}
+		
+		else {
 		
 		*glyph = map;
 		glyph -=2;

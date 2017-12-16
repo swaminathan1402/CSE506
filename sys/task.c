@@ -276,9 +276,11 @@ void addVMAtoTask(task* me ,struct vm_area_struct* new_vma )
 	struct vm_area_struct*  vm_area_temp;
 	if(me->mm ==NULL)
 	{
-	me-> mm->head= new_vma;
-	new_vma->prev= NULL;
-	new_vma->next =NULL;
+	struct mm_struct head_mm_struct;
+	head_mm_struct.head = new_vma;
+	me->mm = &head_mm_struct;
+	new_vma->prev = NULL;
+	new_vma->next = NULL;
 	} 
 	else
 	{
@@ -289,11 +291,13 @@ void addVMAtoTask(task* me ,struct vm_area_struct* new_vma )
 			me->mm->head= new_vma;
 			new_vma->next = vm_area_temp1;
 			new_vma->prev= NULL;
+                        kprintf("This case");
+                        while(1);
 			return ;
 		} 
 		while(vm_area_temp1->vm_start <new_vma->vm_start)
 		 {    
-			vm_area_temp1= vm_area_temp1->next ;	 
+			vm_area_temp1= vm_area_temp1->next;	 
 		 }	
 		vm_area_temp = vm_area_temp1-> next;
 		vm_area_temp1->next= new_vma;
@@ -481,6 +485,86 @@ void switch_to_ring_3()
 	
 }
 
+void removefromOtherLists(task * temp)
+{
+
+
+
+
+
+
+}
+
+
+void addtoZombieList(task* temp)
+{
+temp->status = ZOMBIE_PROCESS_STATUS;
+tasklist* current_zombie= (tasklist*) zombieProcessList;
+while(current_zombie != NULL)
+{
+current_zombie = current_zombie->next;
+}
+current_zombie->pid =temp->pid;
+current_zombie->next =NULL;
+removefromOtherLists(temp);
+}
+
+
+
+void addtoRunningList(task* temp)
+{
+temp->status =RUNNING_PROCESS_STATUS;
+tasklist* current_running= (tasklist*) runningProcessList;
+current_running->pid =temp->pid;
+current_running->next =NULL;
+removefromOtherLists(temp);
+}
+
+void addtoWaitList(task* temp)
+{
+temp->status= SLEEPING_PROCESS_STATUS;
+tasklist* current_waiting= (tasklist*) waitProcessList;
+while(current_waiting != NULL)
+{
+current_waiting = current_waiting->next;
+}
+current_waiting->pid =temp->pid;
+current_waiting->next =NULL;
+removefromOtherLists(temp);
+}
+
+
+
+void getprocessList()
+{
+	kprintf("\n PID \t STATUS ");
+	tasklist* current_zombie= (tasklist*) zombieProcessList;
+	while(current_zombie != NULL)
+	{
+	kprintf("\n %d \t ZOMBIE ",current_zombie->pid );
+	current_zombie = current_zombie->next;
+	}
+	//kprintf("\n %d \t ZOMBIE",current_zombie->pid );
+	tasklist* current_running = (tasklist*)runningProcessList;
+	while(current_running !=NULL)
+	{
+		kprintf("\n %d \t RUNNING ",current_running->pid );
+        	current_running = current_running->next;
+       	}
+ //       kprintf("\n %d \t RUNNING",current_running->pid );
+
+tasklist* current_waiting = (tasklist*)waitProcessList;
+while(current_running !=NULL)
+{
+	kprintf("\n %d \t WAITING ",current_waiting->pid );
+        current_waiting = current_waiting->next;
+}
+   //     kprintf("\n %d \t WAITING",current_waiting->pid ); }
+
+}
+
+
+
 int kill_process(int pid){
 	int limit = 43;
 	int count = 0;
@@ -488,7 +572,7 @@ int kill_process(int pid){
 	while(temp->pid != pid && count < limit){
 		temp = temp->next;
 		count++;
-	}
+	}	
 	if(count >= limit) {
 		return -1;
 	}
@@ -497,7 +581,7 @@ int kill_process(int pid){
 		while(prev_temp->next != temp){
 			prev_temp = prev_temp->next;
 		}
-
+		
 		prev_temp->next = temp->next;
 	}
 	return pid;
@@ -505,7 +589,7 @@ int kill_process(int pid){
 
 void removeTask(){
 	// reclaim all the pages used by this task
-
+	
 	changeCR3((PML4E *)kernel_pml4e, (PDPE *)kernel_pdpe, (PDE *)kernel_pde, (PTE *)kernel_pte, 0);
 	/*
 	task* temp = runningTask;
@@ -539,7 +623,7 @@ void removeTask(){
 		:
 	);
 	switch_to_ring_3(runningTask->regs.rip);
-
+	
 }
 
 void temp_yield(){

@@ -4,11 +4,9 @@
 #define NAME_MAX 255
 
 struct dirent {
- long d_ino;
- off_t d_off;
- unsigned short d_reclen;
+ uint8_t  d_reclen;
  char d_name[NAME_MAX+1];
-};
+}__attribute__((packed));
 
 typedef struct DIR DIR;
 

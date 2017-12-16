@@ -1,6 +1,7 @@
-#include<stdio.h>
+#include <stdio.h>
+#include <syscall.h>
 
-
+/*
 int syscall_write(int fd, char *buffer, int count){
 
 
@@ -23,20 +24,7 @@ int syscall_write(int fd, char *buffer, int count){
     );
     return ret;
 }
-
-int syscall_kill_pid(int pid){
-	long long int ret;
-	__asm__ __volatile__(
-		"movq $124, %%rax;"
-		"movq %1, %%rdi;"
-		"int $0x80;"
-		"movq %%rax, %0;"
-		:"=r"(ret)
-		:"m"(pid)
-		:"rax","rdi"
-	);
-	return (signed)ret;
-}
+*/
 
 int main(int argc, char *argv[], char *envp[]){
   int kill_pid = argv[1] - '0';

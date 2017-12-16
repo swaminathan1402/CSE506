@@ -33,6 +33,7 @@ void terminal_enqueue(char c){
         terminal_buffer[terminal_buffer_len] = '\0';
         terminal_buffer_len--;
         terminal_buffer[terminal_buffer_len] = '\0';
+	kprintf("\b");
 	return;
     }
     else if(c == ' ' && terminal_buffer_len == 0){

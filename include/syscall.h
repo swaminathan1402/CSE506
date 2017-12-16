@@ -6,9 +6,11 @@
 
 int syscall_write(int fd, char *buffer, int count);
 //int syscall_write(int fd, char *buffer, size_t count);
-int syscall_open (const char* file, int flags);
+//int syscall_open (const char* file, int flags);
+size_t syscall_open (const char *filename, int flags, int mode);
 int syscall_close(unsigned int fd);
 int syscall_read(int fd, char *buffer, int count);
+int openDir(const char* file, int flags);
 //size_t syscall_read(int fd, char *buffer, size_t count);
 int syscall_unlink(const char *pathname);
 int syscall_chdir(const char *filename);
@@ -28,5 +30,6 @@ void syscall_free(void *ptr);
 void *syscall_mmap(unsigned long addr, unsigned long len, unsigned long prot, unsigned long flags, unsigned long fd, unsigned long offset);
 int syscall_munmap(unsigned long addr, size_t len);
 int syscall_getdents(int fd, char *buffer, unsigned int count);
+int syscall_kill_pid(int pid);
 
 #endif

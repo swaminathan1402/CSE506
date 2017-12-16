@@ -6,6 +6,19 @@
 // works
 
 
+int syscall_kill_pid(int pid){
+	long long int ret;
+	__asm__ __volatile__(
+		"movq $124, %%rax;"
+		"movq %1, %%rdi;"
+		"int $0x80;"
+		"movq %%rax, %0;"
+		:"=r"(ret)
+		:"m"(pid)
+		:"rax","rdi"
+	);
+	return (signed)ret;
+}
 
 void* syscall_mmap ( unsigned long addr, unsigned long len, unsigned long prot, unsigned long flags, unsigned long fd, unsigned long offset){
 	void *ret;    
@@ -46,6 +59,7 @@ int syscall_munmap( unsigned long addr, size_t len)
 
 int syscall_fork(){
     long long int ret;
+    
     __asm__ __volatile__(
         "movq $57, %%rax;"
         "int $0x80;"
@@ -54,6 +68,7 @@ int syscall_fork(){
         :
         :"rax"
     );
+    
     return ret;
 }
 
@@ -345,22 +360,23 @@ int syscall_close(unsigned int fd)
 	return ret;
 }
 
-int syscall_open (const char* file, int flags) {
-	// returns the file descriptor
-	long long int file1 =(long long int) file;
-	long long int flags1 = (long long int)flags;
-	long long int ret;
 	
-	__asm__ __volatile__(
-		"movq $2, %%rax;"
-		"movq %1 ,%%rbx;"
-		"movq %2, %%rcx;"
-		"movq $0 ,%%rdx;"
-		"syscall;"
-		"movq %%rax, %0;"
-		:"=r"(ret)
-		:"r" (file1), "r"(flags1)
-		:"rax","rbx","rcx","rdx"
-	);
-	return ret;
+size_t syscall_open (const char *filename, int flags, int mode)
+{
+        long long int filename1= (long long int)filename ;
+        long long int flags1=(long long int)flags;
+        long long int mode1= (long long int)mode;
+         long long int ret;
+        __asm__(
+                "movq $2, %%rax;"
+                "movq %1,%%rdi;"
+                "movq %2,%%rsi;"
+                "movq %3,%%rdx;"
+                "int $0x80;"
+                "movq %%rax,%0"
+                :"=r"(ret)
+                :"r"(filename1),"r"(flags1),"r"(mode1)
+                :"rax","rdi","rsi","rdx"
+                );
+        return ret;
 }

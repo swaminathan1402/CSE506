@@ -51,7 +51,7 @@ __asm__ __volatile__(
 "movq %%rdi,%1;"
 "movq %%rsi, %2;"
 "movq %%rdx, %3;"
-"movq %%r10,%4;"
+"movq %%r10, %4;"
 "movq %%r9 , %5;"
 "movq %%r8 , %6;"
 :"=m"(rax),"=m"(rdi), "=m"(rsi), "=m"(rdx), "=m"(r10), "=m"(r9), "=m"(r8) 
@@ -62,6 +62,7 @@ unsigned int fd;
 char* buf, arguments ;
 size_t count;
 const char* filename; 
+int ret;
 int flags;
 int mode, waiting_pid;
 int ps_pid, process_to_kill;
@@ -81,7 +82,19 @@ fd= (uint64_t)rdi;
 buf =(char *)rsi;
 count = (size_t)rdx;
 //kprintf("%d, %d, %d ", fd, buf, count);
+
+if(fd==0)
 terminal_read(fd, buf, count);
+else
+{
+ret =readfromFile(fd, buf, count);
+  __asm__ __volatile__(
+	"movq %0, %%rax;"
+	:
+	:"m"(ret)
+	:
+  );
+}
 break;	
 
 case 1: //sys write
@@ -143,10 +156,10 @@ case 11: //sys_munmap
 kprintf("%p %d ", addr,length);
 break;
 
-case 22: //sys_pipe
- filedes= (int *)rdi;
-kprintf("%p" , filedes);
+case 22: //sys_ps
+ getprocessList();
 break ;
+
 
 case 24: // sys_yield
   //yield();
@@ -196,6 +209,39 @@ case 61: // waitpid
   break;
 
 case 78 ://sys_getdents
+fd= (uint64_t)rdi;
+buf =(char *)rsi;
+count = (size_t)rdx;
+ret =readDents(fd,buf);
+__asm__ __volatile__(
+"movq %0 , %%rax;"
+:
+:"m"(ret)
+:
+);
+break;
+
+case 79: //sys_getcwd(); 
+buf=(char*)rdi ; 
+count=(size_t)rsi;
+buf =getCurrentPath(buf, count);
+__asm__ __volatile__(
+"movq %0 , %%rax"
+:
+:"m"(buf)
+:
+);
+break;
+
+case 80: //sys_chdir();
+buf= (char*)rdi;
+ret =setCurrentPath(buf);
+__asm__ __volatile__(
+"movq %0 , %%rax"
+:
+:"m"(ret)
+:
+);
 break;
 
 case 123:  // ps

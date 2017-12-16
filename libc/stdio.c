@@ -204,14 +204,7 @@ void *memcopy(void *dst, void *src, size_t n )
     unsigned char *temp2 = src;
     while(n--) {
 	*temp++ = *temp2++;
-	/*
-	if(n==0){
-	    printf("Ran till 0\n");
-	}
-	*/
     }
-    //printf("Exited loop\n");
-    //while(1);
     return;
 }
 
@@ -221,7 +214,7 @@ int scanf(const char *fmt, void* pointer){
     int type = fmt[1];
     switch (type){
         case 'd':{
-            syscall_read(1, buffer, 256);
+            syscall_read(0, buffer, 256);
             int scanned_input;
             scanned_input = atoi(buffer);
             int *new_pointer = (int *)pointer;
@@ -229,16 +222,13 @@ int scanf(const char *fmt, void* pointer){
             break;
             }   
         case 's':{
-            printf("About to read");
-            int read_count = syscall_read(1, buffer, 256);
-            printf("Output: %s", buffer);
+            int read_count = syscall_read(0, buffer, 256);
+            printf("Read count: %d", read_count);
             memcopy(pointer, (void *)buffer, read_count);
-            printf("memcopy returned");
-            printf("%s", pointer);
             break;
         }   
         case 'c':{
-            syscall_read(1, buffer, 1); 
+            syscall_read(0, buffer, 1); 
             char *new_pointer = (char*)pointer;
             *new_pointer = *(char*)buffer;
             break;

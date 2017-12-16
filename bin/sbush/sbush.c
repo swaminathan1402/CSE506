@@ -35,9 +35,9 @@ void parseExportArguments(char *);
 
 char *commandParser(){
 	char buffer[200] = "\0";
-	//syscall_read(0, buffer, 200); // 100
 	scanf("%s", buffer);
 	char *cmd = sanitize(buffer);
+	printf("Done scanning\n");
 	return cmd;
 }
 
@@ -123,10 +123,11 @@ void handle_pipes(char *command, int numberOfCommands){
 
 void runBinary(char *command, char *args, int bgprocess){
 	int status;
-	printf("About to call fork");
-	pid_t pid = syscall_fork();
-	while(1);
-	printf("About to call fork");
+	printf("Run binary");
+	printf("Args: %s", args);
+	//int pid = syscall_fork();
+	int pid = 0;
+	printf("About to call fork: %d", pid);
 	if(pid == 0){
 		char *arguments = args;
 		if(strlen(args) == 0) {
@@ -141,8 +142,9 @@ void runBinary(char *command, char *args, int bgprocess){
 		}
 		strcat(final_command, command);
 		printf("Final command: %s\n", final_command);
-		int ret = syscall_execvpe(final_command, cmd_arr, NULL);
-		syscall_exit(ret);
+		printf("Arguments: %s\n", cmd_arr);
+		//int ret = syscall_execvpe(final_command, cmd_arr, NULL);
+		//syscall_exit(ret);
 	} else if(pid > 0){
 		if(bgprocess == 1){
 			return;
@@ -154,6 +156,7 @@ void runBinary(char *command, char *args, int bgprocess){
 
 		}
 	} 
+
 }
 
 void interpretCommand(char *command){
@@ -174,9 +177,6 @@ void interpretCommand(char *command){
 	if(isCommandsPiped > 1){
 		// pipe commands
 		handle_pipes(command, isCommandsPiped);
-		/*
-		char *msg = "commands are piped \n";
-		*/
 		return;
 	}
 	// actual command interpretation starts here
@@ -190,6 +190,7 @@ void interpretCommand(char *command){
 	}
 	function[i] = '\0';
 	i+=1;
+	printf("Here\n");
 	while(command[i] != '\0'){
 		arguments[j] = command[i];
 		i++;
@@ -239,10 +240,8 @@ void interpretCommand(char *command){
 	}
 
 	else {
-	printf("Works till here");
+	        printf("Arguments: %s", arguments);
 		runBinary(function, arguments, runAsBackgroundProcess);
-	printf("Works till here");
-	while(1);
 		return;
 	}
 	return;
@@ -334,7 +333,7 @@ int main(int argc, char* argv[], char* envp[]){
 		//char buffer[1024];
 		//int size = syscall_read(0, buffer, 1024);
 		char *command = commandParser();
-                //printf("CMD Output: %s", command);
+                printf("CMD Output: %s", command);
 		interpretCommand(command);
 		printf("%s", shell);
 	}
@@ -522,7 +521,7 @@ void parseExportArguments ( char * arguments) {
 
 void runScripts(char arguments[10][1024]){
 	char *filename = arguments[1];
-	int fd = syscall_open(filename, 0);
+	int fd = syscall_open(filename, 0, 0);
 	char bigBuffer[10240];
 	int i = 0;
 	int line_number = 0;
@@ -546,6 +545,7 @@ void runScripts(char arguments[10][1024]){
 				temp[j] = '\0';
 				char *generated_command = sanitize(temp);
 				interpretCommand(generated_command);
+				//printf("Generated Command: %s\n", generated_command);
 				printf("\n"); 
 			}
 			j = 0;
