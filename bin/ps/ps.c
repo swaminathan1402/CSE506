@@ -1,4 +1,6 @@
 #include<stdio.h>
+#include <syscall.h>
+/*
 int syscall_write(int fd, char *buffer, int count){
 
 
@@ -21,7 +23,7 @@ int syscall_write(int fd, char *buffer, int count){
     );
     return ret;
 }
-
+*/
 int syscall_ps(){
 	long long int ret;
 	__asm__ __volatile__(

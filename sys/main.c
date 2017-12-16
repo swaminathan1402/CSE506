@@ -208,9 +208,16 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   */
 							
 
-  zombieProcessList= (tasklist*) get_free_page();
+	 zombieProcessList= (tasklist*) get_free_page();
+	 memset(zombieProcessList ,4096,0) ;
+	runningProcessList= (tasklist*) get_free_page();
+	 memset(runningProcessList, 4096,0);
+	 waitProcessList= (tasklist*) get_free_page();	
+	 memset(waitProcessList,4096,0);
+/*  zombieProcessList= (tasklist*) get_free_page();
   runningProcessList= (tasklist*) get_free_page();
   waitProcessList= (tasklist*) get_free_page();	
+*/
   tarfs_read();
   
   read_elf(idle_elf,0);	// idle is elf type and global

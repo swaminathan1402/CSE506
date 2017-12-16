@@ -282,7 +282,6 @@ syscall_write(1, strin,size);
 }
 
 
-
 int main(int argc, char *argv[], char *envp[]){
   //syscall_write(0, "hello world\n", 11); 
   //syscall_write(0, "hello world\n", 11); 
@@ -290,8 +289,10 @@ int main(int argc, char *argv[], char *envp[]){
   int pid = syscall_fork();
   if (pid == 0){
     syscall_write(0, "child process\n", 14);
-    //char *command_args[] = {"bin/echo", "hello mister karey ka sister", (char *)0};
-    //syscall_execvpe("bin/echo", command_args, (char *)0); // TODO
+    char *command_args[] = {"bin/echo", "hello mister karey ka sister", NULL};
+   syscall_execvpe("bin/echo", command_args,NULL); // TODO
+	while(1);
+
     //syscall_write(0 , "childprocess\n" , 13);
 
     //int fd = openDir("bin/",0);
