@@ -24,7 +24,7 @@ typedef struct task{
 	PTE* pte;
 	int status;
 	int pid;
-        struct mm_struct *mm ;
+        mm_struct *mm ;
 	int isChild;
 	struct task *parent;  //for pid inheritance
 	struct task *child;	
@@ -67,7 +67,7 @@ int exec(char *);
 void getprocessList();
 
 int kill_process(int);
-void temp_yield();
+void temp_yield(int);
 void waiting_on_pid(int);
 void addtozombieList(task*);
 void addtowaitList( task*);

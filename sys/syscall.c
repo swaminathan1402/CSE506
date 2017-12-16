@@ -75,6 +75,8 @@ unsigned long flag;
 unsigned long off ;
 size_t length;
 int* filedes;
+int bytes_page;
+uint64_t allocated_page;
 switch (rax)
 {
 case 0: //Sys read 
@@ -141,19 +143,37 @@ kprintf("%d, %d, %d ", fd, offset, origin);
 break;
 
 case 9: //sys_mmap
+ /*
  addr= (uint64_t)rdi;
  len =(uint64_t)rsi;
  prot=(uint64_t)rdx;
  flag= (uint64_t)r10;
  fd = (uint64_t)r8;
  off =(uint64_t)r9;
-kprintf("%p, %d, %d, %d , %d, %d", addr, len, prot, flag, fd, off);
+ */
+  bytes_page = (int)rdi;
+  allocated_page = allocate_page(bytes_page);
+  //kprintf("[Kernel]: Genuinely returning %p\n", allocated_page);
+  __asm__ __volatile__(
+	"movq %0, %%rax;"
+	:
+	:"m"(allocated_page)
+	:
+  );
+// kprintf("%p, %d, %d, %d , %d, %d", addr, len, prot, flag, fd, off);
 break;
                                                                 
 case 11: //sys_munmap
  addr = (uint64_t)rdi;
- length= (size_t)rsi;
-kprintf("%p %d ", addr,length);
+ //length= (size_t)rsi;
+ int status_1 = unmap(addr);
+ kprintf("[Kernel] Unmap %p\n ", status_1);
+  __asm__ __volatile__(
+	"movq %0, %%rax;"
+	:
+	:"m"(status_1)
+	:
+  );
 break;
 
 case 22: //sys_ps
@@ -170,7 +190,7 @@ case 24: // sys_yield
 	:
     );
   //kprintf("yield");
-  temp_yield();
+  temp_yield(0);
   break;
 
 case 57:

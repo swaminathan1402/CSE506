@@ -11,15 +11,20 @@
 #define STACK_REGION_END   0x0000000
 
 #define HEAP_REGION_START  0x8000000
+#define VMA_STACK_TYPE 1
+#define VMA_HEAP_TYPE 2
+#define VMA_ANON_TYPE 3
+#define VMA_TEXT_TYPE 4
 
-struct vm_area_struct{
+
+typedef struct vm_area_struct{
     uint64_t vm_start;
     uint64_t vm_end;
     //Address range for the VMA
     
-    uint64_t vm_page_prot; //Protection bits applied to PTE. Architecture specific
+    //uint64_t vm_page_prot; //Protection bits applied to PTE. Architecture specific
     
-    int vm_flags; //Architecture independent. Refer https://stackoverflow.com/questions/8035504/vm-flags-vs-vm-page-prot
+    //int vm_flags; //Architecture independent. Refer https://stackoverflow.com/questions/8035504/vm-flags-vs-vm-page-prot
 
     uint64_t max_size; //Max size to which vma can grow. ????
 
@@ -33,9 +38,15 @@ struct vm_area_struct{
 
     struct vm_area_struct* prev;
 
-};
+    int vma_type;
 
-struct vm_area_struct* get_vm_area_struct();
-struct vm_area_struct* init_vm_area_struct(uint64_t, uint64_t,uint64_t, uint64_t, int, struct vm_area_struct*, struct vm_area_struct*);
-void print_vma_content(struct vm_area_struct* vma);
+}vm_area_struct;
+
+//struct vm_area_struct* get_vm_area_struct();
+//struct vm_area_struct* init_vm_area_struct(uint64_t, uint64_t,uint64_t, uint64_t, int, struct vm_area_struct*, struct vm_area_struct*);
+//void print_vma_content(struct vm_area_struct* vma);
+
+vm_area_struct *create_new_vma(uint64_t, uint64_t, uint64_t, int); 
+
+
 #endif

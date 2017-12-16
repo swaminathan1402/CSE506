@@ -80,8 +80,6 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
     first_free_page = (freelist *)(physfree);
     first_free_page->next = NULL;
     first_free_page->prev = NULL;
-    first_free_page->reference_count = 0;
-    first_free_page->page = (real_page*)(physfree);
 
     current_free_page = first_free_page;
     for(smap = (struct smap_t*)(modulep+2); smap < (struct smap_t*)((char*)modulep+modulep[1]+2*4); ++smap) {
@@ -211,8 +209,11 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
 							
 
   zombieProcessList= (tasklist*) get_free_page();
+  zombieProcessList = NULL;
   runningProcessList= (tasklist*) get_free_page();
+  runningProcessList = NULL;
   waitProcessList= (tasklist*) get_free_page();	
+  waitProcessList = NULL;
   tarfs_read();
   
   read_elf(idle_elf,0);	// idle is elf type and global

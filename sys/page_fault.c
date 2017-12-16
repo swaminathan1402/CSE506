@@ -3,6 +3,9 @@
 #include<sys/page_table.h>
 #include<sys/page.h>
 #include<sys/memory.h>
+#include<sys/task.h>
+#include<sys/mm_struct.h>
+#include<sys/vm_area_struct.h>
 void page_fault()
 {
 uint64_t faulting_address;
@@ -18,7 +21,26 @@ __asm__ __volatile__(
 if(!(err_code & 0x1 ) && (err_code& 0x4))
 {
 	kprintf("\nPage not present in user mode %p ", faulting_address);
-	//kprintf("\nPage not present in user mode %p", faulting_address);
+	int found = 0;
+	mm_struct *mm = runningTask->mm;
+	vm_area_struct *vmas = mm->head;
+	while(vmas->next != mm->head){
+		if(faulting_address >= vmas->vm_start && faulting_address <= vmas->vm_end){
+			found = 1;
+			//setMap(faulting_address, faulting_address, 1);
+			break;
+		}
+		vmas = vmas->next;
+	}
+	if(faulting_address >= vmas->vm_start && faulting_address <= vmas->vm_end){
+		found = 1;
+		//setMap(faulting_address, faulting_address, 1);
+	}
+	if(!found){
+		int kpid = kill_process(runningTask->pid);
+		kprintf("Segmentation Fault! [%d]\n", kpid);
+		temp_yield(1);
+	}
 	setMap(faulting_address, faulting_address, 1);
 	reloadCR3();	
 }

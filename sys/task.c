@@ -154,7 +154,7 @@ void remove_page(uint64_t rm_page){
 
 	first_free_page->prev = newpage;
 	first_free_page = newpage;
-	kprintf("first_free_page is %p %p\n", first_free_page, rm_page);
+	//kprintf("first_free_page is %p %p\n", first_free_page, rm_page);
 
 }
 
@@ -215,6 +215,9 @@ void free(task *zombie_process){
 
 	remove_page((uint64_t)zpml4e);
 	pages_to_free++;
+
+	// reap VMA : TODO
+	
 	//uint64_t freak_page = (uint64_t)get_free_page();
 	//kprintf("freak page is %p \n", freak_page);
 	//changeCR3((PML4E *)kernel_pml4e, (PDPE *)kernel_pdpe, (PDE *)kernel_pde, (PTE *)kernel_pte, 0);
@@ -243,8 +246,9 @@ int exec(char *filename){
 }
 
 void waiting_on_pid(int child_pid){
-
+	
 	runningTask->status = SLEEPING_PROCESS_STATUS;
+	/*
 	task *child = runningTask->next;
 	task *prev = runningTask->prev;
 	task *nextTask = child->next;
@@ -255,8 +259,8 @@ void waiting_on_pid(int child_pid){
 	runningTask->prev = child;
 	runningTask->next = nextTask;
 	nextTask->prev = runningTask;
-
-	temp_yield();
+	*/
+	temp_yield(0);
 }
 
 task* createChildTask(){
@@ -297,7 +301,15 @@ task* createChildTask(){
         childTask->regs.cr3 = (uint64_t)childTask->pml4e;
 	
 	
+	a = (uint64_t)get_free_page();
+	b = (uint64_t)get_free_page();
+	childTask->mm = get_mm_struct();
+	//vm_area_struct *new_stack_vma = create_new_vma(me->regs.user_rsp, me->regs.user_rsp + 4096, 8192, VMA_STACK_TYPE);
+	//init_insert_vma(me->mm, new_stack_vma);
+
+
 	deepCopyPageTable((uint64_t)childTask);
+	deepCopy_mm_structs((uint64_t)childTask);
 	
 	//Copy kernel stack of runningTask  on child and move rsp to align with parent's current rsp
 
@@ -314,23 +326,16 @@ task* createChildTask(){
 	// Copy the complete user stack
 	uint64_t user_rsp_start_addr = *((uint64_t *)(parent_rsp + 24));
 	int size_of_user_stack = runningTask->regs.user_rsp - user_rsp_start_addr;
-	//kprintf("the user rsp start addr %p %d\n", user_rsp_start_addr, size_of_user_stack);
 
 	childTask->regs.user_rsp -= size_of_user_stack;
-	memcpy(childTask->regs.user_rsp, user_rsp_start_addr, size_of_user_stack);
+	//memcpy(childTask->regs.user_rsp, user_rsp_start_addr, size_of_user_stack);
 
-	/*
-	task *nextTask = runningTask->next;
-	runningTask->next = childTask;
-	childTask->next = nextTask;
-	*/
 	task *nextTask = runningTask->next;
 	childTask->next = nextTask;
 	childTask->prev = runningTask;
 	runningTask->next = childTask;
 	nextTask->prev = childTask;
 
-	//kprintf("DUDE %p and %p\n", childTask->regs.rip, childTask->regs.rsp);
 	__asm__ __volatile__(
         "movq %%rsp, %%r11;"
         "movq %1, %%rsi;"
@@ -360,14 +365,14 @@ task* createChildTask(){
 
 void addVMAtoTask(task* me ,struct vm_area_struct* new_vma )
 {
-	
+	/*
 	struct vm_area_struct* vm_area_temp1;
 	struct vm_area_struct*  vm_area_temp;
 	if(me->mm ==NULL)
 	{
-	me-> mm->head= new_vma;
-	new_vma->prev= NULL;
-	new_vma->next =NULL;
+		me-> mm->head= new_vma;
+		new_vma->prev= NULL;
+		new_vma->next =NULL;
 	} 
 	else
 	{
@@ -405,14 +410,15 @@ void addVMAtoTask(task* me ,struct vm_area_struct* new_vma )
 			else
 			{
 			//Case 2:Insert at end by truncating  and assume  that pages of not same permissions	
-			vm_area_temp1->vm_end = new_vma->vm_start;
-			vm_area_temp1->next = new_vma;
-			new_vma->prev= vm_area_temp1;
-			new_vma->next= vm_area_temp;
-			vm_area_temp-> prev= new_vma;
+				vm_area_temp1->vm_end = new_vma->vm_start;
+				vm_area_temp1->next = new_vma;
+				new_vma->prev= vm_area_temp1;
+				new_vma->next= vm_area_temp;
+				vm_area_temp-> prev= new_vma;
 			}
 		}
-	}	
+	}
+	*/
 }
 
 void createTask(
@@ -426,7 +432,15 @@ void createTask(
 	me->regs.rip = (uint64_t)main;
 	me->regs.cr3 = page_dir;
 	me->regs.rsp = (uint64_t)get_free_page() + 4096;  // create stack at the top of the page, so that it can grow downwards and not go to the previous page
-	me->regs.user_rsp = (uint64_t)get_free_user_page() + 4096;	
+	me->regs.user_rsp = (uint64_t)get_free_user_page() + 4096;
+
+
+	uint64_t a = (uint64_t)get_free_page();
+	uint64_t b = (uint64_t)get_free_page();
+	me->mm = get_mm_struct();
+	vm_area_struct *new_stack_vma = create_new_vma(me->regs.user_rsp-4096, me->regs.user_rsp, 8192, VMA_STACK_TYPE);
+	init_insert_vma(me->mm, new_stack_vma);
+
 	me->pid = pid;
 	me->isChild = 0;
        uint64_t *pointer_to_pml4e = (uint64_t *)get_free_page();
@@ -445,7 +459,6 @@ void createTask(
 
 	me->pml4e[511] = pml4e[511];
 	me->regs.cr3 = (uint64_t)me->pml4e;
-	me->mm =NULL ; 
 
 	if(runningTask == NULL){
 		runningTask = me;
@@ -586,6 +599,40 @@ void removefromOtherLists(task * temp)
 
 void addtoZombieList(task* temp)
 {
+	temp->status = ZOMBIE_PROCESS_STATUS;
+	tasklist *new_zombie = (tasklist *)get_free_page();
+	new_zombie->pid = temp->pid;
+	new_zombie->entry = temp;
+	new_zombie->next = NULL;
+	if(zombieProcessList->entry == NULL){
+		kprintf("zombie is empty!\n");
+		zombieProcessList = new_zombie;
+	} else {
+		new_zombie->next = zombieProcessList;
+		zombieProcessList = new_zombie;
+	}
+	kprintf("added zombie %p!\n", new_zombie);
+	/*
+	tasklist* current_zombie =zombieProcessList;
+	if(current_zombie==NULL)
+	{
+		current_zombie->pid = temp->pid;
+		current_zombie->entry= temp;
+		current_zombie->next=NULL;
+	}
+	else
+	{
+		tasklist* temp1= (tasklist*) zombieProcessList;
+		while(current_zombie != NULL){
+			current_zombie = current_zombie->next;
+		}
+		current_zombie->pid =temp->pid;
+		current_zombie->next =NULL;
+		current_zombie->entry= temp;
+		zombieProcessList= temp1;
+	}
+	*/
+/*
 temp->status = ZOMBIE_PROCESS_STATUS;
 tasklist* temp1= (tasklist*) zombieProcessList;
 tasklist* current_zombie =zombieProcessList;
@@ -598,19 +645,34 @@ current_zombie->next =NULL;
 current_zombie->entry= temp;
 zombieProcessList= temp1;
 removefromOtherLists(temp);
+*/
 }
 
 
 
 void addtoRunningList(task* temp)
 {
-temp->status =RUNNING_PROCESS_STATUS;
+	temp->status =RUNNING_PROCESS_STATUS;
+	tasklist *running_process = (tasklist *)get_free_page();	
+	running_process->pid = temp->pid;
+	running_process->entry = temp;
+	running_process->next = NULL;
+
+	if(runningProcessList == NULL){
+		runningProcessList = running_process;
+	} else {
+		running_process->next = runningProcessList;
+		runningProcessList = running_process;
+	}
+	kprintf("added running process %p!\n", running_process);
+/*
 tasklist* current_running= (tasklist*) runningProcessList;
 current_running->pid =temp->pid;
 current_running->next =NULL;
 current_running->entry =temp;
 runningProcessList= current_running;
 removefromOtherLists(temp);
+*/
 }
 
 void addtoWaitList(task* temp)
@@ -638,23 +700,25 @@ void getprocessList()
 	kprintf("\n %x \t ZOMBIE ",current_zombie->pid );
 	current_zombie = current_zombie->next;
 	}
-	//kprintf("\n %d \t ZOMBIE",current_zombie->pid );
+	
+	kprintf("\n %x \t RUNNING ", runningTask->pid );
+	/*
 	tasklist* current_running = (tasklist*)runningProcessList;
+	
 	while(current_running !=NULL)
 	{
-		kprintf("\n %x \t RUNNING ",current_running->pid );
         	current_running = current_running->next;
        	}
- //       kprintf("\n %d \t RUNNING",current_running->pid );
-
-tasklist* current_waiting = (tasklist*)waitProcessList;
-while(current_running !=NULL)
-{
-	kprintf("\n %x \t WAITING ",current_waiting->pid );
-        current_waiting = current_waiting->next;
-}
-   //     kprintf("\n %d \t WAITING",current_waiting->pid ); }
-
+	*/
+	
+	/*
+	tasklist* current_waiting = (tasklist*)waitProcessList;
+	while(current_running !=NULL)
+	{
+		kprintf("\n %x \t WAITING ",current_waiting->pid );
+        	current_waiting = current_waiting->next;
+	}
+	*/
 }
 
 
@@ -692,6 +756,7 @@ int kill_process(int kpid){
 		
 		if(temp->child)
 			temp->child->parent = lastTask; // changing the child's parent to idleTask
+		addtoZombieList(temp);
 		// add to zombie queue
 
 	}
@@ -705,12 +770,11 @@ void removeTask(){
 	changeCR3((PML4E *)kernel_pml4e, (PDPE *)kernel_pdpe, (PDE *)kernel_pde, (PTE *)kernel_pte, 0);
 	free(runningTask);
 
-	kprintf("[Kernel]: Adding %p to zombie queue\n", runningTask);
+	kprintf("[Kernel PID:%d]: Adding %p to zombie queue\n", runningTask->pid);
 	runningTask->prev->next = runningTask->next;
 	runningTask->next->prev = runningTask->prev;
 	runningTask->status = ZOMBIE_PROCESS_STATUS; 
-	//addtoZombieList(runningTask);
-	//getprocessList();
+	addtoZombieList(runningTask);
 	
 	//kprintf("Changed the task from %d to %d and prev is %d\n", runningTask->pid, next->pid, temp->pid);
 
@@ -732,11 +796,12 @@ void removeTask(){
 		:
 		:
 	);
+	getprocessList();
 	switch_to_ring_3(runningTask->regs.rip);
 	
 }
 
-void temp_yield(){
+void temp_yield(int exec_next){
 
 	uint64_t *new_rip = *(uint64_t *)parent_rsp;
 	runningTask->regs.rip = (uint64_t)new_rip;
@@ -759,6 +824,12 @@ void temp_yield(){
 		:"m"(runningTask), "m"(runningTask->next)
 		:
 	);
+	/*
+	if(exec_next){
+	} else {
+		runningTask = runningTask->prev;
+	}
+	*/
 	runningTask = runningTask->next;
 	__asm__ __volatile__ (
 		"movq (%%rsi), %%rsp;"  // change the stack

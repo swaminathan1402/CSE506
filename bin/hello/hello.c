@@ -281,15 +281,93 @@ syscall_write(1, strin,size);
 //syscall_close(filename);
 }
 
+uint64_t syscall_mmap(int bytes){
 
+    
+    long long int ret;
+    long long int bytes1 = (long long int) bytes;
+     __asm__(
+	"movq $9,%%rax;"
+	"movq %1,%%rdi;"
+        "int $0x80;"
+	"movq %%rax, %0;"
+	:"=r"(ret)
+	:"r"(bytes1)
+	:"rax", "rdi"
+	);
+
+    return ret;
+}
+
+uint64_t syscall_munmap(uint64_t addr){
+
+    long long int ret;
+    long long int addr1 = (long long int) addr;
+     __asm__(
+	"movq $11, %%rax;"
+	"movq %1, %%rdi;"
+        "int $0x80;"
+	"movq %%rax, %0;"
+	:"=r"(ret)
+	:"r"(addr1)
+	:"rax", "rdi"
+	);
+
+    return ret;
+}
+
+void *malloc(int bytes){
+	uint64_t addr = syscall_mmap(bytes);
+	return (void*)addr;	
+}
+
+void free(uint64_t addr){
+
+	syscall_munmap(addr);
+}
 
 int main(int argc, char *argv[], char *envp[]){
-  //syscall_write(0, "hello world\n", 11); 
-  //syscall_write(0, "hello world\n", 11); 
-  //int pid = 0;
+for(int i=0; i<2; i++){
   int pid = syscall_fork();
   if (pid == 0){
     syscall_write(0, "child process\n", 14);
+    /*
+	Segmentation faul testing 
+    int *x = (int *)0xffffffffffffffff;
+    *x = *x + 20;
+    */
+    /*
+	Stack overflow testing	
+    char buffer[10000000];
+    int i=0;
+    while(1){
+	buffer[i] = 'a';
+	i++;
+	syscall_write(0, buffer, 10000000);
+    }
+    */
+	/*
+    syscall_write(0, "child process2\n", 14);
+    int c = (int)malloc(4);
+    int d = (int)malloc(123);
+    char *str = (char *)malloc(1024);
+    str = "nirvik ghosh is the best";
+    syscall_write(0, str, strlen(str));
+    free(str);
+	*/
+    //free(c);
+    //free(d);
+    /*
+		Multiple forks
+    int pid2 = syscall_fork();
+    if(pid2 == 0){
+
+	    syscall_write(0, "hello1\n", 5);
+    } else {
+
+	    syscall_write(0, "hello2\n", 5);
+    }
+    */
     //char *command_args[] = {"bin/echo", "hello mister karey ka sister", (char *)0};
     //syscall_execvpe("bin/echo", command_args, (char *)0); // TODO
     //syscall_write(0 , "childprocess\n" , 13);
@@ -333,25 +411,10 @@ int main(int argc, char *argv[], char *envp[]){
 	*/
 	
 } else {
-	//char buffer[20];
-	//syscall_getcwd(buffer,20);
-	//syscall_write(1, buffer ,strlen(buffer));
-	//int status; 
-	//int ret = syscall_waitpid(pid, &status, NULL);
+	int status; 
+	int ret = syscall_waitpid(pid, &status, NULL);
 	syscall_write(0, "good process\n", 12);
-	
-
   }
-/*
-char buffer[1024];
-syscall_read(1, buffer, 1024);
-syscall_write(0, buffer, 1024);
-
-
-
-
-
-
-*/
+}
 return ;
 }

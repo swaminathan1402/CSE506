@@ -14,7 +14,7 @@ void changeCR3(PML4E *new_pml4e, PDPE *new_pdpe, PDE *new_pde, PTE *new_pte, int
 		for(uint64_t i=0; i<1024;i++)
 		    setMap(i*4096, i*4096, 1); // kernel
 	}
-
+	//setMap(0xb8000, 0xb8000, 1);
 
 	__asm__ __volatile__(
         	"movq %0, %%cr3;"

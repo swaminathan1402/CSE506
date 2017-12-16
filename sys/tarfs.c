@@ -46,12 +46,16 @@ void read_elf(Elf64_Ehdr *file ,int index){
         );
 	createTask((void *)file->e_entry, rflags, cr3);
 	changeCR3(runningTask->pml4e, runningTask->pdpe, runningTask->pde, runningTask->pte, 1);
-	kprintf(" || time %p %p %p %p\n", pml4e, pdpe, pde, pte);
 	int count = file->e_phnum;
 	while(count > 0){
 		if(program_header->p_type != 0 && program_header->p_filesz > 0){
 			uint64_t virtual_limit_sz = program_header->p_vaddr + program_header->p_filesz;
 //		vm_area_struct new_vma =  init_vm_area_struct(program_header->p_vaddr , program_header->p_memsz+ program_header->p_vaddr,MAP ,NULL,NULL );
+			uint64_t lets_see_size = (uint64_t)(program_header->p_memsz+ program_header->p_vaddr);
+			vm_area_struct *new_vma = create_new_vma((uint64_t)program_header->p_vaddr, lets_see_size, lets_see_size, VMA_TEXT_TYPE);
+			//kprintf("%p %p %p %p %pnew vma\n", new_vma->vm_start, new_vma->vm_end, new_vma, runningTask, runningTask->mm);
+			init_insert_vma(runningTask->mm, new_vma);
+
 			// map those virtual addresses 
 			for(uint64_t i = program_header->p_vaddr; i<virtual_limit_sz; i+=4096){
 				setMap(i, i+index*0x10000, 1);
@@ -62,6 +66,20 @@ void read_elf(Elf64_Ehdr *file ,int index){
 		program_header = (Elf64_Phdr *)((uint64_t)program_header + file->e_phentsize); // program header entry size
 		count--;
 	}
+
+
+	/*
+	mm_struct *looper = runningTask->mm;
+	vm_area_struct *temp_crap = looper->head;
+
+	while(temp_crap->next != looper->head){
+		kprintf("[%p-%p]\n", temp_crap->vm_start, temp_crap->vm_end);
+		temp_crap = temp_crap->next;
+	}
+		kprintf("[%p-%p]\n", temp_crap->vm_start, temp_crap->vm_end);
+	while(1);
+	*/
+
 	setMap(runningTask->regs.user_rsp, runningTask->regs.user_rsp, 1);  // mapping the stacks as well
 	changeCR3((PML4E *)kernel_pml4e, (PDPE *)kernel_pdpe, (PDE *)kernel_pde, (PTE *)kernel_pte, 0);
 	kprintf("%p %p %p %p\n", pml4e, pdpe, pde, pte);
@@ -87,7 +105,7 @@ void tarfs_read(){
 		//kprintf("\n******Filename: %s Mode: %p Size: %d\n", file->name, file->mode, octal_to_decimal(file->size, 11));
 		Elf64_Ehdr *something = (Elf64_Ehdr *)(file + 1);
 		index++;
-		kprintf("Adding %s: %d %p < %p\n", file->name, index, file, (uint64_t)&_binary_tarfs_end);
+		//kprintf("Adding %s: %d %p < %p\n", file->name, index, file, (uint64_t)&_binary_tarfs_end);
 		if(strcmp(file->name, "bin/hello")==1){
 			sbush_elf = something;
 		}
