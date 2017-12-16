@@ -238,10 +238,16 @@ int exec(char *filename, char** arguments){
 
 	Elf64_Ehdr *the_elf = findElfByName(filename);
 	kprintf("%s, %s, %s", arguments[0], arguments[1], arguments[2]);
-	
+	char args[1024];
+	int len = strlen(arguments[1]);
+				for(int i=0; i<len; i++){
+					//kprintf("[Kernel]: dumping %c ", arguments[i]);
+					args[i] = arguments[1][i];
+				}	
 	load_binary(the_elf, 3);
 	
-	kprintf( "%s ,%s, %s" ,arguments[0],arguments[1], arguments[2]);
+	kprintf( "%s \n" ,args);
+	//kprintf( "%s ,%s, %s" ,arguments[0],arguments[1], arguments[2]);
 	while(1);
 	switch_to_ring_3();
 	return 0;
