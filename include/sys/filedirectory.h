@@ -7,7 +7,7 @@ typedef struct
 char *filename;
 struct filedir* parent;
 struct filedir* root;
-struct filedir* children[10];
+struct filedir* children[20];
 int type; //1: directory , 2:file
 int child_count; 
 uint64_t entry_pointer;

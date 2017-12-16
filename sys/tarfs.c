@@ -86,7 +86,7 @@ void read_elf(Elf64_Ehdr *file ,int index){
             :
         );
 	createTask((void *)file->e_entry, rflags, cr3);
-	load_vmas(file, runningTask->mm);
+	//load_vmas(file, runningTask->mm);
 	changeCR3(runningTask->pml4e, runningTask->pdpe, runningTask->pde, runningTask->pte, 1);
 	kprintf(" || time %p %p %p %p\n", pml4e, pdpe, pde, pte);
 	int count = file->e_phnum;
@@ -100,10 +100,6 @@ void read_elf(Elf64_Ehdr *file ,int index){
 				setMap(i, i+index*0x10000, 1);
 				uint64_t from_addr = (uint64_t)file + program_header->p_offset + (i - program_header->p_vaddr);
 				memcpy((void *)i, (void *)from_addr,  4096);
-				
-				
-
-			//	while(1);
 			}
 		}
 		program_header = (Elf64_Phdr *)((uint64_t)program_header + file->e_phentsize); // program header entry size
@@ -128,13 +124,14 @@ void tarfs_read(){
 	
 	
 
-	while((uint64_t)file < (uint64_t)&_binary_tarfs_end){
+	while((uint64_t)file <= (uint64_t)&_binary_tarfs_end ){
 		
 		int size_of_file = octal_to_decimal(file->size, 11);
 		//kprintf("\n******Filename: %s Mode: %p Size: %d\n", file->name, file->mode, octal_to_decimal(file->size, 11));
 		Elf64_Ehdr *something = (Elf64_Ehdr *)(file + 1);
 		index++;
 		if(strcmp(file->name, "bin/sbush")==1){
+		kprintf("Adding %s: %d %p < %p\n", file->name, index, file, (uint64_t)&_binary_tarfs_end);
 			sbush_elf = something;
 		}
 		if(strcmp(file->name, "bin/init")==1){
@@ -142,7 +139,6 @@ void tarfs_read(){
 		}	
 		if(strlen(file->name)!=0){
 			
-			//kprintf("Adding %s: %d", file->name, index);
 			create_File_Descriptor_Entry(file->name, index ,size_of_file , head, (uint64_t)file+512); 
 		}
 		if(size_of_file == 0) {
@@ -157,8 +153,7 @@ void tarfs_read(){
 
 		}
 	}
-
-	setCurrentPath("root/" );	
+	setCurrentPath("root/");	
 }
 
 Elf64_Ehdr *findElfByName(char *filename){

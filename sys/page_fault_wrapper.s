@@ -8,11 +8,10 @@ push %rax
 push %rbx
 push %rcx
 push %rdx
-push %rbp 
-push %rsi 
-push %rdi  
+push %rbp
+push %rsi
+push %rdi
 call page_fault
- 
 
 pop %rdi 
 pop %rsi 

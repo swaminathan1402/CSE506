@@ -198,7 +198,7 @@ case 59:
 
 
 case 60:
-  kprintf("WE HAVE TO EXIT NOW\n");
+  // kprintf("WE HAVE TO EXIT NOW\n");
   removeTask();
 break;
 
@@ -236,6 +236,7 @@ break;
 case 80: //sys_chdir();
 buf= (char*)rdi;
 ret =setCurrentPath(buf);
+print_File_Descriptor(fileDescriptor);
 __asm__ __volatile__(
 "movq %0 , %%rax"
 :
@@ -268,6 +269,9 @@ case 124: //kill
   );
   break;
   
+case 130: // clean zombies
+	clean_zombies();
+	break;
 
 default :
 kprintf("Syscall not handled yet");

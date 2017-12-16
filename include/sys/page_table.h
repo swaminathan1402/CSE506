@@ -97,4 +97,5 @@ void deepCopyPageTable(uint64_t);
 uint64_t checkCOW();
 void setCOW(uint64_t , uint64_t);
 void setWritable(uint64_t , uint64_t);
+void reloadCR3();
 #endif

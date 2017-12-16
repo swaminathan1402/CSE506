@@ -27,6 +27,7 @@ extern void timer_wrapper();
 extern void keyboard_wrapper();
 extern void page_fault_wrapper();
 extern void syscall_wrapper();
+extern void divide_by_zero_wrapper();
 
 void idt_entry_table(int index, uint64_t function)
 {
@@ -42,7 +43,10 @@ void idt_entry_table(int index, uint64_t function)
 
 void init_idt() {
 	for(int i=0; i<256; i++){
-		if(i == 33){
+                if(i == 0){
+                        idt_entry_table(i, (uint64_t)divide_by_zero_wrapper);
+                }
+		else if(i == 33){
 			idt_entry_table(i, (uint64_t)keyboard_wrapper);
 		} else if(i==14)
 		{	

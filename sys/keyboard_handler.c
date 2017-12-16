@@ -178,6 +178,14 @@ int getCharfromCode(unsigned char scan_code1)
 	else if(scan_code1 == 0x04){
 		return 123- offset;
 	}
+	else if(scan_code1 == 0x34){
+	    if(shiftFlag) return 62;
+	    return 46;
+	}
+	else if(scan_code1 == 0x35){
+	    if(shiftFlag) return 63;
+	    return 47;
+	}
 	return 0;
 }
 

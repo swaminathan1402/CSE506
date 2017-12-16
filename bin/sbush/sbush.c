@@ -30,6 +30,7 @@ int isPiped(char *);
 void modifyShellPrompt(char *, char *);
 char *getBaseName(char *);
 void runScripts(char arguments[10][1024]);
+void runScript(char *);
 void parseExportArguments(char *);
 
 
@@ -37,7 +38,6 @@ char *commandParser(){
 	char buffer[200] = "\0";
 	scanf("%s", buffer);
 	char *cmd = sanitize(buffer);
-	printf("Done scanning\n");
 	return cmd;
 }
 
@@ -142,21 +142,19 @@ void runBinary(char *command, char *args, int bgprocess){
 		}
 		strcat(final_command, command);
 		printf("Final command: %s\n", final_command);
-		printf("Arguments: %s\n", cmd_arr);
 		//int ret = syscall_execvpe(final_command, cmd_arr, NULL);
 		//syscall_exit(ret);
 	} else if(pid > 0){
 		if(bgprocess == 1){
+		        printf("Background");
 			return;
 		}
 		if(syscall_waitpid(pid, &status, 0) > 0){
 			if(WIFEXITED(status) && !WEXITSTATUS(status)){
 			} else{
 			}
-
 		}
 	} 
-
 }
 
 void interpretCommand(char *command){
@@ -190,7 +188,6 @@ void interpretCommand(char *command){
 	}
 	function[i] = '\0';
 	i+=1;
-	printf("Here\n");
 	while(command[i] != '\0'){
 		arguments[j] = command[i];
 		i++;
@@ -201,6 +198,7 @@ void interpretCommand(char *command){
 		runAsBackgroundProcess = 1;
 		arguments[j-1] = '\0';
 		j--;
+		printf("Runing as background\n");
 	}
 	while(arguments[j-1] == ' '){
 		arguments[j-1] = '\0';
@@ -216,6 +214,7 @@ void interpretCommand(char *command){
 	}
 	if(strcmp(function, "cd") == 1) {
 		//handle_cd(arguments); TODO
+		printf("Path: %s", arguments);
 		int ret = syscall_chdir(arguments);  // TODO: implement syscall_chdir
 		/*
 		if(ret == 0){
@@ -238,9 +237,12 @@ void interpretCommand(char *command){
 		parseExportArguments(arguments);
 		return;
 	}
+	if(function[0] == '.' && function[1] == '/'){
+	   printf("Run script\n"); 
+	   runScript(function);
+	}
 
 	else {
-	        printf("Arguments: %s", arguments);
 		runBinary(function, arguments, runAsBackgroundProcess);
 		return;
 	}
@@ -333,7 +335,6 @@ int main(int argc, char* argv[], char* envp[]){
 		//char buffer[1024];
 		//int size = syscall_read(0, buffer, 1024);
 		char *command = commandParser();
-                printf("CMD Output: %s", command);
 		interpretCommand(command);
 		printf("%s", shell);
 	}
@@ -519,6 +520,42 @@ void parseExportArguments ( char * arguments) {
 	}
 }
 
+void runScript(char *script_path){
+	char *filename = script_path;
+	int fd = syscall_open(filename, 0, 0);
+	char bigBuffer[10240];
+	int i = 0;
+	int line_number = 0;
+	int size = syscall_read(fd, bigBuffer, 1024); // read 1KB each time 
+	char temp[1024] = "\0";
+	int j = 0;
+	while(size > 0){
+            while(bigBuffer[i]!='\0' && bigBuffer[i] != '\n'){
+                    if(line_number > 0){
+                            temp[j] = bigBuffer[i];
+                            j++;
+                    }
+                    i++;
+            }
+            if(bigBuffer[i] == '\0'){
+                    size = syscall_read(fd, bigBuffer, 1024);
+                    i=0;
+            } 
+            if(bigBuffer[i] == '\n'){
+                    if(line_number > 0) {
+                            temp[j] = '\0';
+                            char *generated_command = sanitize(temp);
+                            //interpretCommand(generated_command);
+                            printf("Generated Command: %s\n", generated_command);
+                            printf("\n"); 
+                    }
+                    j = 0;
+                    line_number++;
+                    i++;
+            }
+    }
+}
+
 void runScripts(char arguments[10][1024]){
 	char *filename = arguments[1];
 	int fd = syscall_open(filename, 0, 0);
@@ -544,8 +581,8 @@ void runScripts(char arguments[10][1024]){
 			if(line_number > 0) {
 				temp[j] = '\0';
 				char *generated_command = sanitize(temp);
-				interpretCommand(generated_command);
-				//printf("Generated Command: %s\n", generated_command);
+				//interpretCommand(generated_command);
+				printf("Generated Command: %s\n", generated_command);
 				printf("\n"); 
 			}
 			j = 0;

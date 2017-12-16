@@ -215,12 +215,12 @@ int syscall_chdir(const char *filename){
 	long long int ret;
 	__asm__ (
 	"movq $80, %%rax;"
-	"movq %1,%%rbx;"
-	"syscall;"
+	"movq %1,%%rdi;"
+	"int $0x80;"
 	"movq %%rax, %0;"
 	:"=r"(ret)
 	:"r"(filename1)
-	:"rax", "rbx"
+	:"rax", "rdi"
 	);
 	return ret;
 }
@@ -302,7 +302,7 @@ int syscall_write(int fd, char *buffer, int count){
     );
     return ret;
 }
-char* syscall_getcwd (char *buf , size_t size) {
+char* syscall_getcwd (char *buf, size_t size) {
 
 	long long int buf1 = (long long int) buf;
 	long long int size1 = (long long int) size;
@@ -311,7 +311,7 @@ char* syscall_getcwd (char *buf , size_t size) {
 		"movq $79, %%rax;"
 		"movq %1,%%rbx;"
 		"movq %2,%%rcx;"
-		"syscall;"
+		"int $0x80;"
 		"movq %%rax, %0;"
 		:"=m"(buf1)
 		:"r"(buf1), "r"(size1)

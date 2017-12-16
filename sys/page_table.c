@@ -70,7 +70,7 @@ void setCOW(uint64_t faulting_address ,uint64_t value)
  	PDPE *some_pdpe = (PDPE*)(uint64_t)((parent_pml4e+pml4e_index)->page_directory_pointer_base_address << 12);
  	PDE *some_pde = (PDE *)(uint64_t)((some_pdpe + pdpe_index)->page_directory_base_address << 12);
  	PTE *some_pte = (PTE *)(uint64_t)((some_pde + pde_index)->page_table_base_address << 12);      
- 	(some_pte +pte_index)->cow= value &0x1;	
+ 	(some_pte +pte_index)->cow= value & 0x1;	
 	return;
 }
 
@@ -124,8 +124,11 @@ void init_pd(PTE* first_pte, PML4E* first_pml4e, uint64_t from, int size){
 	//setMap(0xffffffff800b8000, 0xb8000);
 	setMap(0xb8000, 0xb8000, 0);
 	int i;
-	for(i=0; i<1024;i++)
+	for(i=0; i<2048;i++){
+		
 	    setMap(i*4096, i*4096, 0); // kernel
+	    //setMap(i*4096 | 0xffffffff00000000, i*4096 | 0xffffffff00000000, 0); // kernel
+	}
 	__asm__ __volatile__(
         	"movq %0, %%cr3;"
         	:
@@ -165,6 +168,7 @@ void deepCopyPageTable(uint64_t child){
 		if((parent_pml4e + pml4e_index)->p == 0){
 			continue;
 		} else{
+			kprintf("[Kernel] parent pml4e index %d\n", pml4e_index);
 			if((child_pml4e+ pml4e_index)->p == 0){
 				uint64_t *some_page = (uint64_t *)get_free_page();
 				memset(some_page, 0, 4096);
@@ -304,10 +308,8 @@ void setMap(uint64_t virtual_addr, uint64_t physical_addr, int user_accessible){
                 		(pte + pte_index)->rw = 1;
                 		(pte + pte_index)->p  = 1;
                 		(pte + pte_index)->us = user_accessible;
-                		
                 	}
                 }
-
 	}
 
 	if((pde + pde_index)->p == 0){

@@ -223,7 +223,6 @@ int scanf(const char *fmt, void* pointer){
             }   
         case 's':{
             int read_count = syscall_read(0, buffer, 256);
-            printf("Read count: %d", read_count);
             memcopy(pointer, (void *)buffer, read_count);
             break;
         }   

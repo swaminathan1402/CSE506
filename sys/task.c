@@ -1,4 +1,4 @@
-#include <sys/task.h>
+ #include <sys/task.h>
 #include <sys/kprintf.h>
 #include <sys/page.h>
 #include <sys/memory.h>
@@ -102,6 +102,8 @@ void yield(){
 	);
 }
 
+
+/*
 void mainTwo() {
 	kprintf("@MainTwo ---- 1\n");
 	for(int i=0; i<1000; i++) {
@@ -139,11 +141,95 @@ void beIdle(){
 	}
 
 }
+*/
 
+
+void remove_page(uint64_t rm_page){
+	//kprintf("removing this page %p\n", rm_page);
+	memset(rm_page, 0, 4096);
+	freelist *newpage = (freelist *)rm_page;
+	newpage->next = first_free_page;
+	newpage->prev = first_free_page->prev;
+	first_free_page->prev->next = newpage;
+
+	first_free_page->prev = newpage;
+	first_free_page = newpage;
+	kprintf("first_free_page is %p %p\n", first_free_page, rm_page);
+
+}
+
+
+void free(task *zombie_process){
+	// walk down the page tables
+	// zero down the pages 
+	// add it to the free list 
+	// make zombie process null
+	//changeCR3(runningTask->pml4e, runningTask->pdpe, runningTask->pde, runningTask->pte, 0);
+
+	int pages_to_free=0;
+	PML4E *zpml4e = zombie_process->pml4e;
+	PDPE *zpdpe = zombie_process->pdpe;
+	PDE *zpde = zombie_process->pde;
+	PTE *zpte = zombie_process->pte;
+	for(int pml4e_index=0; pml4e_index<510; pml4e_index++){
+		
+		if((zpml4e + pml4e_index)->p == 1){
+			zpdpe = (PDPE *)(uint64_t)((zpml4e + pml4e_index)->page_directory_pointer_base_address << 12);
+			for(int pdpe_index=0; pdpe_index < 512; pdpe_index++){
+				if((zpdpe + pdpe_index)->p == 1){
+					zpde = (PDE *)(uint64_t)((zpdpe + pdpe_index)->page_directory_base_address << 12);
+					for(int pde_index=0; pde_index < 512; pde_index++){
+						if((zpde + pde_index)->p == 1){
+							//kprintf("bulls eye %d %d %d\n", pml4e_index, pdpe_index, pde_index);
+							zpte = (PTE *)(uint64_t)((zpde + pde_index)->page_table_base_address << 12);
+							for(int pte_index = 0; pte_index < 512; pte_index++){
+								if((zpte + pte_index)->p == 1){
+									uint64_t free_this_page = (uint64_t)((zpte + pte_index)->physical_address << 12);
+									/*
+									kprintf("Free this page %p\n", free_this_page);
+									//memset(free_this_page, 0, 4096);
+									freelist *newpage = (freelist *)free_this_page;
+									newpage->next = first_free_page;
+									first_free_page->prev = newpage;
+									first_free_page = newpage;
+									pages_to_free++;
+									*/
+									
+								}
+							}
+							remove_page((uint64_t)zpte);
+							pages_to_free++;
+						}
+						
+					}
+					remove_page((uint64_t)zpde);
+					pages_to_free++;
+					
+				}
+
+			}
+			remove_page((uint64_t)zpdpe);
+			pages_to_free++;
+		}
+	}
+
+	remove_page((uint64_t)zpml4e);
+	pages_to_free++;
+	//uint64_t freak_page = (uint64_t)get_free_page();
+	//kprintf("freak page is %p \n", freak_page);
+	//changeCR3((PML4E *)kernel_pml4e, (PDPE *)kernel_pdpe, (PDE *)kernel_pde, (PTE *)kernel_pte, 0);
+	kprintf("[Kernel] No of pages freed for %p: (%d)\n", zombie_process, pages_to_free);
+
+}
 
 int fork() {
+	task *child = createChildTask();
 
-	int child_pid = createChildTask();
+	if(runningTask->child == NULL){
+		runningTask->child = child;
+	}
+
+	int child_pid = child->pid;
 	// add the new child to the task queue;
 	return child_pid;
 }
@@ -173,7 +259,7 @@ void waiting_on_pid(int child_pid){
 	temp_yield();
 }
 
-int createChildTask(){
+task* createChildTask(){
 	// create new child task
 	// deep copy the page tables with parents page tables
 	// create a kernel stack
@@ -189,9 +275,14 @@ int createChildTask(){
 	childTask->regs.user_rsp = (uint64_t)get_free_user_page() + 4096;	
 	childTask->pid = pid;
 	childTask->isChild = 1;
-        uint64_t *pointer_to_pml4e = (uint64_t *)get_free_page();
-        uint64_t *pointer_to_pdpe = (uint64_t *)get_free_page();
-        uint64_t *pointer_to_pde = (uint64_t *)get_free_page();
+	childTask->parent = runningTask;
+	childTask->child = NULL;
+
+        uint64_t *pointer_to_pml4e = (uint64_t *)((uint64_t)get_free_page() + 0x2000);
+        uint64_t *pointer_to_pdpe = (uint64_t *)((uint64_t)get_free_page());
+        uint64_t *pointer_to_pde = (uint64_t *)((uint64_t)get_free_page());
+	uint64_t a = (uint64_t)get_free_page();
+	uint64_t b = (uint64_t)get_free_page();
         uint64_t *pointer_to_pte = (uint64_t *)get_free_page();
 
         childTask->pml4e = (PML4E *)pointer_to_pml4e;
@@ -265,7 +356,8 @@ int createChildTask(){
         :"memory"
         );
         childTask->regs.rsp -= 56;
-	return childTask->pid;
+	//return childTask->pid;
+	return childTask;
 	
 }
 
@@ -413,6 +505,9 @@ void test_user_function()
 
 void switch_to_ring_3()
 {
+	if(runningTask->child && runningTask->child->status == ZOMBIE_PROCESS_STATUS){
+		kprintf("[Kernel]: removing its child junk %p\n", runningTask->child);
+	}
 	changeCR3(runningTask->pml4e, runningTask->pdpe, runningTask->pde, runningTask->pte, 0);
         //kprintf("new cr3 %p and pointing to %p\n", runningTask->pml4e, runningTask->regs.rip);
 	__asm__ __volatile__ (
@@ -499,13 +594,16 @@ void removefromOtherLists(task * temp)
 void addtoZombieList(task* temp)
 {
 temp->status = ZOMBIE_PROCESS_STATUS;
-tasklist* current_zombie= (tasklist*) zombieProcessList;
+tasklist* temp1= (tasklist*) zombieProcessList;
+tasklist* current_zombie =zombieProcessList;
 while(current_zombie != NULL)
 {
 current_zombie = current_zombie->next;
 }
 current_zombie->pid =temp->pid;
 current_zombie->next =NULL;
+current_zombie->entry= temp;
+zombieProcessList= temp1;
 removefromOtherLists(temp);
 }
 
@@ -517,6 +615,8 @@ temp->status =RUNNING_PROCESS_STATUS;
 tasklist* current_running= (tasklist*) runningProcessList;
 current_running->pid =temp->pid;
 current_running->next =NULL;
+current_running->entry =temp;
+runningProcessList= current_running;
 removefromOtherLists(temp);
 }
 
@@ -529,6 +629,7 @@ while(current_waiting != NULL)
 current_waiting = current_waiting->next;
 }
 current_waiting->pid =temp->pid;
+current_waiting ->entry=temp;
 current_waiting->next =NULL;
 removefromOtherLists(temp);
 }
@@ -541,14 +642,14 @@ void getprocessList()
 	tasklist* current_zombie= (tasklist*) zombieProcessList;
 	while(current_zombie != NULL)
 	{
-	kprintf("\n %d \t ZOMBIE ",current_zombie->pid );
+	kprintf("\n %x \t ZOMBIE ",current_zombie->pid );
 	current_zombie = current_zombie->next;
 	}
 	//kprintf("\n %d \t ZOMBIE",current_zombie->pid );
 	tasklist* current_running = (tasklist*)runningProcessList;
 	while(current_running !=NULL)
 	{
-		kprintf("\n %d \t RUNNING ",current_running->pid );
+		kprintf("\n %x \t RUNNING ",current_running->pid );
         	current_running = current_running->next;
        	}
  //       kprintf("\n %d \t RUNNING",current_running->pid );
@@ -556,7 +657,7 @@ void getprocessList()
 tasklist* current_waiting = (tasklist*)waitProcessList;
 while(current_running !=NULL)
 {
-	kprintf("\n %d \t WAITING ",current_waiting->pid );
+	kprintf("\n %x \t WAITING ",current_waiting->pid );
         current_waiting = current_waiting->next;
 }
    //     kprintf("\n %d \t WAITING",current_waiting->pid ); }
@@ -565,10 +666,16 @@ while(current_running !=NULL)
 
 
 
-int kill_process(int pid){
+int kill_process(int kpid){
+
+	// when we kill a proecess
+	// we check if that process has any children or not 
+	// if it does, we access that child's parent and change its parent to MainTask
+	// 
 	int limit = 43;
 	int count = 0;
 	task *temp = runningTask;
+
 	while(temp->pid != pid && count < limit){
 		temp = temp->next;
 		count++;
@@ -577,32 +684,41 @@ int kill_process(int pid){
 		return -1;
 	}
 	else {
+		/*
 		task *prev_temp = temp;
 		while(prev_temp->next != temp){
 			prev_temp = prev_temp->next;
 		}
 		
 		prev_temp->next = temp->next;
+		*/
+		task *prev_task = temp->prev;
+		task *next_task = temp->next;
+		prev_task->next = next_task;
+		next_task->prev = prev_task;
+		
+		if(temp->child)
+			temp->child->parent = lastTask; // changing the child's parent to idleTask
+		// add to zombie queue
+
 	}
-	return pid;
+	return kpid;
 }
 
 void removeTask(){
+
+	// we just add this to zombie queue
 	// reclaim all the pages used by this task
-	
 	changeCR3((PML4E *)kernel_pml4e, (PDPE *)kernel_pdpe, (PDE *)kernel_pde, (PTE *)kernel_pte, 0);
-	/*
-	task* temp = runningTask;
-	task* next = runningTask->next;
+	free(runningTask);
 
-	while(temp->next != runningTask){
-		temp = temp->next;
-	}
-	temp->next = next;
-	*/
-
+	kprintf("[Kernel]: Adding %p to zombie queue\n", runningTask);
 	runningTask->prev->next = runningTask->next;
 	runningTask->next->prev = runningTask->prev;
+	runningTask->status = ZOMBIE_PROCESS_STATUS; 
+	//addtoZombieList(runningTask);
+	//getprocessList();
+	
 	//kprintf("Changed the task from %d to %d and prev is %d\n", runningTask->pid, next->pid, temp->pid);
 
 	//yield(); // this is only supposed to switch the stack
@@ -613,6 +729,7 @@ void removeTask(){
 		:"m"(runningTask), "m"(runningTask->next)
 		:
 	);
+
 	runningTask = runningTask->next;
 	// switch the rsp's
 
@@ -658,4 +775,8 @@ void temp_yield(){
 	);
 	switch_to_ring_3(runningTask->regs.rip);
 
+}
+
+void clean_zombies(){
+	//kprintf("[Kernel]: Removing all the zombie processes\n");
 }

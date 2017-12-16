@@ -13,6 +13,7 @@ typedef struct {
 	uint64_t rsp, rbp, rip, cr3, user_rsp;
 } registers;
 
+
 typedef struct task{	
 	registers regs;
 	struct task* next;
@@ -23,12 +24,15 @@ typedef struct task{
 	PTE* pte;
 	int status;
 	int pid;
-       struct mm_struct *mm ;
+        struct mm_struct *mm ;
 	int isChild;
+	struct task *parent;  //for pid inheritance
+	struct task *child;	
 } task;
 
 typedef struct tasklist{
 int pid ;
+task* entry;
 struct tasklist* next; 
 }tasklist;
 
@@ -57,7 +61,7 @@ void mainTwo();
 void beIdle();
 void removeTask();
 int fork();
-int createChildTask();
+task* createChildTask();
 int exec(char *);
 
 void getprocessList();
@@ -70,5 +74,6 @@ void addtowaitList( task*);
 void addtorunningList( task*);
 void removefromOtherList(task*);
 void addVMAtoTask(task* me ,struct vm_area_struct* new_vma );
-
+void clean_zombies();
+void free(task *);
 #endif
