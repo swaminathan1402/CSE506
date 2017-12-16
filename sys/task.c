@@ -199,10 +199,15 @@ int fork() {
 	return child_pid;
 }
 
-int exec(char *filename){
+int exec(char *filename, char** arguments){
 
 	Elf64_Ehdr *the_elf = findElfByName(filename);
+	kprintf("%s, %s, %s", arguments[0], arguments[1], arguments[2]);
+	
 	load_binary(the_elf, 3);
+	
+	kprintf( "%s ,%s, %s" ,arguments[0],arguments[1], arguments[2]);
+	//while(1);
 	switch_to_ring_3();
 	return 0;
 }
@@ -458,6 +463,23 @@ void test_user_function()
 
 }
 
+void load_arguments(uint64_t user_rsp ,int argc)
+{
+__asm__ __volatile__(
+"movq %0 , %%rdi;"
+"movq %%rsp, %%r11;"
+"movq %1, %%r8;"
+"movq %%r8 ,%%rsp;"
+"subq $0x18, %%rsp;"
+"movq %%rdi,(%%rsp);"
+"movq %%rsi ,8(%%rsp);"
+"movq %%r11 , %%rsp;"
+:
+: "m"(argc) , "m"(user_rsp)
+:"memory"
+);
+
+}
 
 void switch_to_ring_3()
 {
@@ -466,6 +488,8 @@ void switch_to_ring_3()
 	}
 	changeCR3(runningTask->pml4e, runningTask->pdpe, runningTask->pde, runningTask->pte, 0);
         //kprintf("new cr3 %p and pointing to %p\n", runningTask->pml4e, runningTask->regs.rip);
+	char ** rsi;
+
 	__asm__ __volatile__ (
         	"movq %0, %%r11;"
         	"movq %%r11, %%rsp;"
@@ -473,10 +497,35 @@ void switch_to_ring_3()
             : "m"(runningTask->regs.rsp)
             :
         );
+
 	uint64_t fn_to_execute =  runningTask->regs.rip;
 	//uint64_t* user_rsp= (uint64_t*)get_free_user_page();
 	//user_rsp += 0x1000;
 	uint64_t user_rsp = runningTask->regs.user_rsp;
+	int argc=0 ; 
+	__asm__ __volatile__
+	(
+	"movq %%rsi , %0 ;"
+	:"=m" (rsi)
+	:
+	:
+        );	
+
+	char** arguments = (char**)rsi;
+	kprintf("%s , %s, %s ", arguments[0], arguments[1], arguments[2]);
+	//if(arguments[1]!=NULL)
+//	while(1);
+
+	int i=0 ; 
+	while(arguments[i]!=NULL)
+	{	
+	i++;
+	}
+	argc =i;
+	if(argc != 0)
+	{
+	load_arguments(user_rsp , argc);
+	}
 	uint64_t current_rsp;
 	__asm__ __volatile__("movq %%rsp, %0;"
 	:"=m" (current_rsp)
@@ -546,12 +595,19 @@ void removefromOtherLists(task * temp)
 
 }
 
-
-void addtoZombieList(task* temp)
+void addtoZombieList(task* temp )
 {
 temp->status = ZOMBIE_PROCESS_STATUS;
-tasklist* temp1= (tasklist*) zombieProcessList;
 tasklist* current_zombie =zombieProcessList;
+if(current_zombie==NULL)
+{
+	current_zombie ->pid = temp->pid;
+	current_zombie->entry= temp;
+	current_zombie->next=NULL
+}
+else
+{
+tasklist* temp1= (tasklist*) zombieProcessList;
 while(current_zombie != NULL)
 {
 current_zombie = current_zombie->next;
@@ -562,7 +618,7 @@ current_zombie->entry= temp;
 zombieProcessList= temp1;
 removefromOtherLists(temp);
 }
-
+}
 
 
 void addtoRunningList(task* temp)
@@ -674,7 +730,6 @@ void removeTask(){
 	runningTask->status = ZOMBIE_PROCESS_STATUS; 
 	addtoZombieList(runningTask);
 	getprocessList();
-	while(1);
 	
 	//kprintf("Changed the task from %d to %d and prev is %d\n", runningTask->pid, next->pid, temp->pid);
 
@@ -688,6 +743,7 @@ void removeTask(){
 	);
 
 	runningTask = runningTask->next;
+	addtoRunningList(runningTask)
 	// switch the rsp's
 
 	__asm__ __volatile__ (

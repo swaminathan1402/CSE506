@@ -59,7 +59,8 @@ __asm__ __volatile__(
 :
 );
 unsigned int fd;
-char* buf, arguments ;
+char* buf;
+char** arguments;
 size_t count;
 const char* filename; 
 int ret;
@@ -187,9 +188,9 @@ case 57:
 
 case 59:
   filename = (char *)rdi;
-  arguments = *(uint64_t *)rsi;
-  kprintf("execvping %s %s\n", filename, arguments);
-  //exec(filename);
+  arguments = (char **)rsi;
+  kprintf("execvping %s %s %s %s\n", filename, arguments[0], arguments[1], arguments[2]);
+  exec(filename,arguments);
   break;
   /*
   argv = (char *)rsi;
