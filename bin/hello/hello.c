@@ -286,6 +286,7 @@ syscall_write(1, strin,size);
 int main(int argc, char *argv[], char *envp[]){
   //syscall_write(0, "hello world\n", 11); 
   //syscall_write(0, "hello world\n", 11); 
+  //int pid = 0;
   int pid = syscall_fork();
   if (pid == 0){
     syscall_write(0, "child process\n", 14);
@@ -335,8 +336,8 @@ int main(int argc, char *argv[], char *envp[]){
 	//char buffer[20];
 	//syscall_getcwd(buffer,20);
 	//syscall_write(1, buffer ,strlen(buffer));
-	int status; 
-	int ret = syscall_waitpid(pid, &status, NULL);
+	//int status; 
+	//int ret = syscall_waitpid(pid, &status, NULL);
 	syscall_write(0, "good process\n", 12);
 	
 

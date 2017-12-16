@@ -80,6 +80,9 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
     first_free_page = (freelist *)(physfree);
     first_free_page->next = NULL;
     first_free_page->prev = NULL;
+    first_free_page->reference_count = 0;
+    first_free_page->page = (real_page*)(physfree);
+
     current_free_page = first_free_page;
     for(smap = (struct smap_t*)(modulep+2); smap < (struct smap_t*)((char*)modulep+modulep[1]+2*4); ++smap) {
       if (smap->type == 1 /* memory */ && smap->length != 0) {
@@ -106,7 +109,6 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
     kprintf("physfree %p\n", (uint64_t)physfree);
     kprintf("physbase %p\n", (uint64_t)physbase);
     kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
-  
   
     pid = 0;  // pid generation
     uint64_t *pointer_to_pml4e = (uint64_t *)get_free_page();
@@ -208,9 +210,9 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   */
 							
 
-	 zombieProcessList= (tasklist*) get_free_page();
-	 runningProcessList= (tasklist*) get_free_page();
-	 waitProcessList= (tasklist*) get_free_page();	
+  zombieProcessList= (tasklist*) get_free_page();
+  runningProcessList= (tasklist*) get_free_page();
+  waitProcessList= (tasklist*) get_free_page();	
   tarfs_read();
   
   read_elf(idle_elf,0);	// idle is elf type and global

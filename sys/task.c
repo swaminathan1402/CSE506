@@ -143,6 +143,22 @@ void beIdle(){
 }
 */
 
+
+void remove_page(uint64_t rm_page){
+	//kprintf("removing this page %p\n", rm_page);
+	memset(rm_page, 0, 4096);
+	freelist *newpage = (freelist *)rm_page;
+	newpage->next = first_free_page;
+	newpage->prev = first_free_page->prev;
+	first_free_page->prev->next = newpage;
+
+	first_free_page->prev = newpage;
+	first_free_page = newpage;
+	kprintf("first_free_page is %p %p\n", first_free_page, rm_page);
+
+}
+
+
 void free(task *zombie_process){
 	// walk down the page tables
 	// zero down the pages 
@@ -155,8 +171,8 @@ void free(task *zombie_process){
 	PDPE *zpdpe = zombie_process->pdpe;
 	PDE *zpde = zombie_process->pde;
 	PTE *zpte = zombie_process->pte;
-
-	for(int pml4e_index=0; pml4e_index<512; pml4e_index++){
+	for(int pml4e_index=0; pml4e_index<510; pml4e_index++){
+		
 		if((zpml4e + pml4e_index)->p == 1){
 			zpdpe = (PDPE *)(uint64_t)((zpml4e + pml4e_index)->page_directory_pointer_base_address << 12);
 			for(int pdpe_index=0; pdpe_index < 512; pdpe_index++){
@@ -164,24 +180,43 @@ void free(task *zombie_process){
 					zpde = (PDE *)(uint64_t)((zpdpe + pdpe_index)->page_directory_base_address << 12);
 					for(int pde_index=0; pde_index < 512; pde_index++){
 						if((zpde + pde_index)->p == 1){
+							//kprintf("bulls eye %d %d %d\n", pml4e_index, pdpe_index, pde_index);
 							zpte = (PTE *)(uint64_t)((zpde + pde_index)->page_table_base_address << 12);
-								/*
 							for(int pte_index = 0; pte_index < 512; pte_index++){
 								if((zpte + pte_index)->p == 1){
-									//(zpte + pte_index)->physical_address =(parent_pte + pte_index)->physical_address;
+									uint64_t free_this_page = (uint64_t)((zpte + pte_index)->physical_address << 12);
+									/*
+									kprintf("Free this page %p\n", free_this_page);
+									//memset(free_this_page, 0, 4096);
+									freelist *newpage = (freelist *)free_this_page;
+									newpage->next = first_free_page;
+									first_free_page->prev = newpage;
+									first_free_page = newpage;
 									pages_to_free++;
+									*/
+									
 								}
 							}
-								*/
+							remove_page((uint64_t)zpte);
+							pages_to_free++;
 						}
 						
 					}
+					remove_page((uint64_t)zpde);
+					pages_to_free++;
 					
 				}
 
 			}
+			remove_page((uint64_t)zpdpe);
+			pages_to_free++;
 		}
 	}
+
+	remove_page((uint64_t)zpml4e);
+	pages_to_free++;
+	//uint64_t freak_page = (uint64_t)get_free_page();
+	//kprintf("freak page is %p \n", freak_page);
 	//changeCR3((PML4E *)kernel_pml4e, (PDPE *)kernel_pdpe, (PDE *)kernel_pde, (PTE *)kernel_pte, 0);
 	kprintf("[Kernel] No of pages freed for %p: (%d)\n", zombie_process, pages_to_free);
 
@@ -243,9 +278,11 @@ task* createChildTask(){
 	childTask->parent = runningTask;
 	childTask->child = NULL;
 
-        uint64_t *pointer_to_pml4e = (uint64_t *)get_free_page();
-        uint64_t *pointer_to_pdpe = (uint64_t *)get_free_page();
-        uint64_t *pointer_to_pde = (uint64_t *)get_free_page();
+        uint64_t *pointer_to_pml4e = (uint64_t *)((uint64_t)get_free_page() + 0x2000);
+        uint64_t *pointer_to_pdpe = (uint64_t *)((uint64_t)get_free_page());
+        uint64_t *pointer_to_pde = (uint64_t *)((uint64_t)get_free_page());
+	uint64_t a = (uint64_t)get_free_page();
+	uint64_t b = (uint64_t)get_free_page();
         uint64_t *pointer_to_pte = (uint64_t *)get_free_page();
 
         childTask->pml4e = (PML4E *)pointer_to_pml4e;
@@ -663,18 +700,17 @@ int kill_process(int kpid){
 
 void removeTask(){
 
-//	free(runningTask);
 	// we just add this to zombie queue
 	// reclaim all the pages used by this task
 	changeCR3((PML4E *)kernel_pml4e, (PDPE *)kernel_pdpe, (PDE *)kernel_pde, (PTE *)kernel_pte, 0);
+	free(runningTask);
 
 	kprintf("[Kernel]: Adding %p to zombie queue\n", runningTask);
 	runningTask->prev->next = runningTask->next;
 	runningTask->next->prev = runningTask->prev;
 	runningTask->status = ZOMBIE_PROCESS_STATUS; 
-	addtoZombieList(runningTask);
-	getprocessList();
-	while(1);
+	//addtoZombieList(runningTask);
+	//getprocessList();
 	
 	//kprintf("Changed the task from %d to %d and prev is %d\n", runningTask->pid, next->pid, temp->pid);
 
