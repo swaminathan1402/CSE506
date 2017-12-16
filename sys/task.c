@@ -1,4 +1,4 @@
- #include <sys/task.h>
+#include <sys/task.h>
 #include <sys/kprintf.h>
 #include <sys/page.h>
 #include <sys/memory.h>
@@ -8,6 +8,8 @@
 #include <sys/tarfs.h>
 #include <sys/elf64.h>
 #include<sys/mm_struct.h>
+#include <sys/string.h>
+
 void yield(){
 
 	/*
@@ -247,8 +249,24 @@ int exec(char *filename, char** arguments){
 	load_binary(the_elf, 3);
 	
 	kprintf( "%s \n" ,args);
+	char *something = args;
+	kprintf("something %s \n", something);
 	//kprintf( "%s ,%s, %s" ,arguments[0],arguments[1], arguments[2]);
-	while(1);
+	__asm__ __volatile__
+	(
+	"movq %0,  %%rsi;"
+	:
+	:"m"(something)
+	:		
+	);
+	//runningTask->arguments = something;
+	int str_len = strlen(something);
+	int i = 0;
+	while(i<str_len){
+	    runningTask->arguments[i] = something[i];
+	    i++;
+	}
+
 	switch_to_ring_3();
 	return 0;
 }
@@ -504,7 +522,6 @@ void createTask(
 
 void test_user_function()
 {
-	
 	__asm__ __volatile__(
 
 	"syscall;"
@@ -513,8 +530,19 @@ void test_user_function()
 
 }
 
-void load_arguments(uint64_t user_rsp ,int argc)
+void load_arguments(uint64_t user_rsp ,uint64_t argc)
 {
+
+
+	__asm__ __volatile__(
+
+	"movq %0, %%rsi ;"
+	:
+	:"m"(runningTask->arguments)
+	:                  
+	);
+
+
 __asm__ __volatile__(
 "movq %0 , %%rdi;"
 "movq %%rsp, %%r11;"
@@ -533,13 +561,26 @@ __asm__ __volatile__(
 
 void switch_to_ring_3()
 {
-	if(runningTask->child && runningTask->child->status == ZOMBIE_PROCESS_STATUS){
+/*
+		__asm__ __volatile__
+        	(
+        	"movq (%%rsi) , %0 ;"
+        	:"=m"(runningTask->arguments)
+        	:
+        	:
+                );	*/
+	//runningTask->arguments = "Hello";	
+	kprintf("\nRunningtask: %s" , runningTask->arguments);
+	/*for(int i=0; i<strlen(rsi); i++){
+		args_string[i] = rsi[i];
+	}
+	kprintf ("%s rsi: ", args_string);
+        */
+if(runningTask->child && runningTask->child->status == ZOMBIE_PROCESS_STATUS){
 		kprintf("[Kernel]: removing its child junk %p\n", runningTask->child);
 	}
 	changeCR3(runningTask->pml4e, runningTask->pdpe, runningTask->pde, runningTask->pte, 0);
-        //kprintf("new cr3 %p and pointing to %p\n", runningTask->pml4e, runningTask->regs.rip);
-	char ** rsi;
-
+        //kprintf("new cr3 %p and pointing to %p\n", runningTask->pml4e, runningTask->regs.rip);	
 	__asm__ __volatile__ (
         	"movq %0, %%r11;"
         	"movq %%r11, %%rsp;"
@@ -552,28 +593,17 @@ void switch_to_ring_3()
 	//uint64_t* user_rsp= (uint64_t*)get_free_user_page();
 	//user_rsp += 0x1000;
 	uint64_t user_rsp = runningTask->regs.user_rsp;
-	int argc=0 ; 
-	__asm__ __volatile__
-	(
-	"movq %%rsi , %0 ;"
-	:"=m" (rsi)
-	:
-	:
-        );	
-
-	char** arguments = (char**)rsi;
+	int argc=0 ;
+//	char** arguments = (char**)rsi;
 //	kprintf("%s , %s, %s ", arguments[0], arguments[1], arguments[2]);
 	//if(arguments[1]!=NULL)
 //	while(1);
-
-	int i=0 ; 
-	while(arguments[i]!=NULL)
-	{	
-	i++;
-	}
-	argc =i;
+	if(runningTask->arguments != '\0')
+	argc=1;
 	if(argc != 0)
 	{
+	//kprintf("%s :LAST STAGE \n" , runningTask->arguments);
+//	while(1);
 	load_arguments(user_rsp , argc);
 	}
 	uint64_t current_rsp;

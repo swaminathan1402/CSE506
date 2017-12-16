@@ -7,6 +7,7 @@ void _start(void) {
 
 __asm__ __volatile__(
     //"addq $0x18,%%rsp;"
+    "subq $0x18 , %%rsp ;"
     "movq (%%rsp),%%rdi;"
     "movq 8(%%rsp), %%rsi;"
   //  "movq 16(%%rsp,%%rdi,8 ),%%rdx;"

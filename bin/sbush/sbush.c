@@ -105,8 +105,9 @@ void handle_pipes(char *command, int numberOfCommands){
 				strcpy(final_command, bin_string);
 			}
 			strcat(final_command, function);
-			int ret = syscall_execvpe(final_command, command_args, NULL); // TODO
-			syscall_exit(ret);  // TODO
+			printf("final command: %s", final_command);
+			//int ret = syscall_execvpe(final_command, command_args, NULL); // TODO
+			//syscall_exit(ret);  // TODO
 		} else if(pid > 0){
 		        printf("Pid: %d", pid);
 			if(syscall_waitpid(pid, &status, 0) > 0){ // TODO
