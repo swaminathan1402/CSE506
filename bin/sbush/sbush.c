@@ -67,6 +67,7 @@ void handle_pipes(char *command, int numberOfCommands){
 	for(int i=0; i<numberOfCommands; i++){
 		syscall_pipe(fd); // TODO
 		pid_t pid = syscall_fork(); // TODO
+		//printf("Pid: %d", pid);
 		if(pid == 0){
 			if(input != 0) {
 				syscall_dup2(input, 0); // TODO
@@ -107,6 +108,7 @@ void handle_pipes(char *command, int numberOfCommands){
 			int ret = syscall_execvpe(final_command, command_args, NULL); // TODO
 			syscall_exit(ret);  // TODO
 		} else if(pid > 0){
+		        printf("Pid: %d", pid);
 			if(syscall_waitpid(pid, &status, 0) > 0){ // TODO
 				if(WIFEXITED(status) && !WEXITSTATUS(status)){ //TODO
 					syscall_close(fd[1]); //TODO
@@ -142,7 +144,7 @@ void runBinary(char *command, char *args, int bgprocess){
 		}
 		strcat(final_command, command);
 		printf("Final command: %s\n", final_command);
-		//int ret = syscall_execvpe(final_command, cmd_arr, NULL);
+		int ret = syscall_execvpe(final_command, cmd_arr, NULL);
 		//syscall_exit(ret);
 	} else if(pid > 0){
 		if(bgprocess == 1){
@@ -280,7 +282,7 @@ void aggregateEnvVariables(char *home_env){
 	//strcpy(dollar_PATH, temp_path);
 	strcpy(HOME, temp_home);
 	strcpy(ROOTFS_BIN_PATH, HOME);
-	char *bpath = "/temp/CSE506/rootfs/bin/";
+	char *bpath = "bin/";
 	strcat(ROOTFS_BIN_PATH, bpath);
 	//printf("PATH: %s",ROOTFS_BIN_PATH);
 }
