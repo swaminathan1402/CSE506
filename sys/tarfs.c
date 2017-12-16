@@ -50,7 +50,6 @@ void read_elf(Elf64_Ehdr *file ,int index){
 	int count = file->e_phnum;
 	while(count > 0){
 		if(program_header->p_type != 0 && program_header->p_filesz > 0){
-			// kprintf("Virtual addr: %p\ntype: %d\nFile size: %d\nEntry point: %x\nPOffset: %d\n", program_header->p_vaddr, program_header->p_type, program_header->p_filesz, file->e_entry, program_header->p_offset);
 			uint64_t virtual_limit_sz = program_header->p_vaddr + program_header->p_filesz;
 //		vm_area_struct new_vma =  init_vm_area_struct(program_header->p_vaddr , program_header->p_memsz+ program_header->p_vaddr,MAP ,NULL,NULL );
 			// map those virtual addresses 
@@ -58,10 +57,6 @@ void read_elf(Elf64_Ehdr *file ,int index){
 				setMap(i, i+index*0x10000, 1);
 				uint64_t from_addr = (uint64_t)file + program_header->p_offset + (i - program_header->p_vaddr);
 				memcpy((void *)i, (void *)from_addr,  4096);
-				
-				
-
-			//	while(1);
 			}
 		}
 		program_header = (Elf64_Phdr *)((uint64_t)program_header + file->e_phentsize); // program header entry size
@@ -115,7 +110,7 @@ void tarfs_read(){
 
 		}
 	}
-	setCurrentPath("root/" );	
+	setCurrentPath("root/");	
 }
 
 Elf64_Ehdr *findElfByName(char *filename){

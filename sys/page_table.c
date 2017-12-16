@@ -124,8 +124,11 @@ void init_pd(PTE* first_pte, PML4E* first_pml4e, uint64_t from, int size){
 	//setMap(0xffffffff800b8000, 0xb8000);
 	setMap(0xb8000, 0xb8000, 0);
 	int i;
-	for(i=0; i<1024;i++)
+	for(i=0; i<2048;i++){
+		
 	    setMap(i*4096, i*4096, 0); // kernel
+	    //setMap(i*4096 | 0xffffffff00000000, i*4096 | 0xffffffff00000000, 0); // kernel
+	}
 	__asm__ __volatile__(
         	"movq %0, %%cr3;"
         	:
@@ -165,6 +168,7 @@ void deepCopyPageTable(uint64_t child){
 		if((parent_pml4e + pml4e_index)->p == 0){
 			continue;
 		} else{
+			kprintf("[Kernel] parent pml4e index %d\n", pml4e_index);
 			if((child_pml4e+ pml4e_index)->p == 0){
 				uint64_t *some_page = (uint64_t *)get_free_page();
 				memset(some_page, 0, 4096);

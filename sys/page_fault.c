@@ -26,7 +26,7 @@ else if(!(err_code & 0x1) && !(err_code & 0x4) )
 {
 		kprintf("Page not present in supervisor mode %p", faulting_address);
 		setMap(faulting_address , faulting_address ,1);
-		reloadCR3();
+		reloadCR3();	
 }
 else if(err_code & 0x2)
 {
