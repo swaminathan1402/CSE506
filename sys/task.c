@@ -1,4 +1,4 @@
- #include <sys/task.h>
+#include <sys/task.h>
 #include <sys/kprintf.h>
 #include <sys/page.h>
 #include <sys/memory.h>
@@ -7,7 +7,9 @@
 #include <sys/syscall.h>
 #include <sys/tarfs.h>
 #include <sys/elf64.h>
-#include<sys/mm_struct.h>
+#include <sys/mm_struct.h>
+#include <sys/string.h>
+
 void yield(){
 
 	/*
@@ -576,11 +578,11 @@ void test_user_function()
 void load_arguments(uint64_t user_rsp)
 {
 int argc =0;
-while(runningTask->arguments[argc]!='\0')
-{
-argc++;
+while(runningTask->arguments[argc]!= NULL && strcmp(runningTask->arguments[argc], "")!=0){
+    argc++;
 }
-
+kprintf("Argc: %d", argc);
+kprintf("args: %s", runningTask->arguments);
 __asm__  __volatile__
 (
 "movq %%rsp ,%%r11;"
@@ -590,7 +592,7 @@ __asm__  __volatile__
 "movq %%rdi ,(%%rsp)"
 "movq %%r11, %%rsp;"
 :
-: "m"(user_rsp) "m"(argc)
+: "m"(user_rsp), "m"(argc)
 );
 
 if(argc==0)
@@ -628,7 +630,7 @@ __asm__ __volatile__(
 :"memory"
 );
 */
-}
+
 
 void switch_to_ring_3()
 {
