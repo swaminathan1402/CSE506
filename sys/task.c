@@ -287,10 +287,12 @@ int fork() {
 }
 
 int exec(char *filename, char** arguments){
+	
+	
+	kprintf("%s, %s, %s", arguments[0], arguments[1], arguments[2]);
 	Elf64_Ehdr *the_elf = findElfByName(filename);
 	load_binary(the_elf, 3);
 	
-	kprintf("%s, %s, %s", arguments[0], arguments[1], arguments[2]);
 	//char args[1024];
 	//int len = strlen(arguments[1]);
 	//			for(int i=0; i<len; i++){
@@ -308,6 +310,7 @@ int exec(char *filename, char** arguments){
 	:		
 	);*/
 	runningTask->arguments= arguments;
+	load_arguments(runningTask->regs.user_rsp);
 	switch_to_ring_3(runningTask->regs.rip);
 	return 0;
 }
@@ -570,7 +573,7 @@ void test_user_function()
 	
 	__asm__ __volatile__(
 	"syscall;"
-	);
+	)
 	while(1);
 
 }
@@ -607,7 +610,7 @@ kprintf("\n%s", runningTask->arguments[i]);
 if(argc >0)
 {
 user_rsp= user_rsp-argc*64;
-runningTask->user_rsp= user_rsp;
+runningTask->regs.user_rsp= user_rsp;
 }
 }
 
@@ -643,7 +646,7 @@ void switch_to_ring_3()
 		kprintf("[Kernel]: removing its child junk %p\n", runningTask->child);
 		free((uint64_t)runningTask->child);
 	}
-	load_arguments(runningTask->regs.user_rsp);
+//	load_arguments(runningTask->regs.user_rsp);
 
 
 
