@@ -219,7 +219,7 @@ void free(task *zombie_process){
 	// reap VMA : TODO
 	int index = 0;
 	int count = 0;
-	mm_struct *mm_to_clean = runningTask->mm;
+	mm_struct *mm_to_clean = zombie_process->mm;
 	vm_area_struct *vms_to_clean = mm_to_clean->head;
 	while(vms_to_clean->next != mm_to_clean->head){
 		count++;
@@ -236,17 +236,38 @@ void free(task *zombie_process){
 	}
 
 	
-	remove_page((uint64_t)runningTask->mm);
+	remove_page((uint64_t)zombie_process->mm);
 	pages_to_free++;
-	remove_page((uint64_t)runningTask->regs.rsp);
+	remove_page((uint64_t)zombie_process->regs.rsp);
 	pages_to_free++;
-	remove_page((uint64_t)runningTask->regs.user_rsp);
-	pages_to_free++;
-	remove_page((uint64_t)runningTask);
+	remove_page((uint64_t)zombie_process->regs.user_rsp);
 	pages_to_free++;
 	//uint64_t freak_page = (uint64_t)get_free_page();
 	//kprintf("freak page is %p \n", freak_page);
 	//changeCR3((PML4E *)kernel_pml4e, (PDPE *)kernel_pdpe, (PDE *)kernel_pde, (PTE *)kernel_pte, 0);
+
+	// look for that zombie in the zombie queue and remove it
+	tasklist *zom = zombieProcessList;
+	tasklist *back_zombie = zombieProcessList;
+
+	if(zom->entry == zombie_process){
+		zombieProcessList = zom->next;
+		remove_page((uint64_t)zombie_process);
+		remove_page((uint64_t)zom);
+		pages_to_free+=2;
+	}
+	else {
+		while(zom->entry != zombie_process){
+			back_zombie = zom;
+			zom = zom->next;
+		}
+
+		back_zombie->next = zom->next;
+		remove_page((uint64_t)zombie_process);
+		remove_page((uint64_t)zom);
+		pages_to_free+=2;
+	}
+
 	kprintf("[Kernel] No of pages freed for %p: (%d)\n", zombie_process, pages_to_free);
 
 }
@@ -577,6 +598,7 @@ void switch_to_ring_3()
 
 	if(runningTask->child && runningTask->child->status == ZOMBIE_PROCESS_STATUS){
 		kprintf("[Kernel]: removing its child junk %p\n", runningTask->child);
+		free((uint64_t)runningTask->child);
 	}
 	changeCR3(runningTask->pml4e, runningTask->pdpe, runningTask->pde, runningTask->pte, 0);
         //kprintf("new cr3 %p and pointing to %p\n", runningTask->pml4e, runningTask->regs.rip);	
@@ -820,7 +842,7 @@ void removeTask(){
 	);
 
 	runningTask = runningTask->next;
-	addtoRunningList(runningTask);
+	//addtoRunningList(runningTask);
 	// switch the rsp's
 
 	__asm__ __volatile__ (
@@ -869,23 +891,62 @@ void temp_yield(int exec_next){
 	switch_to_ring_3(runningTask->regs.rip);
 
 }
+/*
+void remove_zombies_from_queue(task *zombie_process){
 
+	// look for that zombie in the zombie queue and remove it
+	tasklist *zom = zombieProcessList;
+	tasklist *back_zombie = zombieProcessList;
+
+	if(zom->entry == zombie_process){
+		zombieProcessList = zom->next;
+		remove_page((uint64_t)zombie_process);
+		remove_page((uint64_t)zom);
+		pages_to_free+=2;
+	}
+	else {
+		while(zom->entry != zombie_process){
+			back_zombie = zom;
+			zom = zom->next;
+		}
+
+		back_zombie->next = zom->next;
+		remove_page((uint64_t)zombie_process);
+		remove_page((uint64_t)zom);
+		pages_to_free+=2;
+	}
+}
+*/
 void clean_zombies(){
 	//kprintf("[Kernel]: Removing all the zombie processes\n");
 	// traverse zombie list
 	// usually called by the main task
 	
 	tasklist *current_zombie = zombieProcessList;
+	tasklist *ahead_zombie = current_zombie;
+
 	while(current_zombie != NULL){
-		if(current_zombie->parent == NULL){
+		if(current_zombie->entry->parent == NULL){
 			// clean it up
+			ahead_zombie = current_zombie->next;
+			free(current_zombie->entry);
+			current_zombie = ahead_zombie;
 		}
-		else if(current_zombie->parent == runningTask){
+		else if(current_zombie->entry->parent == runningTask){
 			// say parent has died
 			// before dying, parent assigns responsibility to 1
+			ahead_zombie = current_zombie->next;
+			free(current_zombie->entry);
+			current_zombie = ahead_zombie;
 
+		} else if(current_zombie->entry->parent != runningTask && current_zombie->entry->parent->status == ZOMBIE_PROCESS_STATUS){
+			//clean it up
+			ahead_zombie = current_zombie->next;
+			free(current_zombie->entry);
+			current_zombie = ahead_zombie;
+		} else {
+			current_zombie = current_zombie->next;
 		}
-		current_zombie = current_zombie->next;
 	}
 
 }

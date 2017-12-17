@@ -290,8 +290,8 @@ int main(int argc, char *argv[], char *envp[]){
     if (pid == 0){
       syscall_write(0, "child process\n", 14);	
     } else {
-	//int status;
-	//int ret = syscall_waitpid(pid, &status, NULL);
+	int status;
+	int ret = syscall_waitpid(pid, &status, NULL);
   	syscall_write(0, "good process\n", 12);
     }
 return ;
