@@ -533,12 +533,13 @@ void test_user_function()
 void load_arguments(uint64_t user_rsp ,uint64_t argc)
 {
 
-
+char* ptr= &runningTask->arguments; 
+uint64_t work_please = (uint64_t)ptr;
 	__asm__ __volatile__(
 
 	"movq %0, %%rsi ;"
 	:
-	:"m"(runningTask->arguments)
+	:"m"(work_please)
 	:                  
 	);
 
@@ -548,7 +549,7 @@ __asm__ __volatile__(
 "movq %%rsp, %%r11;"
 "movq %1, %%r8;"
 "movq %%r8 ,%%rsp;"
-"subq $0x18, %%rsp;"
+"subq $0x10, %%rsp;"
 "movq %%rdi,(%%rsp);"
 "movq %%rsi ,8(%%rsp);"
 "movq %%r11 , %%rsp;"
