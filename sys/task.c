@@ -599,13 +599,16 @@ if(argc==0)
 {
 return;
 }
-for( int i=0; i<argc; i++)
+for( uint64_t i=0; i<argc; i++)
 {
 memcpy( user_rsp-i*64 ,runningTask->arguments[i] ,64);
 kprintf("\n%s", runningTask->arguments[i]);
 }
-
-
+if(argc >0)
+{
+user_rsp= user_rsp-argc*64;
+runningTask->user_rsp= user_rsp;
+}
 }
 
 /*
