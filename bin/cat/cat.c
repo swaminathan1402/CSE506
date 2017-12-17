@@ -79,7 +79,7 @@ int syscall_close(unsigned int fd)
 
      __asm__("movq $3,%%rax;"
 	"movq %1,%%rbx;"
-        "syscall;"
+        "int $0x80;"
 	"movq %%rax, %0;"
 	:"=r"(ret)
 	:"r"(fd1)
@@ -90,13 +90,13 @@ int syscall_close(unsigned int fd)
 
 int main (int argc, char *argv[], char *envp[])
 {
-	char str[102];
+	char str[4096];
 	char *strin = str;
-	char* filename="text_files/text2.txt";
+	char* filename="text_files/text.txt";
 	int size;
 	int fd;
 	fd = syscall_open(filename, 0, 0);
-	size=syscall_read(fd,strin, 102);
+	size=syscall_read(fd,strin, 4096);
 	syscall_write(1,strin, size);
 	syscall_close(fd);
 	return 0;

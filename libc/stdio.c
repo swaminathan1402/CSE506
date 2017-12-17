@@ -29,6 +29,26 @@ char volatile *ulongtoa(unsigned long value){
         return p;
 }
 
+int atoi(char* string){
+    int sign = 1;
+    int index = 0;
+    int result = 0;
+    while(string[index] == ' ')
+        index++;
+    if(string[index] == '-'){
+        sign = -1;
+        index += 1;
+    }
+
+    for(;string[index]; index++){
+        if (string[index] != '\n')
+            result = result*10 + string[index] - '0';
+    }
+    result = result*sign;
+    return result;
+
+}
+
 char volatile *itoa(int value, int base){
         //char *buffer = (char *)malloc(sizeof(char) * 1024);
         char volatile buffer[1024];
@@ -176,4 +196,45 @@ int printf(const char *fmt, ...){
 
         return 0;
 
+}
+
+void *memcopy(void *dst, void *src, size_t n )
+{
+    unsigned char *temp = dst;
+    unsigned char *temp2 = src;
+    while(n--) {
+	*temp++ = *temp2++;
+    }
+    return;
+}
+
+int scanf(const char *fmt, void* pointer){
+    char buffer[256];
+
+    int type = fmt[1];
+    switch (type){
+        case 'd':{
+            syscall_read(0, buffer, 256);
+            int scanned_input;
+            scanned_input = atoi(buffer);
+            int *new_pointer = (int *)pointer;
+            *new_pointer = scanned_input;
+            break;
+            }   
+        case 's':{
+            int read_count = syscall_read(0, buffer, 256);
+            memcopy(pointer, (void *)buffer, read_count);
+            break;
+        }   
+        case 'c':{
+            syscall_read(0, buffer, 1); 
+            char *new_pointer = (char*)pointer;
+            *new_pointer = *(char*)buffer;
+            break;
+        }   
+        default :
+            break;
+
+    }   
+    return 0;
 }

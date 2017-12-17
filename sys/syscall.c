@@ -211,7 +211,7 @@ case 57:
 case 59:
   filename = (char *)rdi;
   arguments = (char **)rsi;
-  kprintf("execvping %s %s %s %s\n", filename, arguments[0], arguments[1], arguments[2]);
+  //kprintf("execvping %s %s %s %s\n", filename, arguments[0], arguments[1], arguments[2]);
   exec(filename,arguments);
   break;
   /*

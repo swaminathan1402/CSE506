@@ -106,7 +106,7 @@ void tarfs_read(){
 		Elf64_Ehdr *something = (Elf64_Ehdr *)(file + 1);
 		index++;
 		//kprintf("Adding %s: %d %p < %p\n", file->name, index, file, (uint64_t)&_binary_tarfs_end);
-		if(strcmp(file->name, "bin/hello")==1){
+		if(strcmp(file->name, "bin/sbush")==1){
 			sbush_elf = something;
 		}
 		if(strcmp(file->name, "bin/init")==1){

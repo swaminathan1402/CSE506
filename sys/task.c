@@ -275,11 +275,15 @@ int exec(char *filename, char** arguments){
 
 	runningTask->regs.rsp = (uint64_t)get_free_page() + 4096;  // create stack at the top of the page, so that it can grow downwards and not go to the previous page
 	runningTask->regs.user_rsp = (uint64_t)get_free_user_page() + 4096;	
-        uint64_t *pointer_to_pml4e = (uint64_t *)((uint64_t)get_free_page() + 0x2000);
-        uint64_t *pointer_to_pdpe = (uint64_t *)((uint64_t)get_free_page());
-        uint64_t *pointer_to_pde = (uint64_t *)((uint64_t)get_free_page());
 	uint64_t a = (uint64_t)get_free_page();
 	uint64_t b = (uint64_t)get_free_page();
+	uint64_t c = (uint64_t)get_free_page();
+        uint64_t *pointer_to_pml4e = (uint64_t *)((uint64_t)get_free_page() + 0x1000);
+	uint64_t d = (uint64_t)get_free_page();
+	uint64_t e = (uint64_t)get_free_page();
+        uint64_t *pointer_to_pdpe = (uint64_t *)((uint64_t)get_free_page());
+        uint64_t *pointer_to_pde = (uint64_t *)((uint64_t)get_free_page());
+	uint64_t f = (uint64_t)get_free_page();
         uint64_t *pointer_to_pte = (uint64_t *)get_free_page();
         runningTask->pml4e = (PML4E *)pointer_to_pml4e;
         memset(runningTask->pml4e, 0, 4096);
@@ -299,6 +303,9 @@ int exec(char *filename, char** arguments){
 	changeCR3(runningTask->pml4e, runningTask->pdpe, runningTask->pde, runningTask->pte, 1);
 
 	load_binary(the_elf, 3);
+	
+	removeFromRunningList(runningTask);
+
 	switch_to_ring_3(runningTask->regs.rip);
 	/*
 	Elf64_Ehdr *the_elf = findElfByName(filename);
@@ -363,7 +370,7 @@ task* createChildTask(){
 	childTask->parent = runningTask;
 	childTask->child = NULL;
 
-        uint64_t *pointer_to_pml4e = (uint64_t *)((uint64_t)get_free_page() + 0x2000);
+        uint64_t *pointer_to_pml4e = (uint64_t *)((uint64_t)get_free_page() + 0x1000);
         uint64_t *pointer_to_pdpe = (uint64_t *)((uint64_t)get_free_page());
         uint64_t *pointer_to_pde = (uint64_t *)((uint64_t)get_free_page());
 	uint64_t a = (uint64_t)get_free_page();
@@ -666,7 +673,7 @@ void addtoZombieList(task* temp )
 void addtoRunningList(task* temp)
 {
 	
-	//kprintf("[Kernel] Adding PID: %d to running list\n", temp->pid);
+	kprintf("[Kernel] Adding PID: %d to running list\n", temp->pid);
 	temp->status = RUNNING_PROCESS_STATUS;
 	tasklist *running_process = (tasklist *)get_free_page();	
 	running_process->pid = temp->pid;
@@ -683,7 +690,7 @@ void addtoRunningList(task* temp)
 }
 
 void removeFromRunningList(task *temp){
-	//kprintf("[Kernel] Removing PID: %d from running list\n", temp->pid);
+	kprintf("[Kernel] Removing PID: %d from running list\n", temp->pid);
 	tasklist *A = runningProcessList;
 	tasklist *B = runningProcessList;
 
@@ -772,7 +779,7 @@ int checkProcessInWaitList(task *temp){
 }
 void addtoReadyList(task *temp){
 
-	//kprintf("[Kernel] Adding PID: %d to ready list\n", temp->pid);
+	kprintf("[Kernel] Adding PID: %d to ready list\n", temp->pid);
 	temp->status= READY_PROCESS_STATUS;
 	tasklist *ready_process = (tasklist *)get_free_page();	
 	ready_process->pid = temp->pid;
@@ -790,7 +797,7 @@ void addtoReadyList(task *temp){
 
 void removeFromReadyList(task *temp){
 
-	//kprintf("[Kernel] Removing PID: %d from ready list\n", temp->pid);
+	kprintf("[Kernel] Removing PID: %d from ready list\n", temp->pid);
 	tasklist *A = readyProcessList;
 	tasklist *B = readyProcessList;
 
