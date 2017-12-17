@@ -85,6 +85,11 @@ char *extractParentFromFilename(char *filename){
 
 int search( char* filename )
 {
+if(strcmp (filename , ".")==1)
+{
+filename= getCurrentPath(filename, 20);
+
+}
 int i=0;
 filedir* temp = (filedir*)fileDescriptor+i;  
 while(temp->filename!= '\0')
@@ -327,23 +332,24 @@ int readDents(int index, char* buffer)
 		filedir* temp1 = (filedir*)temp->children[i];
 		*(buffer+bPos)=strlen(temp1->filename) +1;
 		bPos++;
+		char* temp2= temp1->filename;
+		kprintf ("%s \t", temp2);
 		//buffer+=1;
 		//bPos+=1;
 		//kprintf("ls %s\n", temp->filename);
 		
 
-		for(j =0 ; j< strlen(temp1->filename);j++)
+		/*for(j =0 ; j< strlen(temp1->filename);j++)
 		{
 		*(buffer+bPos) = temp1->filename[j]; 
 		//kprintf("dude %s %s\n", buffer, *(temp1->filename+j));
-		bPos++;
+		bPos++;*/
 		//buffer++;	
 		
-		}
+	}
 	//	*(buffer+bPos) ='\0';
 		//bPos+= strlen(temp1->filename);	
 	//	bPos++;
-	}
 	//kprintf("dude %s \n", buffer);
 	return bPos;		
 }

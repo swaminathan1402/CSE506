@@ -285,15 +285,15 @@ int fork() {
 }
 
 int exec(char *filename, char** arguments){
-	/*
 	Elf64_Ehdr *the_elf = findElfByName(filename);
+	load_binary(the_elf, 3);
+	/*
 	kprintf("%s, %s, %s", arguments[0], arguments[1], arguments[2]);
 	char args[1024];
 	int len = strlen(arguments[1]);
 				for(int i=0; i<len; i++){
 					args[i] = arguments[1][i];
 				}	
-	load_binary(the_elf, 3);
 	
 	kprintf( "%s \n" ,args);
 	char *something = args;
@@ -305,10 +305,11 @@ int exec(char *filename, char** arguments){
 	:"m"(something)
 	:		
 	);
-	runningTask->arguments= something;
-	switch_to_ring_3();
-	return 0;
+	//runningTask->arguments= something;
 	*/
+
+	switch_to_ring_3(runningTask->regs.rip);
+	return 0;
 }
 
 void waiting_on_pid(int child_pid){

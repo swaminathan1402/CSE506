@@ -1,5 +1,7 @@
 #include<stdio.h>
 #include<string.h>
+#include<sys/syscall.h>
+
 int syscall_write(int fd, char *buffer, int count){
 
 
@@ -25,7 +27,7 @@ int syscall_write(int fd, char *buffer, int count){
 
 int main(int argc, char *argv[], char *envp[]) {
 
-  char *message = argv[1];
+  char *message = "Hello World";
   syscall_write(0, message, strlen(message));
-  return 0;
+    return 0;
 }

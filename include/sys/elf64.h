@@ -45,4 +45,6 @@ void load_binary(Elf64_Ehdr *, int);
 Elf64_Ehdr *fineElfByName(char *);
 Elf64_Ehdr *sbush_elf;
 Elf64_Ehdr *idle_elf;
+Elf64_Ehdr *echo_elf;
+
 #endif
