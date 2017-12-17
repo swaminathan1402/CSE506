@@ -291,6 +291,8 @@ int exec(char *filename, char** arguments){
 	
 	kprintf("%s, %s, %s", arguments[0], arguments[1], arguments[2]);
 	Elf64_Ehdr *the_elf = findElfByName(filename);
+ 	runningTask->arguments= arguments;	
+	load_arguments(runningTask->regs.user_rsp);
 	load_binary(the_elf, 3);
 	
 	//char args[1024];
@@ -309,8 +311,7 @@ int exec(char *filename, char** arguments){
 	:"m"(something)
 	:		
 	);*/
-	runningTask->arguments= arguments;
-	load_arguments(runningTask->regs.user_rsp);
+	
 	switch_to_ring_3(runningTask->regs.rip);
 	return 0;
 }
@@ -571,10 +572,6 @@ void createTask(
 void test_user_function()
 {
 	
-	__asm__ __volatile__(
-	"syscall;"
-	)
-	while(1);
 
 }
 
