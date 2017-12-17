@@ -4,6 +4,7 @@ void _start(void) {
  int argc = -7;
   char* argv[] = {"None"};
   char* envp[] = {"None"};
+/*
 
 __asm__ __volatile__(
     //"addq $0x18,%%rsp;"
@@ -20,7 +21,7 @@ __asm__ __volatile__(
   );
 printf("%d, %s", argc , argv[0]);
 //while(1);	
-
+*/
   main(argc, argv, envp);
   __asm__(
      "movq $60, %%rax;"

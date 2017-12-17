@@ -130,7 +130,7 @@ void tarfs_read(){
 		//kprintf("\n******Filename: %s Mode: %p Size: %d\n", file->name, file->mode, octal_to_decimal(file->size, 11));
 		Elf64_Ehdr *something = (Elf64_Ehdr *)(file + 1);
 		index++;
-		if(strcmp(file->name, "bin/sbush")==1){
+		if(strcmp(file->name, "bin/sleep")==1){
 		kprintf("Adding %s: %d %p < %p\n", file->name, index, file, (uint64_t)&_binary_tarfs_end);
 			sbush_elf = something;
 		}

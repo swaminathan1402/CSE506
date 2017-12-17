@@ -20,6 +20,17 @@ int syscall_kill_pid(int pid){
 	return (signed)ret;
 }
 
+void syscall_sleep(int time){
+    __asm__ __volatile__(
+        "movq $6, %%rax;"
+        "movq %0, %%rdi;"
+        "int $0x80;"
+        :
+        :"m"(time)
+        :"rax", "rdi"
+    );
+}
+
 void* syscall_mmap ( unsigned long addr, unsigned long len, unsigned long prot, unsigned long flags, unsigned long fd, unsigned long offset){
 	void *ret;    
         __asm__ (

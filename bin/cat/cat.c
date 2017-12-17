@@ -1,90 +1,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-size_t syscall_read(int fd, char *buffer, size_t count){
-   
-    long long int fd1 = (long long int) fd;
-    long long int buffer1 = (long long int) buffer;
-    long long int count1 = (long long int) count;
-    
-    long long int ret;
-    __asm__ __volatile__(
-
-        "movq $0, %%rax;"
-        "movq %1, %%rbx;"
-        "movq %2, %%rcx;"
-        "movq %3, %%rdx;"
-        "syscall;"
-        "movq %%rax, %0;"
-        :"=r"(ret)
-        :"r"(fd1), "r"(buffer1), "r"(count1)
-        :"rax", "rbx", "rcx", "rdx"
-    );
-    int i = 0;
-    while(buffer[i] != '\n') i++;
-    buffer[i] = '\0';
-    return ret;
-}
-
-int syscall_write(int fd, char *buffer, size_t count){
+#include <syscall.h>
 
 
-    long long int fd1 = (long long int) fd;
-    long long int buffer1 = (long long int) buffer;
-    long long int count1 = (long long int) count;
-    long long int ret;
+void cat(char *filename){
 
+    char str[400];
+    char *strin= str;
+    int file_fd= syscall_open(filename, 0,0);
 
-    __asm__ __volatile__(
+    if(file_fd == -1)
+            return;
 
-        "movq $1, %%rax;"
-        "movq %1, %%rbx;"
-        "movq %2, %%rcx;"
-        "movq %3, %%rdx;"
-        "syscall;"
-        "movq %%rax, %0;"
-        :"=r"(ret)
-        :"r"(fd1), "r"(buffer1), "r"(count1)
-        :"rax", "rbx", "rcx", "rdx"
-    );
-    return ret;
-}
-
-size_t syscall_open (const char *filename, int flags, int mode)
-{
-        long long int filename1= (long long int)filename ;
-        long long int flags1=(long long int)flags;
-        long long int mode1= (long long int)mode;
-         long long int ret;
-        __asm__(
-                "movq $2, %%rax;"
-                "movq %1,%%rbx;"
-                "movq %2,%%rcx;"
-                "movq %3,%%rdx;"
-                "syscall;"
-                "movq %%rax,%0"
-                :"=r"(ret)
-                :"r"(filename1),"r"(flags1),"r"(mode1)
-                :"rax","rbx","rcx","rdx"
-                );
-        return ret;
-}
-
-int syscall_close(unsigned int fd)
-{
-    long long int ret;
-    long long int fd1 = (long long int) fd;
-
-     __asm__("movq $3,%%rax;"
-	"movq %1,%%rbx;"
-        "syscall;"
-	"movq %%rax, %0;"
-	:"=r"(ret)
-	:"r"(fd1)
-	:"rax", "rbx"
-	);
-	return ret;
+    int size= syscall_read(file_fd , strin , 400);
+    syscall_write(1, strin,size);
 }
 
 int main (int argc, char *argv[], char *envp[])
