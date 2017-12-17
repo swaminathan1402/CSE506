@@ -298,8 +298,8 @@ int exec(char *filename, char** arguments){
 	//			}	
 	
 //	kprintf( "%s \n" ,args);
-	char *something = arguments;
-	kprintf("something %s \n", something);
+//	char *something = arguments;
+//	kprintf("something %s \n", something);
 	/*__asm__ __volatile__
 	(
 	"movq %0,  %%rsi;"
@@ -307,7 +307,7 @@ int exec(char *filename, char** arguments){
 	:"m"(something)
 	:		
 	);*/
-	runningTask->arguments= something;
+	runningTask->arguments= arguments;
 	switch_to_ring_3(runningTask->regs.rip);
 	return 0;
 }
@@ -586,10 +586,10 @@ kprintf("args: %s", runningTask->arguments);
 __asm__  __volatile__
 (
 "movq %%rsp ,%%r11;"
-"movq %0 ,%%r8 "
+"movq %0 ,%%r8;" 
 "movq %%r8 , %%rsp;"
-"movq %1 , %%rdi "
-"movq %%rdi ,(%%rsp)"
+"movq %1 , %%rdi;"
+"movq %%rdi ,(%%rsp);"
 "movq %%r11, %%rsp;"
 :
 : "m"(user_rsp), "m"(argc)
@@ -602,6 +602,7 @@ return;
 for( int i=0; i<argc; i++)
 {
 memcpy( user_rsp-i*64 ,runningTask->arguments[i] ,64);
+kprintf("\n%s", runningTask->arguments[i]);
 }
 
 
@@ -629,8 +630,8 @@ __asm__ __volatile__(
 : "m"(argc) , "m"(user_rsp)
 :"memory"
 );
+<<<<<<< HEAD
 */
-
 
 void switch_to_ring_3()
 {
@@ -639,7 +640,7 @@ void switch_to_ring_3()
 		kprintf("[Kernel]: removing its child junk %p\n", runningTask->child);
 		free((uint64_t)runningTask->child);
 	}
-	loadArguments();
+	load_arguments(runningTask->regs.user_rsp);
 
 
 
