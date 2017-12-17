@@ -584,13 +584,13 @@ argc++;
 __asm__  __volatile__
 (
 "movq %%rsp ,%%r11;"
-"movq %0 ,%%r8 "
+"movq %0 ,%%r8;" 
 "movq %%r8 , %%rsp;"
-"movq %1 , %%rdi "
-"movq %%rdi ,(%%rsp)"
+"movq %1 , %%rdi;"
+"movq %%rdi ,(%%rsp);"
 "movq %%r11, %%rsp;"
 :
-: "m"(user_rsp) "m"(argc)
+: "m"(user_rsp), "m"(argc)
 );
 
 if(argc==0)
@@ -627,9 +627,9 @@ __asm__ __volatile__(
 : "m"(argc) , "m"(user_rsp)
 :"memory"
 );
-*/
-}
 
+}
+*/
 void switch_to_ring_3()
 {
 
@@ -637,7 +637,7 @@ void switch_to_ring_3()
 		kprintf("[Kernel]: removing its child junk %p\n", runningTask->child);
 		free((uint64_t)runningTask->child);
 	}
-	loadArguments();
+	load_arguments(runningTask->regs.user_rsp);
 
 
 
