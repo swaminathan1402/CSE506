@@ -283,16 +283,16 @@ syscall_write(1, strin,size);
 
 
 int main(int argc, char *argv[], char *envp[]){
-  //syscall_write(0, "hello world\n", 11); 
-  //syscall_write(0, "hello world\n", 11); 
   //int pid = 0;
     int pid = syscall_fork();
     if (pid == 0){
-      syscall_write(0, "child process\n", 14);	
+      syscall_write(0, "child process\n", 14);
+	//char *command_args[] = {"bin/echo", "hello mister karey ka sister", NULL};
+  	 //syscall_execvpe("bin/echo", command_args, NULL);
     } else {
 	int status;
 	int ret = syscall_waitpid(pid, &status, NULL);
   	syscall_write(0, "good process\n", 12);
     }
-return ;
+return 0;
 }

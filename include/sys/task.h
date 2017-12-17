@@ -7,7 +7,9 @@
 #define RUNNING_PROCESS_STATUS 1
 #define SLEEPING_PROCESS_STATUS 2
 #define ZOMBIE_PROCESS_STATUS 3
-#define ORPHAN_PROCESS_STATUS 4
+#define READY_PROCESS_STATUS 4
+#define WAITING_PROCESS_STATUS 5
+
 void initTasking();
 typedef struct {
 	uint64_t rsp, rbp, rip, cr3, user_rsp;
@@ -51,6 +53,7 @@ int pid;
 tasklist* runningProcessList;
 tasklist*  zombieProcessList;
 tasklist* waitProcessList;
+tasklist *readyProcessList;
 
 
 void createTask(void(*)(), uint64_t, uint64_t);
@@ -75,6 +78,9 @@ void addtozombieList(task*);
 void addtowaitList( task*);
 void addtorunningList( task*);
 void removefromOtherList(task*);
+void removeFromRunningList(task *);
+void addtoReadyList(task *);
 void clean_zombies();
 void free(task *);
+void reap_zombie_process(task *);
 #endif

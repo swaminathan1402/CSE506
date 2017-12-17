@@ -214,6 +214,9 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   runningProcessList = NULL;
   waitProcessList= (tasklist*) get_free_page();	
   waitProcessList = NULL;
+
+  readyProcessList = (tasklist *)get_free_page();
+  readyProcessList = NULL;
   tarfs_read();
   
   read_elf(idle_elf,0);	// idle is elf type and global

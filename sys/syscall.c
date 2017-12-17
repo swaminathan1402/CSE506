@@ -191,6 +191,8 @@ case 24: // sys_yield
 	:
     );
   //kprintf("yield");
+  removeFromRunningList(runningTask);
+  addtoReadyList(runningTask);
   temp_yield(0);
   break;
 
