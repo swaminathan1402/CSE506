@@ -53,7 +53,7 @@ void read_elf(Elf64_Ehdr *file ,int index){
 //		vm_area_struct new_vma =  init_vm_area_struct(program_header->p_vaddr , program_header->p_memsz+ program_header->p_vaddr,MAP ,NULL,NULL );
 			uint64_t lets_see_size = (uint64_t)(program_header->p_memsz+ program_header->p_vaddr);
 			vm_area_struct *new_vma = create_new_vma((uint64_t)program_header->p_vaddr, lets_see_size, lets_see_size, VMA_TEXT_TYPE);
-			//kprintf("%p %p %p %p %pnew vma\n", new_vma->vm_start, new_vma->vm_end, new_vma, runningTask, runningTask->mm);
+			kprintf("%p %p %p %p %pnew vma\n", new_vma->vm_start, new_vma->vm_end, new_vma, runningTask, runningTask->mm);
 			init_insert_vma(runningTask->mm, new_vma);
 
 			// map those virtual addresses 

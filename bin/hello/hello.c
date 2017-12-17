@@ -281,140 +281,18 @@ syscall_write(1, strin,size);
 //syscall_close(filename);
 }
 
-uint64_t syscall_mmap(int bytes){
-
-    
-    long long int ret;
-    long long int bytes1 = (long long int) bytes;
-     __asm__(
-	"movq $9,%%rax;"
-	"movq %1,%%rdi;"
-        "int $0x80;"
-	"movq %%rax, %0;"
-	:"=r"(ret)
-	:"r"(bytes1)
-	:"rax", "rdi"
-	);
-
-    return ret;
-}
-
-uint64_t syscall_munmap(uint64_t addr){
-
-    long long int ret;
-    long long int addr1 = (long long int) addr;
-     __asm__(
-	"movq $11, %%rax;"
-	"movq %1, %%rdi;"
-        "int $0x80;"
-	"movq %%rax, %0;"
-	:"=r"(ret)
-	:"r"(addr1)
-	:"rax", "rdi"
-	);
-
-    return ret;
-}
-
-void *malloc(int bytes){
-	uint64_t addr = syscall_mmap(bytes);
-	return (void*)addr;	
-}
-
-void free(uint64_t addr){
-
-	syscall_munmap(addr);
-}
 
 int main(int argc, char *argv[], char *envp[]){
-for(int i=0; i<2; i++){
-  int pid = syscall_fork();
-  if (pid == 0){
-    syscall_write(0, "child process\n", 14);
-    /*
-	Segmentation faul testing 
-    int *x = (int *)0xffffffffffffffff;
-    *x = *x + 20;
-    */
-    /*
-	Stack overflow testing	
-    char buffer[10000000];
-    int i=0;
-    while(1){
-	buffer[i] = 'a';
-	i++;
-	syscall_write(0, buffer, 10000000);
-    }
-    */
-	/*
-    syscall_write(0, "child process2\n", 14);
-    int c = (int)malloc(4);
-    int d = (int)malloc(123);
-    char *str = (char *)malloc(1024);
-    str = "nirvik ghosh is the best";
-    syscall_write(0, str, strlen(str));
-    free(str);
-	*/
-    //free(c);
-    //free(d);
-    /*
-		Multiple forks
-    int pid2 = syscall_fork();
-    if(pid2 == 0){
-
-	    syscall_write(0, "hello1\n", 5);
+  //syscall_write(0, "hello world\n", 11); 
+  //syscall_write(0, "hello world\n", 11); 
+  //int pid = 0;
+    int pid = syscall_fork();
+    if (pid == 0){
+      syscall_write(0, "child process\n", 14);	
     } else {
-
-	    syscall_write(0, "hello2\n", 5);
+	//int status;
+	//int ret = syscall_waitpid(pid, &status, NULL);
+  	syscall_write(0, "good process\n", 12);
     }
-    */
-    //char *command_args[] = {"bin/echo", "hello mister karey ka sister", (char *)0};
-    //syscall_execvpe("bin/echo", command_args, (char *)0); // TODO
-    //syscall_write(0 , "childprocess\n" , 13);
-
-    //int fd = openDir("bin/",0);
-/*	char fdchar[5] ="Fd:";
-	fdchar[3]= fd+48;               
-	fdchar[4]= '\n';                
-	syscall_write(0 , fdchar, 4);
-*/
-	
-	//readDir(fd);
- 	//cat("text_files/text2.txt");
-
-
-	/*
- 	char buffer[20];	
-        syscall_getcwd(buffer,20);
-        syscall_write(1, buffer ,strlen(buffer));
-	char buffer2[10];
-	int ret=syscall_chdir("usr/");
-	syscall_getcwd(buffer2,10);
-	if(ret==1)
-	{
-	syscall_write(1,buffer2, strlen(buffer2));
-	}
-	else
-	{
-	char buffer2[15]= "Wrong setting";
-	syscall_write(1 ,buffer2, strlen(buffer2));
-	}
-	ret=syscall_chdir("..");
-	syscall_getcwd(buffer2,10 );
-	syscall_write(1,buffer2,10);
-	ret=syscall_chdir("bin/");
-        syscall_getcwd(buffer2,10 );
-        syscall_write(1,buffer2,10);
-	ret=syscall_chdir("/");
-        syscall_getcwd(buffer2,10 );
-        syscall_write(1,buffer2,10);
-	*/
-	
-} else {
-	int status; 
-	int ret = syscall_waitpid(pid, &status, NULL);
-	syscall_write(0, "good process\n", 12);
-  }
-}
 return ;
 }

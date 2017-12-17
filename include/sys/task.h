@@ -28,12 +28,14 @@ typedef struct task{
 	int isChild;
 	struct task *parent;  //for pid inheritance
 	struct task *child;	
+	char arguments[256];
 } task;
 
 typedef struct tasklist{
 int pid ;
 task* entry;
 struct tasklist* next; 
+char* command;
 }tasklist;
 
 
@@ -62,7 +64,7 @@ void beIdle();
 void removeTask();
 int fork();
 task* createChildTask();
-int exec(char *);
+int exec(char * ,char** );
 
 void getprocessList();
 

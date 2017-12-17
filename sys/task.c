@@ -217,7 +217,33 @@ void free(task *zombie_process){
 	pages_to_free++;
 
 	// reap VMA : TODO
+	int index = 0;
+	int count = 0;
+	mm_struct *mm_to_clean = runningTask->mm;
+	vm_area_struct *vms_to_clean = mm_to_clean->head;
+	while(vms_to_clean->next != mm_to_clean->head){
+		count++;
+		vms_to_clean = vms_to_clean->next;
+		//kprintf("[Kernel]: VMA %d\n", count);
+	}	
+	while(index <= count){
+		index++;
+		vm_area_struct *temp = vms_to_clean->next;
+		kprintf("[Kernel] Removing VMA %d %p\n", index+1, vms_to_clean);
+		pages_to_free++;
+		remove_page((uint64_t)vms_to_clean);
+		vms_to_clean = temp;
+	}
+
 	
+	remove_page((uint64_t)runningTask->mm);
+	pages_to_free++;
+	remove_page((uint64_t)runningTask->regs.rsp);
+	pages_to_free++;
+	remove_page((uint64_t)runningTask->regs.user_rsp);
+	pages_to_free++;
+	remove_page((uint64_t)runningTask);
+	pages_to_free++;
 	//uint64_t freak_page = (uint64_t)get_free_page();
 	//kprintf("freak page is %p \n", freak_page);
 	//changeCR3((PML4E *)kernel_pml4e, (PDPE *)kernel_pdpe, (PDE *)kernel_pde, (PTE *)kernel_pte, 0);
@@ -237,12 +263,31 @@ int fork() {
 	return child_pid;
 }
 
-int exec(char *filename){
-
+int exec(char *filename, char** arguments){
+	/*
 	Elf64_Ehdr *the_elf = findElfByName(filename);
+	kprintf("%s, %s, %s", arguments[0], arguments[1], arguments[2]);
+	char args[1024];
+	int len = strlen(arguments[1]);
+				for(int i=0; i<len; i++){
+					args[i] = arguments[1][i];
+				}	
 	load_binary(the_elf, 3);
+	
+	kprintf( "%s \n" ,args);
+	char *something = args;
+	kprintf("something %s \n", something);
+	__asm__ __volatile__
+	(
+	"movq %0,  %%rsi;"
+	:
+	:"m"(something)
+	:		
+	);
+	runningTask->arguments= something;
 	switch_to_ring_3();
 	return 0;
+	*/
 }
 
 void waiting_on_pid(int child_pid){
@@ -440,6 +485,7 @@ void createTask(
 	me->mm = get_mm_struct();
 	vm_area_struct *new_stack_vma = create_new_vma(me->regs.user_rsp-4096, me->regs.user_rsp, 8192, VMA_STACK_TYPE);
 	init_insert_vma(me->mm, new_stack_vma);
+	kprintf("%p %p %p %p %pnew vma\n", new_stack_vma->vm_start, new_stack_vma->vm_end, new_stack_vma, runningTask, runningTask->mm);
 
 	me->pid = pid;
 	me->isChild = 0;
@@ -508,14 +554,32 @@ void test_user_function()
 
 }
 
+void load_arguments(uint64_t user_rsp ,int argc)
+{
+__asm__ __volatile__(
+"movq %0 , %%rdi;"
+"movq %%rsp, %%r11;"
+"movq %1, %%r8;"
+"movq %%r8 ,%%rsp;"
+"subq $0x18, %%rsp;"
+"movq %%rdi,(%%rsp);"
+"movq %%rsi ,8(%%rsp);"
+"movq %%r11 , %%rsp;"
+:
+: "m"(argc) , "m"(user_rsp)
+:"memory"
+);
+
+}
 
 void switch_to_ring_3()
 {
+
 	if(runningTask->child && runningTask->child->status == ZOMBIE_PROCESS_STATUS){
 		kprintf("[Kernel]: removing its child junk %p\n", runningTask->child);
 	}
 	changeCR3(runningTask->pml4e, runningTask->pdpe, runningTask->pde, runningTask->pte, 0);
-        //kprintf("new cr3 %p and pointing to %p\n", runningTask->pml4e, runningTask->regs.rip);
+        //kprintf("new cr3 %p and pointing to %p\n", runningTask->pml4e, runningTask->regs.rip);	
 	__asm__ __volatile__ (
         	"movq %0, %%r11;"
         	"movq %%r11, %%rsp;"
@@ -523,6 +587,7 @@ void switch_to_ring_3()
             : "m"(runningTask->regs.rsp)
             :
         );
+
 	uint64_t fn_to_execute =  runningTask->regs.rip;
 	//uint64_t* user_rsp= (uint64_t*)get_free_user_page();
 	//user_rsp += 0x1000;
@@ -596,8 +661,7 @@ void removefromOtherLists(task * temp)
 
 }
 
-
-void addtoZombieList(task* temp)
+void addtoZombieList(task* temp )
 {
 	temp->status = ZOMBIE_PROCESS_STATUS;
 	tasklist *new_zombie = (tasklist *)get_free_page();
@@ -613,41 +677,10 @@ void addtoZombieList(task* temp)
 	}
 	kprintf("added zombie %p!\n", new_zombie);
 	/*
-	tasklist* current_zombie =zombieProcessList;
-	if(current_zombie==NULL)
-	{
-		current_zombie->pid = temp->pid;
-		current_zombie->entry= temp;
-		current_zombie->next=NULL;
-	}
-	else
-	{
-		tasklist* temp1= (tasklist*) zombieProcessList;
-		while(current_zombie != NULL){
-			current_zombie = current_zombie->next;
-		}
-		current_zombie->pid =temp->pid;
-		current_zombie->next =NULL;
-		current_zombie->entry= temp;
-		zombieProcessList= temp1;
-	}
 	*/
 /*
-temp->status = ZOMBIE_PROCESS_STATUS;
-tasklist* temp1= (tasklist*) zombieProcessList;
-tasklist* current_zombie =zombieProcessList;
-while(current_zombie != NULL)
-{
-current_zombie = current_zombie->next;
-}
-current_zombie->pid =temp->pid;
-current_zombie->next =NULL;
-current_zombie->entry= temp;
-zombieProcessList= temp1;
-removefromOtherLists(temp);
 */
 }
-
 
 
 void addtoRunningList(task* temp)
@@ -768,9 +801,9 @@ void removeTask(){
 	// we just add this to zombie queue
 	// reclaim all the pages used by this task
 	changeCR3((PML4E *)kernel_pml4e, (PDPE *)kernel_pdpe, (PDE *)kernel_pde, (PTE *)kernel_pte, 0);
-	free(runningTask);
+	//free(runningTask);
 
-	kprintf("[Kernel PID:%d]: Adding %p to zombie queue\n", runningTask->pid);
+	//kprintf("[Kernel PID:%d]: Adding %p to zombie queue\n", runningTask->pid);
 	runningTask->prev->next = runningTask->next;
 	runningTask->next->prev = runningTask->prev;
 	runningTask->status = ZOMBIE_PROCESS_STATUS; 
@@ -778,7 +811,6 @@ void removeTask(){
 	
 	//kprintf("Changed the task from %d to %d and prev is %d\n", runningTask->pid, next->pid, temp->pid);
 
-	//yield(); // this is only supposed to switch the stack
 	__asm__ __volatile__ (
 		"movq %0, %%rdi;"
 		"movq %1, %%rsi;"
@@ -788,6 +820,7 @@ void removeTask(){
 	);
 
 	runningTask = runningTask->next;
+	addtoRunningList(runningTask);
 	// switch the rsp's
 
 	__asm__ __volatile__ (
@@ -825,10 +858,6 @@ void temp_yield(int exec_next){
 		:
 	);
 	/*
-	if(exec_next){
-	} else {
-		runningTask = runningTask->prev;
-	}
 	*/
 	runningTask = runningTask->next;
 	__asm__ __volatile__ (
@@ -843,4 +872,20 @@ void temp_yield(int exec_next){
 
 void clean_zombies(){
 	//kprintf("[Kernel]: Removing all the zombie processes\n");
+	// traverse zombie list
+	// usually called by the main task
+	
+	tasklist *current_zombie = zombieProcessList;
+	while(current_zombie != NULL){
+		if(current_zombie->parent == NULL){
+			// clean it up
+		}
+		else if(current_zombie->parent == runningTask){
+			// say parent has died
+			// before dying, parent assigns responsibility to 1
+
+		}
+		current_zombie = current_zombie->next;
+	}
+
 }
