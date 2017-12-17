@@ -28,7 +28,7 @@ typedef struct task{
 	int isChild;
 	struct task *parent;  //for pid inheritance
 	struct task *child;	
-	char arguments[256];
+	char **arguments;
 } task;
 
 typedef struct tasklist{

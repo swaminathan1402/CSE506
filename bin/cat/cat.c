@@ -83,7 +83,8 @@ int syscall_close(unsigned int fd)
 int main (int argc, char *argv[], char *envp[])
 {
      
-      
+   	//char* file2 = argv[1] ;
+//	printf  
 	int temp=1;
 	char str[100];
 	char *strin = str;

@@ -287,27 +287,25 @@ int fork() {
 int exec(char *filename, char** arguments){
 	Elf64_Ehdr *the_elf = findElfByName(filename);
 	load_binary(the_elf, 3);
-	/*
-	kprintf("%s, %s, %s", arguments[0], arguments[1], arguments[2]);
-	char args[1024];
-	int len = strlen(arguments[1]);
-				for(int i=0; i<len; i++){
-					args[i] = arguments[1][i];
-				}	
 	
-	kprintf( "%s \n" ,args);
-	char *something = args;
+	kprintf("%s, %s, %s", arguments[0], arguments[1], arguments[2]);
+	//char args[1024];
+	//int len = strlen(arguments[1]);
+	//			for(int i=0; i<len; i++){
+	//				args[i] = arguments[1][i];
+	//			}	
+	
+//	kprintf( "%s \n" ,args);
+	char *something = arguments;
 	kprintf("something %s \n", something);
-	__asm__ __volatile__
+	/*__asm__ __volatile__
 	(
 	"movq %0,  %%rsi;"
 	:
 	:"m"(something)
 	:		
-	);
-	//runningTask->arguments= something;
-	*/
-
+	);*/
+	runningTask->arguments= something;
 	switch_to_ring_3(runningTask->regs.rip);
 	return 0;
 }
@@ -569,29 +567,67 @@ void test_user_function()
 {
 	
 	__asm__ __volatile__(
-
 	"syscall;"
 	);
 	while(1);
 
 }
 
-void load_arguments(uint64_t user_rsp ,int argc)
+void load_arguments(uint64_t user_rsp)
 {
+int argc =0;
+while(runningTask->arguments[argc]!='\0')
+{
+argc++;
+}
+
+__asm__  __volatile__
+(
+"movq %%rsp ,%%r11;"
+"movq %0 ,%%r8 "
+"movq %%r8 , %%rsp;"
+"movq %1 , %%rdi "
+"movq %%rdi ,(%%rsp)"
+"movq %%r11, %%rsp;"
+:
+: "m"(user_rsp) "m"(argc)
+);
+
+if(argc==0)
+{
+return;
+}
+for( int i=0; i<argc; i++)
+{
+memcpy( user_rsp-i*64 ,runningTask->arguments[i] ,64);
+}
+
+
+}
+
+/*
 __asm__ __volatile__(
-"movq %0 , %%rdi;"
-"movq %%rsp, %%r11;"
-"movq %1, %%r8;"
-"movq %%r8 ,%%rsp;"
-"subq $0x18, %%rsp;"
+"movq %0 , %%rsi;"
+"movq %1,%%rdi;"
+:
+:"m"(runningTask->arguments), "m"(argc)
+:
+);
+
+__asm__ __volatile__(
+
+
+
+
+"subq $0x28, %%rsp;"
 "movq %%rdi,(%%rsp);"
 "movq %%rsi ,8(%%rsp);"
-"movq %%r11 , %%rsp;"
+
 :
 : "m"(argc) , "m"(user_rsp)
 :"memory"
 );
-
+*/
 }
 
 void switch_to_ring_3()
@@ -601,6 +637,11 @@ void switch_to_ring_3()
 		kprintf("[Kernel]: removing its child junk %p\n", runningTask->child);
 		free((uint64_t)runningTask->child);
 	}
+	loadArguments();
+
+
+
+
 	changeCR3(runningTask->pml4e, runningTask->pdpe, runningTask->pde, runningTask->pte, 0);
         //kprintf("new cr3 %p and pointing to %p\n", runningTask->pml4e, runningTask->regs.rip);	
 	__asm__ __volatile__ (

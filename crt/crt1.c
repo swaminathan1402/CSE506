@@ -5,22 +5,20 @@ void _start(void) {
   char* argv[] = {"None"};
   char* envp[] = {"None"};
 
-/*
+
 __asm__ __volatile__(
-    //"addq $0x18,%%rsp;"
+    "addq $0x28,%%rsp;"
     "movq (%%rsp),%%rdi;"
-    "movq 8(%%rsp), %%rsi;"
-  //  "movq 16(%%rsp,%%rdi,8 ),%%rdx;"
+      //  "movq 16(%%rsp,%%rdi,8 ),%%rdx;"
     "movq %%rdi, %0;"
-    "movq %%rsi, %1;"
   //  "movq %%rdx, %2;"
-    :"=m"(argc), "=m"(argv)
+    :"=m"(argc) 
     :
     :"memory"
-  );
-printf("%d, %s", argc , argv[0]);
+ );
+printf("%d  ", argc );
 //while(1);	
-*/
+
   main(argc, argv, envp);
   __asm__(
      "movq $60, %%rax;"
