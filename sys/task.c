@@ -910,7 +910,7 @@ void removeTask(){
 		:
 		:
 	);
-	//getprocessList();
+	getprocessList();
 	switch_to_ring_3(runningTask->regs.rip);
 	
 }
