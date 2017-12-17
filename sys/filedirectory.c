@@ -316,35 +316,15 @@ int readDents(int index, char* buffer)
 	}
 	for(i=0;i< temp->child_count; i++)
 	{
-		//char* tempString =converttoString((uint64_t)temp->children[i]); 
-	//	memcpy(buffer,tempString ,8); 
-	//	bPos =bPos+8;
-	//	buffer+=8;
-	//	*(buffer) =i;	
-	//	bPos= bPos+8;
-	//	buffer+=8;
-
+		
 		filedir* temp1 = (filedir*)temp->children[i];
-		*(buffer+bPos)=strlen(temp1->filename) +1;
+		char *temp2 = (temp1->filename);
+		//*(buffer+bPos)=strlen(temp1->filename) +1;
 		bPos++;
-		//buffer+=1;
-		//bPos+=1;
-		//kprintf("ls %s\n", temp->filename);
+		kprintf("ls %s\n", temp2);
 		
 
-		for(j =0 ; j< strlen(temp1->filename);j++)
-		{
-		*(buffer+bPos) = temp1->filename[j]; 
-		//kprintf("dude %s %s\n", buffer, *(temp1->filename+j));
-		bPos++;
-		//buffer++;	
-		
-		}
-	//	*(buffer+bPos) ='\0';
-		//bPos+= strlen(temp1->filename);	
-	//	bPos++;
 	}
-	//kprintf("dude %s \n", buffer);
 	return bPos;		
 }
 

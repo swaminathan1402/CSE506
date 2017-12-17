@@ -71,38 +71,17 @@ int getdents(int fd, char *buffer){
 
 int readDir(int fd)
 {
-        char s[1024];
-        char *buffer = s;
-         long long int ret;
-        struct dirent *dirp;
-        while (1)
-        {
-		ret = getdents(fd, buffer);	
+        char buffer[1024];
+	int ret = getdents(fd, buffer);	
             //printf("%d",ret);
             if(ret ==-1){
-		//printf("\nError");
-             	break;
+		syscall_write( 1,"\nError reading file", 20);
             }
             if(ret==0){
-		//printf( "\nEmpty directory");
-            	break;
+		syscall_write(1, "\nEmpty directory", 15);
             }
-
-           for (int bpos=0 ; bpos<ret;){
-                dirp = ( struct dirent *)(buffer +bpos);
-                //printf("\t%s",dirp->d_name);
-		char *toPrint = dirp->d_name;
-		char *space = "\t";
-		strcat(toPrint, space);
-		int size_toPrint = strlen(toPrint);
-		syscall_write(1, toPrint, size_toPrint);
-                bpos += dirp->d_reclen;
-           }
-        }
 	return 1;
-
 }
-
 
 int closeDir(int fd)
 {
@@ -154,6 +133,11 @@ int main (int argc , char *argv[], char *envp[])
 	        closeDir(fd);
         }
 	*/
+	const char *filename = "bin/";
+	int fd = openDir(filename, 0);
+	if(fd == -1) return 0;
+	readDir(fd);
+	closeDir(fd);
 	syscall_write(0, "awesome\n",9);
         return 0;
 }

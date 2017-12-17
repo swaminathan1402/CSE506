@@ -240,8 +240,8 @@ void free(task *zombie_process){
 	pages_to_free++;
 	remove_page((uint64_t)zombie_process->regs.rsp);
 	pages_to_free++;
-	remove_page((uint64_t)zombie_process->regs.user_rsp);
-	pages_to_free++;
+	//remove_page((uint64_t)zombie_process->regs.user_rsp);
+	//pages_to_free++;
 
 
 	//uint64_t freak_page = (uint64_t)get_free_page();
@@ -267,6 +267,39 @@ int fork() {
 }
 
 int exec(char *filename, char** arguments){
+	kprintf("[Kernel]: Performing an exec of %s\n", filename);
+	kprintf("[Kernel] Elf name %s\n", filename);
+	Elf64_Ehdr *the_elf = findElfByName(filename);
+	changeCR3((PML4E *)kernel_pml4e, (PDPE *)kernel_pdpe, (PDE *)kernel_pde, (PTE *)kernel_pte, 0);
+	free((uint64_t)runningTask);
+
+	runningTask->regs.rsp = (uint64_t)get_free_page() + 4096;  // create stack at the top of the page, so that it can grow downwards and not go to the previous page
+	runningTask->regs.user_rsp = (uint64_t)get_free_user_page() + 4096;	
+        uint64_t *pointer_to_pml4e = (uint64_t *)((uint64_t)get_free_page() + 0x2000);
+        uint64_t *pointer_to_pdpe = (uint64_t *)((uint64_t)get_free_page());
+        uint64_t *pointer_to_pde = (uint64_t *)((uint64_t)get_free_page());
+	uint64_t a = (uint64_t)get_free_page();
+	uint64_t b = (uint64_t)get_free_page();
+        uint64_t *pointer_to_pte = (uint64_t *)get_free_page();
+        runningTask->pml4e = (PML4E *)pointer_to_pml4e;
+        memset(runningTask->pml4e, 0, 4096);
+        runningTask->pdpe = (PDPE *)pointer_to_pdpe;
+        memset(runningTask->pdpe, 0, 4096);
+        runningTask->pde = (PDE *)pointer_to_pde;
+        memset(runningTask->pde, 0, 4096);
+        runningTask->pte = (PTE *)pointer_to_pte;
+        memset(runningTask->pte, 0, 4096);
+        runningTask->pml4e[511] = pml4e[511];
+        runningTask->regs.cr3 = (uint64_t)runningTask->pml4e;
+	a = (uint64_t)get_free_page();
+	b = (uint64_t)get_free_page();
+	runningTask->mm = get_mm_struct();
+	vm_area_struct *new_stack_vma = create_new_vma(runningTask->regs.user_rsp-4096, runningTask->regs.user_rsp, 8192, VMA_STACK_TYPE);
+	init_insert_vma(runningTask->mm, new_stack_vma);
+	changeCR3(runningTask->pml4e, runningTask->pdpe, runningTask->pde, runningTask->pte, 1);
+
+	load_binary(the_elf, 3);
+	switch_to_ring_3(runningTask->regs.rip);
 	/*
 	Elf64_Ehdr *the_elf = findElfByName(filename);
 	kprintf("%s, %s, %s", arguments[0], arguments[1], arguments[2]);
@@ -288,7 +321,6 @@ int exec(char *filename, char** arguments){
 	:		
 	);
 	runningTask->arguments= something;
-	switch_to_ring_3();
 	return 0;
 	*/
 }
@@ -634,7 +666,7 @@ void addtoZombieList(task* temp )
 void addtoRunningList(task* temp)
 {
 	
-	kprintf("[Kernel] Adding PID: %d to running list\n", temp->pid);
+	//kprintf("[Kernel] Adding PID: %d to running list\n", temp->pid);
 	temp->status = RUNNING_PROCESS_STATUS;
 	tasklist *running_process = (tasklist *)get_free_page();	
 	running_process->pid = temp->pid;
@@ -651,7 +683,7 @@ void addtoRunningList(task* temp)
 }
 
 void removeFromRunningList(task *temp){
-	kprintf("[Kernel] Removing PID: %d from running list\n", temp->pid);
+	//kprintf("[Kernel] Removing PID: %d from running list\n", temp->pid);
 	tasklist *A = runningProcessList;
 	tasklist *B = runningProcessList;
 
@@ -740,7 +772,7 @@ int checkProcessInWaitList(task *temp){
 }
 void addtoReadyList(task *temp){
 
-	kprintf("[Kernel] Adding PID: %d to ready list\n", temp->pid);
+	//kprintf("[Kernel] Adding PID: %d to ready list\n", temp->pid);
 	temp->status= READY_PROCESS_STATUS;
 	tasklist *ready_process = (tasklist *)get_free_page();	
 	ready_process->pid = temp->pid;
@@ -758,7 +790,7 @@ void addtoReadyList(task *temp){
 
 void removeFromReadyList(task *temp){
 
-	kprintf("[Kernel] Removing PID: %d from ready list\n", temp->pid);
+	//kprintf("[Kernel] Removing PID: %d from ready list\n", temp->pid);
 	tasklist *A = readyProcessList;
 	tasklist *B = readyProcessList;
 
