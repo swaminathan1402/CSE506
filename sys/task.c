@@ -296,8 +296,8 @@ int exec(char *filename, char** arguments){
 	//			}	
 	
 //	kprintf( "%s \n" ,args);
-	char *something = arguments;
-	kprintf("something %s \n", something);
+//	char *something = arguments;
+//	kprintf("something %s \n", something);
 	/*__asm__ __volatile__
 	(
 	"movq %0,  %%rsi;"
@@ -305,7 +305,7 @@ int exec(char *filename, char** arguments){
 	:"m"(something)
 	:		
 	);*/
-	runningTask->arguments= something;
+	runningTask->arguments= arguments;
 	switch_to_ring_3(runningTask->regs.rip);
 	return 0;
 }
@@ -600,6 +600,7 @@ return;
 for( int i=0; i<argc; i++)
 {
 memcpy( user_rsp-i*64 ,runningTask->arguments[i] ,64);
+kprintf("\n%s", runningTask->arguments[i]);
 }
 
 
