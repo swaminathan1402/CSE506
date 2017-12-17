@@ -410,19 +410,18 @@ int syscall_execvpe(const char *filename , char *const argv[], char *const envp[
 }
 
 
-
 int syscall_close(unsigned int fd)
 {
     long long int ret;
     long long int fd1 = (long long int) fd;
 
      __asm__("movq $3,%%rax;"
-	"movq %1,%%rbx;"
-        "syscall;"
+	"movq %1,%%rdi;"
+        "int $0x80;"
 	"movq %%rax, %0;"
 	:"=r"(ret)
 	:"r"(fd1)
-	:"rax", "rbx"
+	:"rax", "rdi"
 	);
 	return ret;
 }
