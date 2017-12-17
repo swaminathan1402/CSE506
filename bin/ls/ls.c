@@ -38,6 +38,7 @@ int readDir(int fd)
                 bpos += dirp->d_reclen;
            }
         }
+
 	return 1;
 
 }
@@ -78,6 +79,7 @@ int main (int argc , char *argv[], char *envp[])
         }
 	
 	syscall_write(0, "awesome\n",9);
+	while(1);
         return 0;
 }
 

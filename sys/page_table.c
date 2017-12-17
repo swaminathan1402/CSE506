@@ -168,7 +168,7 @@ void deepCopyPageTable(uint64_t child){
 		if((parent_pml4e + pml4e_index)->p == 0){
 			continue;
 		} else{
-			kprintf("[Kernel] parent pml4e index %d\n", pml4e_index);
+			//kprintf("[Kernel] parent pml4e index %d\n", pml4e_index);
 			if((child_pml4e+ pml4e_index)->p == 0){
 				uint64_t *some_page = (uint64_t *)get_free_page();
 				memset(some_page, 0, 4096);
