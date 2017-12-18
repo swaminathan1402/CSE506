@@ -171,7 +171,6 @@ void load_binary(Elf64_Ehdr *file, int index){
 			uint64_t virtual_limit_sz = program_header->p_vaddr + program_header->p_filesz;
 			uint64_t lets_see_size = (uint64_t)(program_header->p_memsz+ program_header->p_vaddr);
 			vm_area_struct *new_vma = create_new_vma((uint64_t)program_header->p_vaddr, lets_see_size, lets_see_size, VMA_TEXT_TYPE);
-			//kprintf("%p %p %p %p %pnew vma\n", new_vma->vm_start, new_vma->vm_end, new_vma, runningTask, runningTask->mm);
 			init_insert_vma(runningTask->mm, new_vma);
 			// map those virtual addresses 
 			for(uint64_t i = program_header->p_vaddr; i<virtual_limit_sz; i+=4096){

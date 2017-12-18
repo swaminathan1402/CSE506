@@ -133,7 +133,8 @@ int main (int argc , char *argv[], char *envp[])
 	        closeDir(fd);
         }
 	*/
-	const char *filename = "bin/";
+	//const char *filename = "bin/";
+	const char *filename = argv[1];
 	int fd = openDir(filename, 0);
 	if(fd == -1) return 0;
 	readDir(fd);

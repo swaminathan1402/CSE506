@@ -266,18 +266,34 @@ int fork() {
 }
 
 int exec(char *filename, char** arguments){
-	//kprintf("[Kernel]: Performing an exec of %s\n", filename);
-	//kprintf("[Kernel] Elf name %s\n", filename);
 	Elf64_Ehdr *the_elf = findElfByName(filename);
 
+	
+	int argc =0;
+	while(arguments[argc]!= NULL) {
+	    argc++;
+	}
+	char args[4][64];
+	for( uint64_t i=0; i<argc; i++)
+	{
+	    for(int j=0; j<strlen(arguments[i]); j++){
+		args[i][j] = arguments[i][j];
+	    }
 
-
-
+	}
+	//runningTask->arguments = args;
+	/*
+	if(argc > 1){
+		
+		kprintf("%s %s argument \n", arguments[0], arguments[1]);
+	}
+	*/
 	changeCR3((PML4E *)kernel_pml4e, (PDPE *)kernel_pdpe, (PDE *)kernel_pde, (PTE *)kernel_pte, 0);
 	free((uint64_t)runningTask);
 
 	runningTask->regs.rsp = (uint64_t)get_free_page() + 4096;  // create stack at the top of the page, so that it can grow downwards and not go to the previous page
-	runningTask->regs.user_rsp = (uint64_t)get_free_user_page() + 4096;	
+	runningTask->regs.user_rsp = (uint64_t)get_free_user_page() + 4096;
+
 	uint64_t a = (uint64_t)get_free_page();
 	uint64_t b = (uint64_t)get_free_page();
 	uint64_t c = (uint64_t)get_free_page();
@@ -305,34 +321,33 @@ int exec(char *filename, char** arguments){
 	init_insert_vma(runningTask->mm, new_stack_vma);
 	changeCR3(runningTask->pml4e, runningTask->pdpe, runningTask->pde, runningTask->pte, 1);
 
+	//load_arguments(runningTask->regs.user_rsp);
+
+	uint64_t* ptr =(uint64_t*)((uint64_t)runningTask->regs.user_rsp-16- 64*argc);
+        memset(ptr, 0, argc*64 + 16);
+        if(argc>0)
+        {
+        	*ptr = argc;
+        }
+        runningTask->regs.user_rsp=(uint64_t)ptr;
+        if(argc > 1){ 
+        	memcpy(ptr+1, args, argc * 64);
+	}
+
+
+
+
+
+
+
+
+
+
 	load_binary(the_elf, 3);
 	
 	removeFromRunningList(runningTask);
 
 	switch_to_ring_3(runningTask->regs.rip);
-	/*
-	Elf64_Ehdr *the_elf = findElfByName(filename);
-	kprintf("%s, %s, %s", arguments[0], arguments[1], arguments[2]);
-	char args[1024];
-	int len = strlen(arguments[1]);
-				for(int i=0; i<len; i++){
-					args[i] = arguments[1][i];
-				}	
-	load_binary(the_elf, 3);
-	
-	kprintf( "%s \n" ,args);
-	char *something = args;
-	kprintf("something %s \n", something);
-	__asm__ __volatile__
-	(
-	"movq %0,  %%rsi;"
-	:
-	:"m"(something)
-	:		
-	);
-	runningTask->arguments= something;
-	return 0;
-	*/
 }
 
 void waiting_on_pid(int child_pid){
@@ -548,23 +563,47 @@ void test_user_function()
 
 }
 
-void load_arguments(uint64_t user_rsp ,int argc)
+uint64_t load_arguments(uint64_t user_rsp)
 {
-__asm__ __volatile__(
-"movq %0 , %%rdi;"
-"movq %%rsp, %%r11;"
-"movq %1, %%r8;"
-"movq %%r8 ,%%rsp;"
-"subq $0x18, %%rsp;"
-"movq %%rdi,(%%rsp);"
-"movq %%rsi ,8(%%rsp);"
-"movq %%r11 , %%rsp;"
-:
-: "m"(argc) , "m"(user_rsp)
-:"memory"
-);
+	int argc =0;
+	while(runningTask->arguments[argc]!= NULL) { //&& strcmp(runningTask->arguments[argc], "")!=0){
+	    argc++;
+	}
+	kprintf("Argc: %d", argc);
+	//kprintf("args: %s", runningTask->arguments[0]);
 
+
+	uint64_t* ptr =(uint64_t*)((uint64_t)user_rsp-16- 64*argc);
+	memset(ptr, 0, argc*64 + 16);
+	if(argc>0)
+	{
+	*ptr = argc;
+	//memcpy((ptr+1),(void*)runningTask->arguments , argc*64); 
+	}
+	runningTask->regs.user_rsp=(uint64_t)ptr;
+
+	/*
+	char args[4][64];
+	for( uint64_t i=0; i<argc; i++)
+	{
+	    for(int j=0; j<strlen(runningTask->arguments[i]); j++){
+		args[i][j] = runningTask->arguments[i][j];
+	    }
+
+	}
+	kprintf("what we are copying is: %s ", args[1]);
+	memcpy(ptr+1, args, argc * 64);
+	*/
+	memcpy(ptr+1, runningTask->arguments, argc * 64);
+	if(argc >0)
+	{
+		runningTask->regs.user_rsp= ptr;//user_rsp;
+	}
+
+	return ptr;
 }
+
+
 
 void switch_to_ring_3()
 {

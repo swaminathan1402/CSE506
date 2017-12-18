@@ -92,7 +92,7 @@ int main (int argc, char *argv[], char *envp[])
 {
 	char str[4096];
 	char *strin = str;
-	char* filename="text_files/text.txt";
+	const char* filename=argv[1];
 	int size;
 	int fd;
 	fd = syscall_open(filename, 0, 0);

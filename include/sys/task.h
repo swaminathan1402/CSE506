@@ -29,8 +29,8 @@ typedef struct task{
         mm_struct *mm ;
 	int isChild;
 	struct task *parent;  //for pid inheritance
-	struct task *child;	
-	char arguments[256];
+	struct task *child;
+	char **arguments;	
 } task;
 
 typedef struct tasklist{
