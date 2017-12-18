@@ -147,7 +147,6 @@ void beIdle(){
 void remove_page(uint64_t rm_page){
 	//kprintf("removing this page %p\n", rm_page);
 
-	/*
 	memset(rm_page, 0, 4096);
 	freelist *newpage = (freelist *)rm_page;
 	newpage->next = first_free_page;
@@ -156,7 +155,6 @@ void remove_page(uint64_t rm_page){
 
 	first_free_page->prev = newpage;
 	first_free_page = newpage;
-	*/
 	
 	//kprintf("first_free_page is %p %p\n", first_free_page, rm_page);
 
@@ -170,7 +168,6 @@ void free(task *zombie_process){
 	// make zombie process null
 	//changeCR3(runningTask->pml4e, runningTask->pdpe, runningTask->pde, runningTask->pte, 0);
 
-	/*
 	int pages_to_free=0;
 	PML4E *zpml4e = zombie_process->pml4e;
 	PDPE *zpdpe = zombie_process->pdpe;
@@ -232,7 +229,7 @@ void free(task *zombie_process){
 	while(index <= count){
 		index++;
 		vm_area_struct *temp = vms_to_clean->next;
-		kprintf("[Kernel] Removing VMA %d %p\n", index+1, vms_to_clean);
+		//kprintf("[Kernel] Removing VMA %d %p\n", index+1, vms_to_clean);
 		pages_to_free++;
 		remove_page((uint64_t)vms_to_clean);
 		vms_to_clean = temp;
@@ -253,8 +250,7 @@ void free(task *zombie_process){
 
 	// look for that zombie in the zombie queue and remove it
 
-	kprintf("[Kernel] No of pages freed for %p: (%d)\n", zombie_process, pages_to_free);
-	*/
+	//kprintf("[Kernel] No of pages freed for %p: (%d)\n", zombie_process, pages_to_free);
 }
 
 int fork() {
@@ -273,6 +269,10 @@ int exec(char *filename, char** arguments){
 	//kprintf("[Kernel]: Performing an exec of %s\n", filename);
 	//kprintf("[Kernel] Elf name %s\n", filename);
 	Elf64_Ehdr *the_elf = findElfByName(filename);
+
+
+
+
 	changeCR3((PML4E *)kernel_pml4e, (PDPE *)kernel_pdpe, (PDE *)kernel_pde, (PTE *)kernel_pte, 0);
 	free((uint64_t)runningTask);
 
@@ -926,7 +926,7 @@ void removeTask(){
 		}
 	}
 	free(runningTask);
-	kprintf("[Kernel PID:%d]: Adding %p to zombie queue\n", runningTask->pid);
+	//kprintf("[Kernel PID:%d]: Adding %p to zombie queue\n", runningTask->pid);
 	runningTask->prev->next = runningTask->next;
 	runningTask->next->prev = runningTask->prev;
 	runningTask->status = ZOMBIE_PROCESS_STATUS; 
@@ -995,7 +995,7 @@ void temp_yield(int exec_next){
 void reap_zombie_process(task *zombie_process){
 	// Removes the PCB itself
 	// look for that zombie in the zombie queue and remove it
-	kprintf("[Kernel] Process[PID: %d] is reaping Zombie Process[PID:%d]\n", runningTask->pid, zombie_process->pid);
+	//kprintf("[Kernel] Process[PID: %d] is reaping Zombie Process[PID:%d]\n", runningTask->pid, zombie_process->pid);
 	tasklist *zom = zombieProcessList;
 	tasklist *back_zombie = zombieProcessList;
 	/*

@@ -269,7 +269,7 @@ break;
 
 case 123:  // ps
   ps_pid = runningTask->pid;
-  kprintf("[Kernel]: pid is %d\n", ps_pid);
+  //kprintf("[Kernel]: pid is %d\n", ps_pid);
   __asm__ __volatile__(
 	"movq %0, %%rax;"
 	:

@@ -25,7 +25,7 @@ int syscall_write(int fd, char *buffer, int count){
 int syscall_ps(){
 	long long int ret;
 	__asm__ __volatile__(
-		"movq $123, %%rax;"
+		"movq $22, %%rax;"
 		"int $0x80;"
 		"movq %%rax, %0;"
 		:"=r"(ret)

@@ -25,8 +25,8 @@ int syscall_write(int fd, char *buffer, int count){
 
 int main(int argc, char *argv[], char *envp[]) {
 
-  //char *message = argv[1];
-  char *message = "hello mister";
-  syscall_write(0, message, strlen(message));
+  char *message = argv[1];
+  //char *message = "hello mister";
+  syscall_write(0, message, 1024);
   return 0;
 }
