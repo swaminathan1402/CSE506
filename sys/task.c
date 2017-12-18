@@ -413,7 +413,7 @@ task* createChildTask(){
 
 	// Copy the complete user stack
 	uint64_t user_rsp_start_addr = *((uint64_t *)(parent_rsp + 24));
-	int size_of_user_stack = runningTask->regs.user_rsp - user_rsp_start_addr;
+	int size_of_user_stack = (((runningTask->regs.user_rsp>>12)<<12 + 0x1000) - user_rsp_start_addr) & 0xfff;
 
 	childTask->regs.user_rsp -= size_of_user_stack;
 	//memcpy(childTask->regs.user_rsp, user_rsp_start_addr, size_of_user_stack);
