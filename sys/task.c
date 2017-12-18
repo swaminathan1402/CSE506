@@ -235,11 +235,11 @@ void free(task *zombie_process){
 		vms_to_clean = temp;
 	}
 
-	
 	remove_page((uint64_t)zombie_process->mm);
 	pages_to_free++;
 	remove_page((uint64_t)zombie_process->regs.rsp);
 	pages_to_free++;
+
 	//remove_page((uint64_t)zombie_process->regs.user_rsp);
 	//pages_to_free++;
 
