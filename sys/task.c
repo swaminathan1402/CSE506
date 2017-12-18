@@ -146,6 +146,8 @@ void beIdle(){
 
 void remove_page(uint64_t rm_page){
 	//kprintf("removing this page %p\n", rm_page);
+
+	/*
 	memset(rm_page, 0, 4096);
 	freelist *newpage = (freelist *)rm_page;
 	newpage->next = first_free_page;
@@ -154,6 +156,8 @@ void remove_page(uint64_t rm_page){
 
 	first_free_page->prev = newpage;
 	first_free_page = newpage;
+	*/
+	
 	//kprintf("first_free_page is %p %p\n", first_free_page, rm_page);
 
 }
@@ -166,6 +170,7 @@ void free(task *zombie_process){
 	// make zombie process null
 	//changeCR3(runningTask->pml4e, runningTask->pdpe, runningTask->pde, runningTask->pte, 0);
 
+	/*
 	int pages_to_free=0;
 	PML4E *zpml4e = zombie_process->pml4e;
 	PDPE *zpdpe = zombie_process->pdpe;
@@ -185,15 +190,13 @@ void free(task *zombie_process){
 							for(int pte_index = 0; pte_index < 512; pte_index++){
 								if((zpte + pte_index)->p == 1){
 									uint64_t free_this_page = (uint64_t)((zpte + pte_index)->physical_address << 12);
-									/*
-									kprintf("Free this page %p\n", free_this_page);
+									//kprintf("Free this page %p\n", free_this_page);
 									//memset(free_this_page, 0, 4096);
-									freelist *newpage = (freelist *)free_this_page;
-									newpage->next = first_free_page;
-									first_free_page->prev = newpage;
-									first_free_page = newpage;
-									pages_to_free++;
-									*/
+									//freelist *newpage = (freelist *)free_this_page;
+									//newpage->next = first_free_page;
+									//first_free_page->prev = newpage;
+									//first_free_page = newpage;
+									//pages_to_free++;
 									
 								}
 							}
@@ -251,7 +254,7 @@ void free(task *zombie_process){
 	// look for that zombie in the zombie queue and remove it
 
 	kprintf("[Kernel] No of pages freed for %p: (%d)\n", zombie_process, pages_to_free);
-
+	*/
 }
 
 int fork() {
@@ -267,8 +270,8 @@ int fork() {
 }
 
 int exec(char *filename, char** arguments){
-	kprintf("[Kernel]: Performing an exec of %s\n", filename);
-	kprintf("[Kernel] Elf name %s\n", filename);
+	//kprintf("[Kernel]: Performing an exec of %s\n", filename);
+	//kprintf("[Kernel] Elf name %s\n", filename);
 	Elf64_Ehdr *the_elf = findElfByName(filename);
 	changeCR3((PML4E *)kernel_pml4e, (PDPE *)kernel_pdpe, (PDE *)kernel_pde, (PTE *)kernel_pte, 0);
 	free((uint64_t)runningTask);
@@ -475,7 +478,7 @@ void createTask(
 	me->mm = get_mm_struct();
 	vm_area_struct *new_stack_vma = create_new_vma(me->regs.user_rsp-4096, me->regs.user_rsp, 8192, VMA_STACK_TYPE);
 	init_insert_vma(me->mm, new_stack_vma);
-	kprintf("%p %p %p %p %pnew vma\n", new_stack_vma->vm_start, new_stack_vma->vm_end, new_stack_vma, runningTask, runningTask->mm);
+	//kprintf("%p %p %p %p %pnew vma\n", new_stack_vma->vm_start, new_stack_vma->vm_end, new_stack_vma, runningTask, runningTask->mm);
 
 	me->pid = pid;
 	me->isChild = 0;
@@ -573,7 +576,7 @@ void switch_to_ring_3()
 	}
 
 	if(runningTask->child && runningTask->child->status == ZOMBIE_PROCESS_STATUS){
-		kprintf("[Kernel]: removing its child junk %p\n", runningTask->child);
+		//kprintf("[Kernel]: removing its child junk %p\n", runningTask->child);
 		//free((uint64_t)runningTask->child);
 		reap_zombie_process(runningTask->child);
 	}
@@ -660,20 +663,20 @@ void addtoZombieList(task* temp )
 	new_zombie->entry = temp;
 	new_zombie->next = NULL;
 	if(zombieProcessList->entry == NULL){
-		kprintf("zombie is empty!\n");
+		//kprintf("zombie is empty!\n");
 		zombieProcessList = new_zombie;
 	} else {
 		new_zombie->next = zombieProcessList;
 		zombieProcessList = new_zombie;
 	}
-	kprintf("added zombie %p!\n", new_zombie);
+	//kprintf("added zombie %p!\n", new_zombie);
 }
 
 
 void addtoRunningList(task* temp)
 {
 	
-	kprintf("[Kernel] Adding PID: %d to running list\n", temp->pid);
+	//kprintf("[Kernel] Adding PID: %d to running list\n", temp->pid);
 	temp->status = RUNNING_PROCESS_STATUS;
 	tasklist *running_process = (tasklist *)get_free_page();	
 	running_process->pid = temp->pid;
@@ -690,7 +693,7 @@ void addtoRunningList(task* temp)
 }
 
 void removeFromRunningList(task *temp){
-	kprintf("[Kernel] Removing PID: %d from running list\n", temp->pid);
+	//kprintf("[Kernel] Removing PID: %d from running list\n", temp->pid);
 	tasklist *A = runningProcessList;
 	tasklist *B = runningProcessList;
 
@@ -725,7 +728,7 @@ int checkProcessInRunningList(task *temp){
 }
 void addtoWaitList(task* temp)
 {
-	kprintf("[Kernel] Adding PID: %d to wait list\n", temp->pid);
+	//kprintf("[Kernel] Adding PID: %d to wait list\n", temp->pid);
 	temp->status= WAITING_PROCESS_STATUS;
 	tasklist *waiting_process = (tasklist *)get_free_page();	
 	waiting_process->pid = temp->pid;
@@ -743,7 +746,7 @@ void addtoWaitList(task* temp)
 
 void removeFromWaitList(task *temp){
 
-	kprintf("[Kernel] Removing PID: %d from wait list\n", temp->pid);
+	//kprintf("[Kernel] Removing PID: %d from wait list\n", temp->pid);
 	tasklist *A = waitProcessList;
 	tasklist *B = waitProcessList;
 
@@ -779,7 +782,7 @@ int checkProcessInWaitList(task *temp){
 }
 void addtoReadyList(task *temp){
 
-	kprintf("[Kernel] Adding PID: %d to ready list\n", temp->pid);
+	//kprintf("[Kernel] Adding PID: %d to ready list\n", temp->pid);
 	temp->status= READY_PROCESS_STATUS;
 	tasklist *ready_process = (tasklist *)get_free_page();	
 	ready_process->pid = temp->pid;
@@ -797,7 +800,7 @@ void addtoReadyList(task *temp){
 
 void removeFromReadyList(task *temp){
 
-	kprintf("[Kernel] Removing PID: %d from ready list\n", temp->pid);
+	//kprintf("[Kernel] Removing PID: %d from ready list\n", temp->pid);
 	tasklist *A = readyProcessList;
 	tasklist *B = readyProcessList;
 
@@ -949,7 +952,7 @@ void removeTask(){
 		:
 		:
 	);
-	getprocessList();
+	//getprocessList();
 	switch_to_ring_3(runningTask->regs.rip);
 	
 }
@@ -995,11 +998,11 @@ void reap_zombie_process(task *zombie_process){
 	kprintf("[Kernel] Process[PID: %d] is reaping Zombie Process[PID:%d]\n", runningTask->pid, zombie_process->pid);
 	tasklist *zom = zombieProcessList;
 	tasklist *back_zombie = zombieProcessList;
-
+	/*
 	if(zom->entry == zombie_process){
 		zombieProcessList = zom->next;
-		remove_page((uint64_t)zombie_process);
-		remove_page((uint64_t)zom);
+		//remove_page((uint64_t)zombie_process);
+		//remove_page((uint64_t)zom);
 	}
 	else {
 		while(zom->entry != zombie_process){
@@ -1008,9 +1011,10 @@ void reap_zombie_process(task *zombie_process){
 		}
 
 		back_zombie->next = zom->next;
-		remove_page((uint64_t)zombie_process);
-		remove_page((uint64_t)zom);
+		//remove_page((uint64_t)zombie_process);
+		//remove_page((uint64_t)zom);
 	}
+	*/
 }
 void clean_zombies(){
 	//kprintf("[Kernel]: Removing all the zombie processes\n");
