@@ -2,6 +2,7 @@
 #include<string.h>
 #include<sys/syscall.h>
 
+
 int syscall_write(int fd, char *buffer, int count){
 
 
@@ -27,7 +28,10 @@ int syscall_write(int fd, char *buffer, int count){
 
 int main(int argc, char *argv[], char *envp[]) {
 
-  char *message = "Hello World";
+  char *message = argv[1];
+  //syscall_write(0, message, 12);
   syscall_write(0, message, strlen(message));
+  //syscall_write(0, "next one", 8);
+  while(1);
     return 0;
 }

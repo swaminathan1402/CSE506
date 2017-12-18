@@ -293,8 +293,7 @@ int exec(char *filename, char** arguments){
 	Elf64_Ehdr *the_elf = findElfByName(filename);
  	runningTask->arguments= arguments;	
 	load_arguments(runningTask->regs.user_rsp);
-	load_binary(the_elf, 3);
-	
+	load_binary(the_elf, 3);	
 	//char args[1024];
 	//int len = strlen(arguments[1]);
 	//			for(int i=0; i<len; i++){
@@ -578,36 +577,43 @@ void test_user_function()
 void load_arguments(uint64_t user_rsp)
 {
 int argc =0;
-while(runningTask->arguments[argc]!= NULL && strcmp(runningTask->arguments[argc], "")!=0){
+while(runningTask->arguments[argc]!= NULL) { //&& strcmp(runningTask->arguments[argc], "")!=0){
     argc++;
 }
 kprintf("Argc: %d", argc);
 kprintf("args: %s", runningTask->arguments);
-__asm__  __volatile__
-(
-"movq %%rsp ,%%r11;"
-"movq %0 ,%%r8;" 
-"movq %%r8 , %%rsp;"
-"movq %1 , %%rdi;"
-"movq %%rdi ,(%%rsp);"
-"movq %%r11, %%rsp;"
-:
-: "m"(user_rsp), "m"(argc)
-);
 
-if(argc==0)
+
+uint64_t* ptr =(uint64_t*)((uint64_t)user_rsp-16- 64*argc);
+memset(ptr, 0, argc*64 + 16);
+if(argc>0)
 {
-return;
+*ptr = argc;
+//memcpy((ptr+1),(void*)runningTask->arguments , argc*64); 
 }
+runningTask->regs.user_rsp=(uint64_t)ptr;
+
+char args[4][64];
 for( uint64_t i=0; i<argc; i++)
 {
-memcpy( user_rsp-i*64 ,runningTask->arguments[i] ,64);
-kprintf("\n%s", runningTask->arguments[i]);
+    for(int j=0; j<strlen(runningTask->arguments[i]); j++){
+        args[i][j] = runningTask->arguments[i][j];
+    }
+
+    //kprintf("%s args\n", runningTask->arguments[i]);
+    //char temp[64];
+    //memcpy( temp , runningTask->arguments[i] ,64);
+    //memcpy( user_rsp-i*64 , temp ,64);
+    //kprintf("\nuser rsp: %s", user_rsp-i*64);
 }
+
+memcpy(ptr+1, args, argc * 64);
+//kprintf("%s the first arg %p\n", args[0], args[0]);
+//kprintf("%s the second arg %p\n", args[1], args[1]);
 if(argc >0)
 {
 user_rsp= user_rsp-argc*64;
-runningTask->regs.user_rsp= user_rsp;
+runningTask->regs.user_rsp= ptr;//user_rsp;
 }
 }
 

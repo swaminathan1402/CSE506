@@ -289,7 +289,7 @@ int main(int argc, char *argv[], char *envp[]){
     int pid = syscall_fork();
     if (pid == 0){
       syscall_write(0, "child process\n", 14);
-      char* command_args[] = {"bin/echo" ,"hello world" ,NULL };
+      char* command_args[] = {"bin/echo" ,"my name is nihal" ,NULL };
       syscall_execvpe("bin/echo", command_args ,NULL);
     } else {
 	int status;
