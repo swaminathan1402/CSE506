@@ -256,9 +256,9 @@ void free(task *zombie_process){
 int fork() {
 	task *child = createChildTask();
 
-	if(runningTask->child == NULL){
-		runningTask->child = child;
-	}
+	//if(runningTask->child == NULL){
+	runningTask->child = child;
+	//}
 
 	int child_pid = child->pid;
 	// add the new child to the task queue;
@@ -882,7 +882,9 @@ void getprocessList()
 	tasklist* current_zombie= (tasklist*) zombieProcessList;
 	while(current_zombie != NULL)
 	{
-	kprintf("\n %x \t ZOMBIE ",current_zombie->pid );
+		if(current_zombie->entry->status != KILLED_PROCESS_STATUS){
+			kprintf("\n %x \t ZOMBIE ",current_zombie->pid );
+		}
 	current_zombie = current_zombie->next;
 	}
 	
@@ -1038,12 +1040,19 @@ void reap_zombie_process(task *zombie_process){
 	// look for that zombie in the zombie queue and remove it
 	//kprintf("[Kernel] Process[PID: %d] is reaping Zombie Process[PID:%d]\n", runningTask->pid, zombie_process->pid);
 
+	tasklist *zom = zombieProcessList;
+	while(zom->pid != zombie_process->pid){
+		zom = zom->next;
+	}
+	zom->entry->status  = KILLED_PROCESS_STATUS;
 	/*
 	tasklist *zom = zombieProcessList;
 	tasklist *back_zombie = zombieProcessList;
 	if(zom->entry == zombie_process){
 		zombieProcessList = zom->next;
-		remove_page((uint64_t)zom);
+
+
+		//remove_page((uint64_t)zom);
 		//remove_page((uint64_t)zombie_process);
 		//remove_page((uint64_t)zom);
 	}
@@ -1053,8 +1062,9 @@ void reap_zombie_process(task *zombie_process){
 			zom = zom->next;
 		}
 
-		back_zombie->next = zom->next;
-		remove_page((uint64_t)zom);
+		//back_zombie->next = zom->next;
+
+		//remove_page((uint64_t)zom);
 		//remove_page((uint64_t)zombie_process);
 		//remove_page((uint64_t)zom);
 	}

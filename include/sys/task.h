@@ -9,6 +9,7 @@
 #define ZOMBIE_PROCESS_STATUS 3
 #define READY_PROCESS_STATUS 4
 #define WAITING_PROCESS_STATUS 5
+#define KILLED_PROCESS_STATUS 6
 
 void initTasking();
 typedef struct {

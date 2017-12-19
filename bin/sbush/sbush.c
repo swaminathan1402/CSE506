@@ -188,9 +188,9 @@ void runBinary(char *command, char *args, int bgprocess){
 		int ret = syscall_execvpe(final_command, cmd_arr, NULL);
 		*/
 		//printf("Command: %s\n", command);
-		char* command_args[] = {"bin/ls" , "lib/", NULL };
+		char* command_args[] = {"bin/ps" , NULL, NULL };
 		//int ret = syscall_execvpe("bin/ls", command_args, NULL);
-		int ret = syscall_execvpe("bin/ls", command_args, NULL);
+		int ret = syscall_execvpe("bin/ps", command_args, NULL);
 		//syscall_exit(ret);
 	} else if(pid > 0){
 		if(bgprocess == 1){
