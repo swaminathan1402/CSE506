@@ -188,9 +188,9 @@ void runBinary(char *command, char *args, int bgprocess){
 		int ret = syscall_execvpe(final_command, cmd_arr, NULL);
 		*/
 		//printf("Command: %s\n", command);
-		char* command_args[] = {"bin/echo" , "root/", NULL };
+		char* command_args[] = {"bin/ls" , "lib/", NULL };
 		//int ret = syscall_execvpe("bin/ls", command_args, NULL);
-		int ret = syscall_execvpe("bin/echo", command_args, NULL);
+		int ret = syscall_execvpe("bin/ls", command_args, NULL);
 		//syscall_exit(ret);
 	} else if(pid > 0){
 		if(bgprocess == 1){
@@ -382,7 +382,6 @@ void runScript(char *script_path){
     }
 }
 */
-
 void runScript(char *script_path){
 	char filename[64];
 	int index = 2;
@@ -401,6 +400,8 @@ void runScript(char *script_path){
 	int size = syscall_read(fd, bigBuffer, 1024); // read 1KB each time 
 	char temp[1024] = "\0";
 	int j = 0;
+        char *generated_command;
+        if(fd>0){
 	
 	while(size > 0){
             while(bigBuffer[i]!='\0' && bigBuffer[i] != '\n'){
@@ -418,8 +419,8 @@ void runScript(char *script_path){
             if(bigBuffer[i] == '\n'){
                     if(line_number > 0) {
                             temp[j] = '\0';
-                            char *generated_command = sanitize(temp);
-                            printf("Generated Command: %s\n", generated_command);
+                            generated_command = sanitize(temp);
+                            //printf("Generated Command: %s\n", generated_command);
                             //printf("\n");
                             //interpretCommand(generated_command);
                     }
@@ -429,8 +430,47 @@ void runScript(char *script_path){
             }
             size--;
     }
-    
+    printf("Generated Command: %s\n", generated_command);
+        char* command = generated_command;
+	char tempCommand[40] = "\0";
+	char function[40] = "\0";
+	char arguments[40] = "\0";
+	strcpy(tempCommand, command);
+	if(strlen(command) == 0){
+		return;
+	}
+	else if(strcmp(tempCommand, "exit") == 1){
+		run_status = 0;
+		printf("Goodbye!");
+		return;
+	}
+	i=0;
+	j=0;
+	while(command[i] != '\0' && command[i] != ' '){
+		function[i] = command[i];
+		i++;
+	}
+	function[i] = '\0';
+	i+=1;
+	while(command[i] != '\0'){
+		arguments[j] = command[i];
+		i++;
+		j++;
+	}
+	arguments[j] = '\0';
+	while(arguments[j-1] == ' '){
+		arguments[j-1] = '\0';
+		j--;
+	}
+	//printf("function: %s", function); 
+        runBinary(function, arguments, 0);
+    }
 }
+
+
+
+
+
 
 void runScripts(char arguments[10][1024]){
 	char *filename = arguments[1];
