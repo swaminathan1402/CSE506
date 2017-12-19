@@ -42,6 +42,7 @@ typedef struct {
 
 void read_elf(Elf64_Ehdr *, int );
 void load_binary(Elf64_Ehdr *, int);
+char *findNameByElf(Elf64_Ehdr *);
 Elf64_Ehdr *fineElfByName(char *);
 Elf64_Ehdr *sbush_elf;
 Elf64_Ehdr *idle_elf;

@@ -290,7 +290,7 @@ int exec(char *filename, char** arguments){
 	*/
 	changeCR3((PML4E *)kernel_pml4e, (PDPE *)kernel_pdpe, (PDE *)kernel_pde, (PTE *)kernel_pte, 0);
 	free((uint64_t)runningTask);
-
+	runningTask->command = findNameByElf(the_elf);
 	runningTask->regs.rsp = (uint64_t)get_free_page() + 4096;  // create stack at the top of the page, so that it can grow downwards and not go to the previous page
 	runningTask->regs.user_rsp = (uint64_t)get_free_user_page() + 4096;
 
@@ -387,6 +387,7 @@ task* createChildTask(){
 	childTask->isChild = 1;
 	childTask->parent = runningTask;
 	childTask->child = NULL;
+	childTask->command = runningTask->command;
 
         uint64_t *pointer_to_pml4e = (uint64_t *)((uint64_t)get_free_page() + 0x1000);
         uint64_t *pointer_to_pdpe = (uint64_t *)((uint64_t)get_free_page());
@@ -477,11 +478,13 @@ void addVMAtoTask(task* me ,struct vm_area_struct* new_vma )
 void createTask(
 		void (*main)(),  // function pointer
 		uint64_t rflags, 
-		uint64_t page_dir
+		uint64_t page_dir,
+		Elf64_Ehdr *elf
 		){
 	pid++;
 	task *me = (task *)get_free_page();
 	me->status = READY_PROCESS_STATUS;
+	me->command = findNameByElf(elf);
 	me->regs.rip = (uint64_t)main;
 	me->regs.cr3 = page_dir;
 	me->regs.rsp = (uint64_t)get_free_page() + 4096;  // create stack at the top of the page, so that it can grow downwards and not go to the previous page
@@ -702,6 +705,9 @@ void addtoZombieList(task* temp )
 	new_zombie->entry = temp;
 	new_zombie->next = NULL;
 	new_zombie->status = temp->status;
+	new_zombie->command = temp->command;
+
+
 	if(zombieProcessList->entry == NULL){
 		//kprintf("zombie is empty!\n");
 		zombieProcessList = new_zombie;
@@ -722,6 +728,7 @@ void addtoRunningList(task* temp)
 	running_process->pid = temp->pid;
 	running_process->entry = temp;
 	running_process->next = NULL;
+	running_process->command = temp->command;
 
 	if(runningProcessList == NULL){
 		runningProcessList = running_process;
@@ -774,6 +781,7 @@ void addtoWaitList(task* temp)
 	waiting_process->pid = temp->pid;
 	waiting_process->entry = temp;
 	waiting_process->next = NULL;
+	waiting_process->command = temp->command;
 
 	if(waitProcessList == NULL){
 		 waitProcessList= waiting_process;
@@ -828,6 +836,7 @@ void addtoReadyList(task *temp){
 	ready_process->pid = temp->pid;
 	ready_process->entry = temp;
 	ready_process->next = NULL;
+	ready_process->command = temp->command;
 
 	if(readyProcessList == NULL){
 		 readyProcessList= ready_process;
@@ -884,7 +893,7 @@ void getprocessList()
 	while(current_zombie != NULL)
 	{
 		if(current_zombie->status != KILLED_PROCESS_STATUS){
-			kprintf("\n %x \t ZOMBIE ",current_zombie->pid );
+			kprintf("\n %d \t %s \tZOMBIE ",current_zombie->pid, current_zombie->command );
 			current_zombie->status = KILLED_PROCESS_STATUS;
 		}
 		current_zombie = current_zombie->next;
@@ -893,21 +902,21 @@ void getprocessList()
 	tasklist* current_running= (tasklist*) runningProcessList;
 	while(current_running !=NULL)
 	{
-		kprintf("\n %x \t RUNNING ",current_running->pid );
+		kprintf("\n %d \t %s \tRUNNING ", current_running->pid, current_running->command );
         	current_running = current_running->next;
        	}
 	
 	tasklist* current_waiting = (tasklist*)waitProcessList;
 	while(current_waiting !=NULL)
 	{
-		kprintf("\n %x \t WAITING ",current_waiting->pid );
+		kprintf("\n %d \t %s \tWAITING ",current_waiting->pid, current_waiting->command );
         	current_waiting = current_waiting->next;
 	}
 
 	tasklist* current_ready = (tasklist*)readyProcessList;
 	while(current_ready !=NULL)
 	{
-		kprintf("\n %x \t READY ",current_ready->pid );
+		kprintf("\n %d \t %s \tREADY ",current_ready->pid, current_ready->command );
         	current_ready = current_ready->next;
 	}	
 	

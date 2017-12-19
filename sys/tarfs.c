@@ -44,7 +44,7 @@ void read_elf(Elf64_Ehdr *file ,int index){
             : "=m"(rflags)
             :
         );
-	createTask((void *)file->e_entry, rflags, cr3);
+	createTask((void *)file->e_entry, rflags, cr3, file);
 	changeCR3(runningTask->pml4e, runningTask->pdpe, runningTask->pde, runningTask->pte, 1);
 	int count = file->e_phnum;
 	while(count > 0){
@@ -159,6 +159,35 @@ Elf64_Ehdr *findElfByName(char *filename){
 	return desired_elf;
 }
 
+
+char *findNameByElf(Elf64_Ehdr *elf_file){
+
+	uint64_t start_addr = (uint64_t)&_binary_tarfs_start;
+	struct posix_header_ustar *file = (struct posix_header_ustar *)start_addr;
+	char *filename;
+	while((uint64_t)file < (uint64_t)&_binary_tarfs_end){
+		
+		int size_of_file = octal_to_decimal(file->size, 11);
+		Elf64_Ehdr *the_elf = (Elf64_Ehdr *)(file + 1);
+		if(the_elf == elf_file){
+			filename = file->name;
+			break;
+		}
+		if(size_of_file == 0) {
+
+			file+=1;
+		}
+		else {
+			file += (1 + size_of_file/512);
+			if(size_of_file  % 512 != 0){
+	                	file += 1;
+                        }
+
+		}
+	}
+	return filename;
+
+}
 
 void load_binary(Elf64_Ehdr *file, int index){
 		

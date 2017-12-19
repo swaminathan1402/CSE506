@@ -59,7 +59,7 @@ tasklist* waitProcessList;
 tasklist *readyProcessList;
 
 
-void createTask(void(*)(), uint64_t, uint64_t);
+void createTask(void(*)(), uint64_t, uint64_t, Elf64_Ehdr *);
 void yield();
 void switchTo(registers *old, registers *current);
 void createIdleTask();
