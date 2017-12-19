@@ -4,6 +4,17 @@
 
 
 // works
+int yield(){
+	__asm__ __volatile__(
+		
+		"movq $24, %%rax;"
+		"int $0x80;"
+		:
+		:
+		:"rax"
+	);
+	return 1;
+}
 
 
 int syscall_kill_pid(int pid){

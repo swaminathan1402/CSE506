@@ -30,5 +30,5 @@ void *syscall_mmap(unsigned long addr, unsigned long len, unsigned long prot, un
 int syscall_munmap(unsigned long addr, size_t len);
 int syscall_getdents(int fd, char *buffer, unsigned int count);
 int syscall_kill_pid(int pid);
-
+int yield();
 #endif

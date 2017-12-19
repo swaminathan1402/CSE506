@@ -22,7 +22,7 @@ char HOME[1024];
 char ROOTFS_BIN_PATH[50];
 int run_status = 1;
 int ps1_enabled= 0;
-
+int go_background = 0;
 char *sanitize(char *);
 char *getCommand(char *);
 char *getArguments(char *);
@@ -154,19 +154,7 @@ void runBinary(char *command, char *args, int bgprocess){
 	}
 	*/
 	int status;
-	//printf("Run binary");
-	//printf("Args: %s", args);
-	//printf("Pid: %d\n", pid);
-	/*
-	if(pid == 0){
-	    printf("Child");
-	}
-	else{
-	    printf("Parent");
-	}
-	*/
-	//int pid = 0;
-	char *test_message = "nirvik";
+	go_background = bgprocess;  //1
 	int pid = syscall_fork();
 	if(pid == 0){
 		char *arguments = args;
@@ -193,17 +181,15 @@ void runBinary(char *command, char *args, int bgprocess){
 		int ret = syscall_execvpe("bin/ps", command_args, NULL);
 		//syscall_exit(ret);
 	} else if(pid > 0){
-		if(bgprocess == 1){
+		if(go_background == 1){
+			yield();
 		        printf("Background");
 			return;
 		}
-		/*
-		if(syscall_waitpid(pid, &status, 0) > 0){
-			printf("Waiting on child");
+		else {
+			int something = syscall_waitpid(pid, &status, 0);
+			printf("Waited on child");
 		}
-		*/
-		int something = syscall_waitpid(pid, &status, 0);
-		printf("Waited on child");
 	}
 	
 }
