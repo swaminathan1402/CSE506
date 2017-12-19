@@ -187,8 +187,8 @@ void runBinary(char *command, char *args, int bgprocess){
 		printf("Final command: %s\n", final_command);
 		int ret = syscall_execvpe(final_command, cmd_arr, NULL);
 		*/
-		printf("Command: %s\n", command);
-		char* command_args[] = {"bin/echo" , "nirvik is awesome", NULL };
+		//printf("Command: %s\n", command);
+		char* command_args[] = {"bin/echo" , "root/", NULL };
 		//int ret = syscall_execvpe("bin/ls", command_args, NULL);
 		int ret = syscall_execvpe("bin/echo", command_args, NULL);
 		//syscall_exit(ret);
@@ -346,6 +346,7 @@ char *sanitize(char *command){
 	return args;
  }
 
+/*
 void runScript(char *script_path){
 	char *filename = script_path;
 	int fd = syscall_open(filename, 0, 0);
@@ -379,6 +380,56 @@ void runScript(char *script_path){
                     i++;
             }
     }
+}
+*/
+
+void runScript(char *script_path){
+	char filename[64];
+	int index = 2;
+	while(script_path[index] != '\0'){
+	    if(script_path[index] == '\n'){
+	        break;
+	    }
+	    filename[index-2] = script_path[index];
+	    index++;
+	}
+	printf("Filename: ", filename);
+	int fd = syscall_open(filename, 0, 0);
+	char bigBuffer[1024];
+	int i = 0;
+	int line_number = 0;
+	int size = syscall_read(fd, bigBuffer, 1024); // read 1KB each time 
+	char temp[1024] = "\0";
+	int j = 0;
+	
+	while(size > 0){
+            while(bigBuffer[i]!='\0' && bigBuffer[i] != '\n'){
+                    if(line_number > 0){
+                            temp[j] = bigBuffer[i];
+                            j++;
+                    }
+                    i++;
+                    size--;
+            }
+            if(bigBuffer[i] == '\0'){
+                    size = syscall_read(fd, bigBuffer, 1024);
+                    i=0;
+            }
+            if(bigBuffer[i] == '\n'){
+                    if(line_number > 0) {
+                            temp[j] = '\0';
+                            char *generated_command = sanitize(temp);
+                            printf("Generated Command: %s\n", generated_command);
+                            //printf("\n");
+                            //interpretCommand(generated_command);
+                    }
+                    j = 0;
+                    line_number++;
+                    i++;
+            }
+            size--;
+    }
+    
 }
 
 void runScripts(char arguments[10][1024]){
