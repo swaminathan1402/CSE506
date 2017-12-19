@@ -102,6 +102,7 @@ int closeDir(int fd)
 int main (int argc , char *argv[], char *envp[])
 {
 	/*
+		if argv[1] is NULL
 	*/
 	for(int i=0; i<argc-1; i++){
 		const char *filename = argv[1];

@@ -1,3 +1,0 @@
-We create freelist from physfree. But, what happens to the memory present before physbase
-
-What happens if the size of the object is bigger than the size of a page

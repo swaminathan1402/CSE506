@@ -1,4 +1,29 @@
 #include<stdio.h>
+#include<syscall.h>
+int atoi(char* string){
+    int sign = 1;
+    int index = 0;
+    int result = 0;
+    while(string[index] == ' ')
+        index++;
+    if(string[index] == '-'){
+        sign = -1;
+        index += 1;
+    }
+
+    for(;string[index]; index++){
+        if (string[index] != '\n')
+            result = result*10 + string[index] - '0';
+    }
+    result = result*sign;
+    return result;
+
+}
+
+
+
+
+
 
 
 int syscall_write(int fd, char *buffer, int count){
@@ -39,8 +64,7 @@ int syscall_kill_pid(int pid){
 }
 
 int main(int argc, char *argv[], char *envp[]){
-  int kill_pid = argv[1] - '0';
-  int status = syscall_kill_pid(kill_pid);
+  int status = syscall_kill_pid(atoi(argv[1]));
   if(status != -1)
   	syscall_write(0, "[User]: Killed!\n",17);
   return 0;

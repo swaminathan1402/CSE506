@@ -715,7 +715,7 @@ void addtoZombieList(task* temp )
 		new_zombie->next = zombieProcessList;
 		zombieProcessList = new_zombie;
 	}
-	//kprintf("added zombie %p!\n", new_zombie);
+	kprintf("added zombie %s!\n", new_zombie->command);
 }
 
 
@@ -934,7 +934,7 @@ int kill_process(int kpid){
 	int count = 0;
 	task *temp = runningTask;
 
-	while(temp->pid != pid && count < limit){
+	while(temp->pid != kpid && count < limit){
 		temp = temp->next;
 		count++;
 	}	
@@ -957,7 +957,18 @@ int kill_process(int kpid){
 		
 		if(temp->child)
 			temp->child->parent = lastTask; // changing the child's parent to idleTask
-		addtoZombieList(temp);
+		kprintf("[Kernel][Kill] adding %d to zombie %d\n", temp->pid, kpid);
+		temp->status = KILLED_PROCESS_STATUS;
+		if(checkProcessInWaitList(temp)){
+			removeFromWaitList(temp);
+		}
+		if(checkProcessInReadyList(temp)){
+			removeFromReadyList(temp);
+		}
+		if(checkProcessInRunningList(temp)){
+			removeFromRunningList(temp);
+		}
+		//addtoZombieList(temp);
 		// add to zombie queue
 
 	}
