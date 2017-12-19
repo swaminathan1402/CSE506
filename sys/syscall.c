@@ -197,9 +197,12 @@ case 24: // sys_yield
 	:
 	:
     );
-  //kprintf("yield");
+  if(runningTask->child){
+  	kprintf("[Kernel] Parent %d getting rid of %d\n", runningTask->pid, runningTask->child->pid);
+  }
   removeFromRunningList(runningTask);
   addtoReadyList(runningTask);
+  runningTask->child = NULL;
   temp_yield(0);
   break;
 

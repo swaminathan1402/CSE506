@@ -31,7 +31,8 @@ typedef struct task{
 	int isChild;
 	struct task *parent;  //for pid inheritance
 	struct task *child;
-	char **arguments;	
+	char **arguments;
+	char *command;	
 } task;
 
 typedef struct tasklist{
@@ -39,6 +40,7 @@ int pid ;
 task* entry;
 struct tasklist* next; 
 char* command;
+int status;
 }tasklist;
 
 
