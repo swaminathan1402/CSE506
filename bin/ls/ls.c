@@ -103,6 +103,10 @@ int main (int argc , char *argv[], char *envp[])
 {
 	/*
 		if argv[1] is NULL
+
+		Testing segmentation fault
+		int *x = (int *)0xffffffffffffffff;
+		*x = *x + 20;
 	*/
 	for(int i=0; i<argc-1; i++){
 		const char *filename = argv[1];
