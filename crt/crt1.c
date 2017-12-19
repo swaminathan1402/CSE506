@@ -58,7 +58,6 @@ else{
     }
     main(argc, argv, NULL);
 }
-  main(argc, argv, envp);
   __asm__(
      "movq $60, %%rax;"
 	"movq $1, %%rbx;"

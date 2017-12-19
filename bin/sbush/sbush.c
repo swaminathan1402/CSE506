@@ -38,6 +38,121 @@ char *commandParser(){
 }
 
 void runBinary(char *command, char *args, int bgprocess){
+	/*
+	if(strcmp(command, "ls")==1){
+            printf("Command: %s\n", command);
+            if(strlen(args) == 0) {
+                arguments = NULL;
+            }
+            int pid = syscall_fork();
+            if(pid == 0){
+                if(arguments == NULL){
+		    char* command_args[] = {"bin/ls" , "lib/" ,NULL };
+                }
+            }
+            else if(pid > 0){
+		if(bgprocess == 1){
+		    printf("Background");
+		    return;
+		}
+		int something = syscall_waitpid(pid, &status, 0);
+		printf("Waited on child");
+		
+            
+            }
+
+	}
+	else if(strcmp(command, "echo") == 1){
+            if(strlen(args) == 0) {
+                arguments = NULL;
+            }
+            int pid = syscall_fork();
+            if(pid == 0){
+            }
+            else if(pid > 0){
+		if(bgprocess == 1){
+		    printf("Background");
+		    return;
+		}
+		int something = syscall_waitpid(pid, &status, 0);
+		printf("Waited on child");
+            
+            }
+	
+	}
+	else if(strcmp(command, "cat") == 1){
+            if(strlen(args) == 0) {
+                arguments = NULL;
+            }
+            int pid = syscall_fork();
+            if(pid == 0){
+            }
+            else if(pid > 0){
+		if(bgprocess == 1){
+		    printf("Background");
+		    return;
+		}
+		int something = syscall_waitpid(pid, &status, 0);
+		printf("Waited on child");
+            
+            }
+	    
+	}
+	else if(strcmp(command, "kill") == 1){
+            if(strlen(args) == 0) {
+                arguments = NULL;
+            }
+            int pid = syscall_fork();
+            if(pid == 0){
+            }
+            else if(pid > 0){
+		if(bgprocess == 1){
+		    printf("Background");
+		    return;
+		}
+		int something = syscall_waitpid(pid, &status, 0);
+		printf("Waited on child");
+            
+            }
+	
+	}
+	else if(strcmp(command, "ps") == 1){
+            if(strlen(args) == 0) {
+                arguments = NULL;
+            }
+            int pid = syscall_fork();
+            if(pid == 0){
+            }
+            else if(pid > 0){
+		if(bgprocess == 1){
+		    printf("Background");
+		    return;
+		}
+		int something = syscall_waitpid(pid, &status, 0);
+		printf("Waited on child");
+            
+            }
+	
+	}
+	else if(strcmp(command, "sleep") == 1){
+            if(strlen(args) == 0) {
+                arguments = NULL;
+            }
+            int pid = syscall_fork();
+            if(pid == 0){
+            }
+            else if(pid > 0){
+		if(bgprocess == 1){
+		    printf("Background");
+		    return;
+		}
+		int something = syscall_waitpid(pid, &status, 0);
+		printf("Waited on child");
+            
+            }
+	
+	}
+	*/
 	int status;
 	//printf("Run binary");
 	//printf("Args: %s", args);
