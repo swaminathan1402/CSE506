@@ -78,6 +78,7 @@ size_t length;
 int* filedes;
 int bytes_page;
 uint64_t allocated_page;
+int sleep_time;
 switch (rax)
 {
 case 0: //Sys read 
@@ -134,6 +135,12 @@ case 3: //sys_close
 fd =(uint64_t)rdi;
 decrease_ref_count(fd);
 kprintf("Closing: %d", fd);
+break;
+
+case 6:
+sleep_time = (uint64_t)rdi;
+set_sleep_timer(sleep_time);
+kprintf("\nsleep timer done\n");
 break;
 
 case 8://sys_lseek 

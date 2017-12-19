@@ -2,6 +2,14 @@
 #include<sys/defs.h>
 #include<sys/pic.h>
 
+static int volatile sleep_timer = 0;
+void reduce_sleep_timer(){
+    if(sleep_timer >  0){
+        sleep_timer--;
+    }
+    //kprintf("timer reduced to: %d", sleep_timer);
+}
+
 extern void timer_handler()
 {
 int temp , t;
@@ -12,6 +20,8 @@ if(timetick%18==0)
 {
 	seconds_from_boot++;
 //	kprintf("%d seconds from boot", seconds_from_boot);
+	reduce_sleep_timer();
+
 }
 temp=seconds_from_boot;
 
@@ -32,4 +42,9 @@ while(temp!=0)
 end_of_interrupt(0x0);
 return;
 }
-
+extern void set_sleep_timer(int sleep_s){
+    sleep_timer = sleep_s;
+    kprintf("Timer sleep: %d", sleep_timer);
+    while(sleep_timer != 0);
+    kprintf("Done");
+}

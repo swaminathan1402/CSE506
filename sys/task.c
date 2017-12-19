@@ -1031,30 +1031,39 @@ void temp_yield(int exec_next){
 	switch_to_ring_3(runningTask->regs.rip);
 
 }
+
+
 void reap_zombie_process(task *zombie_process){
 	// Removes the PCB itself
 	// look for that zombie in the zombie queue and remove it
 	//kprintf("[Kernel] Process[PID: %d] is reaping Zombie Process[PID:%d]\n", runningTask->pid, zombie_process->pid);
+	/*
 	tasklist *zom = zombieProcessList;
 	tasklist *back_zombie = zombieProcessList;
-	/*
 	if(zom->entry == zombie_process){
 		zombieProcessList = zom->next;
+		remove_page((uint64_t)zom);
 		//remove_page((uint64_t)zombie_process);
 		//remove_page((uint64_t)zom);
 	}
 	else {
-		while(zom->entry != zombie_process){
+		while(zom->entry && zom->entry != zombie_process){
 			back_zombie = zom;
 			zom = zom->next;
 		}
 
 		back_zombie->next = zom->next;
+		remove_page((uint64_t)zom);
 		//remove_page((uint64_t)zombie_process);
 		//remove_page((uint64_t)zom);
 	}
 	*/
 }
+
+
+
+
+
 void clean_zombies(){
 	//kprintf("[Kernel]: Removing all the zombie processes\n");
 	// traverse zombie list

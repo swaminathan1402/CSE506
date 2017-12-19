@@ -4,6 +4,7 @@
 #include<sys/memory.h>
 filedir* findParent(char* dir,int index, filedir *root)
 {
+	//char *parent = dir;
 	for(int i=0;i<index;i++) 
 	{
 		filedir* temp= (filedir*)root+i;

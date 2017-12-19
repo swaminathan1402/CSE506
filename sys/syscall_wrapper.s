@@ -10,7 +10,7 @@ push %rdx
 push %rbp
 push %rsi
 push %rdi
-
+sti
 call syscall_handler
 
 pop %rdi
