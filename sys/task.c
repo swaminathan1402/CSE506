@@ -294,15 +294,15 @@ int exec(char *filename, char** arguments){
 	runningTask->regs.rsp = (uint64_t)get_free_page() + 4096;  // create stack at the top of the page, so that it can grow downwards and not go to the previous page
 	runningTask->regs.user_rsp = (uint64_t)get_free_user_page() + 4096;
 
-	uint64_t a = (uint64_t)get_free_page();
-	uint64_t b = (uint64_t)get_free_page();
-	uint64_t c = (uint64_t)get_free_page();
+	//uint64_t a = (uint64_t)get_free_page();
+	//uint64_t b = (uint64_t)get_free_page();
+	//uint64_t c = (uint64_t)get_free_page();
         uint64_t *pointer_to_pml4e = (uint64_t *)((uint64_t)get_free_page() + 0x1000);
-	uint64_t d = (uint64_t)get_free_page();
-	uint64_t e = (uint64_t)get_free_page();
+	//uint64_t d = (uint64_t)get_free_page();
+	//uint64_t e = (uint64_t)get_free_page();
         uint64_t *pointer_to_pdpe = (uint64_t *)((uint64_t)get_free_page());
         uint64_t *pointer_to_pde = (uint64_t *)((uint64_t)get_free_page());
-	uint64_t f = (uint64_t)get_free_page();
+	//uint64_t f = (uint64_t)get_free_page();
         uint64_t *pointer_to_pte = (uint64_t *)get_free_page();
         runningTask->pml4e = (PML4E *)pointer_to_pml4e;
         memset(runningTask->pml4e, 0, 4096);
@@ -314,8 +314,8 @@ int exec(char *filename, char** arguments){
         memset(runningTask->pte, 0, 4096);
         runningTask->pml4e[511] = pml4e[511];
         runningTask->regs.cr3 = (uint64_t)runningTask->pml4e;
-	a = (uint64_t)get_free_page();
-	b = (uint64_t)get_free_page();
+	//a = (uint64_t)get_free_page();
+	//b = (uint64_t)get_free_page();
 	runningTask->mm = get_mm_struct();
 	vm_area_struct *new_stack_vma = create_new_vma(runningTask->regs.user_rsp-4096, runningTask->regs.user_rsp, 8192, VMA_STACK_TYPE);
 	init_insert_vma(runningTask->mm, new_stack_vma);
@@ -1037,6 +1037,7 @@ void reap_zombie_process(task *zombie_process){
 	// Removes the PCB itself
 	// look for that zombie in the zombie queue and remove it
 	//kprintf("[Kernel] Process[PID: %d] is reaping Zombie Process[PID:%d]\n", runningTask->pid, zombie_process->pid);
+
 	/*
 	tasklist *zom = zombieProcessList;
 	tasklist *back_zombie = zombieProcessList;

@@ -20,7 +20,7 @@ __asm__ __volatile__(
 //kprintf("\nErrcode : %p", err_code);
 if(!(err_code & 0x1 ) && (err_code& 0x4))
 {
-	kprintf("\nPage not present in user mode %p ", faulting_address);
+	//kprintf("\nPage not present in user mode %p ", faulting_address);
 	int found = 0;
 	mm_struct *mm = runningTask->mm;
 	vm_area_struct *vmas = mm->head;
@@ -52,11 +52,11 @@ else if(!(err_code & 0x1) && !(err_code & 0x4) )
 }
 else if(err_code & 0x2)
 {
-	kprintf("\nRead only page");
+	//kprintf("\nRead only page");
 	if(checkCOW(faulting_address)==1)
 	{
-		kprintf("%p\n", faulting_address);
-		kprintf("COW bit is set" );
+		//kprintf("%p\n", faulting_address);
+		//kprintf("COW bit is set" );
 	    	uint64_t copy_on_write_page=(uint64_t)get_free_page();		
 	   	memcpy((void *)copy_on_write_page , (void *)faulting_address, 4096 ) ;
 		setWritable( faulting_address, copy_on_write_page);

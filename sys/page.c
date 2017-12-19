@@ -2,6 +2,8 @@
 #include<sys/page.h>
 #include<sys/kprintf.h>
 #include<sys/page_table.h>
+#include<sys/memory.h>
+
 
 void showAllFreePages(){
   freelist *temp = first_free_page;
@@ -15,6 +17,7 @@ freelist *get_free_page(){
 	freelist *page = first_free_page;
 	first_free_page = first_free_page->next;
 	first_free_page->prev = NULL;
+	memset(page, 0, 4096);
 	return page;
 }
 

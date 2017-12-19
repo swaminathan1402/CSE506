@@ -113,7 +113,7 @@ case 2:// sys_open
 filename = (char *)rdi; 
 flags = (int)rsi;
 mode =(int)rdx;
-kprintf("\n Opening:%s  Flags: %d , Mode: %d", filename, flags, mode);
+//kprintf("\n Opening:%s  Flags: %d , Mode: %d", filename, flags, mode);
 if(mode==0)
 {
 int fd =search(filename);
@@ -134,7 +134,7 @@ break;
 case 3: //sys_close
 fd =(uint64_t)rdi;
 decrease_ref_count(fd);
-kprintf("Closing: %d", fd);
+//kprintf("Closing: %d", fd);
 break;
 
 case 6:
