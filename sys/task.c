@@ -407,8 +407,8 @@ task* createChildTask(){
         childTask->regs.cr3 = (uint64_t)childTask->pml4e;
 	
 	
-	a = (uint64_t)get_free_page();
-	b = (uint64_t)get_free_page();
+	//a = (uint64_t)get_free_page();
+	//b = (uint64_t)get_free_page();
 	childTask->mm = get_mm_struct();
 	//vm_area_struct *new_stack_vma = create_new_vma(me->regs.user_rsp, me->regs.user_rsp + 4096, 8192, VMA_STACK_TYPE);
 	//init_insert_vma(me->mm, new_stack_vma);
