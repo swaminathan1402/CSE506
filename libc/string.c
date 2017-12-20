@@ -56,3 +56,41 @@ void *memset(void *array, int c, size_t n){
     return array;
 
 }
+
+int get_argc(char* inp){
+    int n_of_params = 0;
+    for(int i=0; i<strlen(inp);i++){
+        if(inp[i] == ' '){
+            n_of_params++;
+        }
+    }
+    n_of_params++;
+    return n_of_params;
+}
+
+
+void parse_args_from_str(char* inp, char** params){
+    int len = strlen(inp);
+    int n_of_params = 0;
+    for(int i=0; i<len;i++){
+        if(inp[i] == ' '){
+            n_of_params++;
+        }
+    }
+    n_of_params++;
+    int index = 0;
+    int c = 0;
+    for(int i=0; i<len;i++){
+        if(inp[i] == ' '){
+            params[index][c] = '\0';
+            index++;
+            c=0;
+        }else{
+            params[index][c] = inp[i];
+            c++;
+        }
+    }
+    params[index][c] = '\0';
+       
+}
+

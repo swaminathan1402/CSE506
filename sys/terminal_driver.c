@@ -30,10 +30,15 @@ int terminal_write(int fd, void* buffer, uint64_t buffer_len){
 }
 
 void terminal_enqueue(char c){
+  
     if(c == '\b'){
         terminal_buffer[terminal_buffer_len] = '\0';
         terminal_buffer_len--;
         terminal_buffer[terminal_buffer_len] = '\0';
+	if(terminal_buffer_len!=0)
+	{
+		kprintf("\b");
+	}
 	return;
     }
     else if(c == ' ' && terminal_buffer_len == 0){

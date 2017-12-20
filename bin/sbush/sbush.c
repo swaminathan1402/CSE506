@@ -67,10 +67,25 @@ void runBinary(char *command, char *args, int bgprocess){
 			args = hack;
 			printf("Directory: %s\n", args);
 
+			 char* command_args[] = {"bin/ls" , args ,NULL };
+                         int ret = syscall_execvpe("bin/ls", command_args, NULL);
 		}
-		    char* command_args[] = {"bin/ls" , args ,NULL };
-		    int ret = syscall_execvpe("bin/ls", command_args, NULL);
-                //}
+		 else
+		 { 
+			char* command_args[6];
+			command_args[0]= "bin/ls";
+			int argcount=get_argc(args); 
+			char params[5][64];
+			char **temp =parse_args_from_str(args, params);
+			printf("params : %s ", params[0]);
+			printf("params: %s", temp[0]);
+			for(int i=0; i<argcount;i++)	
+			{
+			command_args[i+1]= temp[i];
+			}
+			int ret = syscall_execvpe("bin/ls", command_args, NULL); 				
+		}  
+		 
             }
             else if(pid > 0){
 		if(go_background == 1){
@@ -115,9 +130,9 @@ void runBinary(char *command, char *args, int bgprocess){
             int pid = syscall_fork();
             if(pid == 0){
 		    //char* command_args[] = {"bin/cat" , "text_files/text.txt" , "text_files/text2.txt", NULL };
-		    //printf("%s the cat argument \n", args);
-		    char *final_arg = sanitize(args);
-		    char* command_args[] = {"bin/cat" , final_arg,  NULL };
+		    //printf("%s the cat argument \n", args
+		   
+		    char* command_args[] = {"bin/cat" , args ,  NULL,NULL ,NULL};
 		    int ret = syscall_execvpe("bin/cat", command_args, NULL);
             }
             else if(pid > 0){
@@ -192,15 +207,6 @@ void runBinary(char *command, char *args, int bgprocess){
             }
 	
 	}
-
-
-
-
-
-
-
-
-
 
 	/*
 	int status;

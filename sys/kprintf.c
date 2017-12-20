@@ -171,7 +171,15 @@ void kprintf(const char *fmt, ...)
 
 	int isFormatted = (numberOfParams > 0)? 1: 0;
 	if(!isFormatted){
-		for(; *temp1; temp1+=1, temp2+=2) *temp2 = *temp1;
+		for(; *temp1; temp1+=1, temp2+=2) 
+		if(*temp1=='\b')
+		{temp2 -=2; 
+		 *temp2 ='\0';
+		}
+		else
+		{
+		*temp2 = *temp1;
+		}
 	}
 	else {
 		//for(j = 1; j<= numberOfParams; j++){
@@ -227,7 +235,13 @@ void kprintf(const char *fmt, ...)
 			}	
 
 			temp1+=1;
-		    } else {
+		    } 
+			else if(*temp1 =='\b')
+			{
+			temp2= temp2 -2;
+			*temp2 ='\0';			
+			}	
+			else {
 			*temp2 = *temp1;
 			temp1+=1;
 			temp2+=2;
