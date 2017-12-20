@@ -91,10 +91,29 @@ int syscall_close(unsigned int fd)
 int main (int argc, char *argv[], char *envp[])
 {
 
-	for(int i=0; i<argc-1; i++){
+	char* filename = argv[1];
+	int argcount= get_argc(filename);
+	char filelist[5][64];
+ //	char** args=parse_args_from_str(filename,filelist);		
+int len =strlen(filename);
+    int index = 0;
+    int c = 0;
+    for(int i=0; i<len;i++){
+        if(filename[i] == ' '){
+            filelist[index][c] = '\0';
+            index++;
+            c=0;
+        }else{
+            filelist[index][c] = filename[i];
+            c++;
+        }
+    }
+    filelist[index][c] = '\0';
+
+	for(int i=0; i<argcount; i++){
 		char str[4096];
 		char *strin = str;
-		char* filename=argv[i+1];
+		char* filename=filelist[i];
 		int size;
 		int fd;
 		fd = syscall_open(filename, 0, 0);

@@ -348,6 +348,7 @@ int exec(char *filename, char** arguments){
 	removeFromRunningList(runningTask);
 
 	switch_to_ring_3(runningTask->regs.rip);
+	return 1;
 }
 
 void waiting_on_pid(int child_pid){

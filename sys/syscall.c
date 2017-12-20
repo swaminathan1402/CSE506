@@ -73,9 +73,9 @@ unsigned long addr ;
 unsigned long len ;
 unsigned long prot;
 unsigned long flag;
-unsigned long off ;
-size_t length;
-int* filedes;
+//unsigned long off ;
+//size_t length;
+//int* filedes;
 int bytes_page;
 uint64_t allocated_page;
 int sleep_time, child_process_id;
@@ -240,7 +240,7 @@ break;
 
 
 case 61: // waitpid
-  waiting_pid = (int *)rdi;
+  waiting_pid = (int )rdi;
   waiting_on_pid(rdi);
   break;
 
@@ -292,7 +292,7 @@ case 123:  // ps
   break;
 
 case 124: //kill
-  process_to_kill = (int *)rdi;
+  process_to_kill = (int )rdi;
   //kprintf("[Kernel]: Killing %d\n", process_to_kill);
   int status = kill_process(process_to_kill);
   //kprintf("[Kernel]: Kill Status %d\n", status);

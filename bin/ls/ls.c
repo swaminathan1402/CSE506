@@ -5,7 +5,7 @@
 #include <string.h>
 #define O_DIRECTORY 00200000
 #define O_RDONLY 0x0000
-int syscall_write(int fd, char *buffer, size_t count){
+/*int syscall_write(int fd, char *buffer, size_t count){
 
 
     long long int fd1 = (long long int) fd;
@@ -28,7 +28,8 @@ int syscall_write(int fd, char *buffer, size_t count){
     );
     return ret;
 }
-
+*/
+/*
 int openDir (const char* file, int flags)
 {
 	long long int file1 =(long long int) file;
@@ -49,7 +50,8 @@ int openDir (const char* file, int flags)
 	return ret;
 
 }
-
+*/
+/*
 int getdents(int fd, char *buffer){
 
         long long int fd1= (long long int) fd;
@@ -68,7 +70,7 @@ int getdents(int fd, char *buffer){
         );
 	return ret;
 }
-
+*/
 int readDir(int fd)
 {
         char buffer[1024];
@@ -82,7 +84,7 @@ int readDir(int fd)
             }
 	return 1;
 }
-
+/*
 int closeDir(int fd)
 {
 	long long int fd1= (long long int)fd;
@@ -98,7 +100,7 @@ int closeDir(int fd)
 	);
 	return ret;
 }
-
+*/
 int main (int argc , char *argv[], char *envp[])
 {
 	/*
@@ -108,8 +110,34 @@ int main (int argc , char *argv[], char *envp[])
 		int *x = (int *)0xffffffffffffffff;
 		*x = *x + 20;
 	*/
-	for(int i=0; i<argc-1; i++){
-		const char *filename = argv[1];
+//	printf("\nMAIN:%s", argv[1]);
+	char* filename = argv[1];
+	int argcount= get_argc(filename);
+	char filelist[5][64];
+ //	char** args=parse_args_from_str(filename,filelist);		
+//	printf("\n %d", argcount);
+//	for(int i=0;i<argcount; i++)	
+//	{
+//	printf("\n Argument herE: %s",args[i]) ;	
+//	}
+	
+int len =strlen(filename);
+    int index = 0;
+    int c = 0;
+    for(int i=0; i<len;i++){
+        if(filename[i] == ' '){
+            filelist[index][c] = '\0';
+            index++;
+            c=0;
+        }else{
+            filelist[index][c] = filename[i];
+            c++;
+        }
+    }
+    filelist[index][c] = '\0';
+
+	for(int i=0; i<argcount; i++){
+		const char *filename = filelist[i];
 		int fd = openDir(filename, 0);
 		if(fd == -1) return 0;
 		readDir(fd);

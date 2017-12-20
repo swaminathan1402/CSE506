@@ -69,7 +69,7 @@ int get_argc(char* inp){
 }
 
 
-void parse_args_from_str(char* inp, char** params){
+char**  parse_args_from_str(char* inp, char** params){
     int len = strlen(inp);
     int n_of_params = 0;
     for(int i=0; i<len;i++){
@@ -77,20 +77,21 @@ void parse_args_from_str(char* inp, char** params){
             n_of_params++;
         }
     }
+    char param[5][64];
     n_of_params++;
     int index = 0;
     int c = 0;
     for(int i=0; i<len;i++){
         if(inp[i] == ' '){
-            params[index][c] = '\0';
+            param[index][c] = '\0';
             index++;
             c=0;
         }else{
-            params[index][c] = inp[i];
+            param[index][c] = inp[i];
             c++;
         }
     }
-    params[index][c] = '\0';
-       
+    param[index][c] = '\0';
+    return param;
 }
 

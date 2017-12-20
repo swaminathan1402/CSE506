@@ -108,11 +108,11 @@ void create_File_Descriptor_Entry(char* filename, int index ,int filesz, filedir
 	filedir* temp = (filedir *)root + index; 
 	*/
 	filedir *new_file = create_file_entry(filename, index, filesz, file);
-	int i=0;
+	//int i=0;
 	if(filesz==0)
 	{
-		new_file->parent = root;
-		new_file->root = root;
+		new_file->parent = (filedir *) root;
+		new_file->root = (filedir*)root;
 		root->children[root->child_count] = new_file;
 		root->child_count++;
 		/*
@@ -307,10 +307,10 @@ return string;
 
 int readDents(int index, char* buffer)
 {
-	char *temp_please = buffer;
+	//char *temp_please = buffer;
 	filedir* temp = (filedir*)fileDescriptor+ index;
 	int bPos=0;
-	int i,j;
+	int i;
 	if(temp->child_count==0)
 	{
 	 return 0;
@@ -335,7 +335,7 @@ void print_File_Descriptor(filedir* root)
 	//kprintf("|Filename :%s , Type: %d Child count: %d|", root->filename, root->type, root->child_count);
 	int child_count = root->child_count;
 	for(int i=0; i<child_count; i++){
-		print_File_Descriptor(root->children[i]);
+		print_File_Descriptor((filedir*) root->children[i]);
 	}
 	/*
 	int i=0;

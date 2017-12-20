@@ -67,24 +67,11 @@ void runBinary(char *command, char *args, int bgprocess){
 			args = hack;
 			printf("Directory: %s\n", args);
 
-			 char* command_args[] = {"bin/ls" , args ,NULL };
-                         int ret = syscall_execvpe("bin/ls", command_args, NULL);
+			
+                        
 		}
-		 else
-		 { 
-			char* command_args[6];
-			command_args[0]= "bin/ls";
-			int argcount=get_argc(args); 
-			char params[5][64];
-			char **temp =parse_args_from_str(args, params);
-			printf("params : %s ", params[0]);
-			printf("params: %s", temp[0]);
-			for(int i=0; i<argcount;i++)	
-			{
-			command_args[i+1]= temp[i];
-			}
-			int ret = syscall_execvpe("bin/ls", command_args, NULL); 				
-		}  
+		 char* command_args[] = {"bin/ls" , args ,NULL };
+                  syscall_execvpe("bin/ls", command_args, NULL);
 		 
             }
             else if(pid > 0){
@@ -93,14 +80,13 @@ void runBinary(char *command, char *args, int bgprocess){
 		    //printf("Background");
 		    return;
 		}
-		int something = syscall_waitpid(pid, &status, 0);
+		 syscall_waitpid(pid, &status, 0);
 		//printf("Waited on child");
 		
             
             }
 
 	}
-	
 	else if(strcmp(command, "echo") == 1){
             if(strlen(args) == 0) {
                 args = NULL;
@@ -108,7 +94,7 @@ void runBinary(char *command, char *args, int bgprocess){
             int pid = syscall_fork();
             if(pid == 0){
 		    char* command_args[] = {"bin/echo" , args ,NULL };
-		    int ret = syscall_execvpe("bin/echo", command_args, NULL);
+		     syscall_execvpe("bin/echo", command_args, NULL);
             }
             else if(pid > 0){
 		if(go_background == 1){
@@ -116,7 +102,7 @@ void runBinary(char *command, char *args, int bgprocess){
 		    //printf("Background");
 		    return;
 		}
-		int something = syscall_waitpid(pid, &status, 0);
+		syscall_waitpid(pid, &status, 0);
 		//printf("Waited on child");
             
             }
@@ -133,7 +119,7 @@ void runBinary(char *command, char *args, int bgprocess){
 		    //printf("%s the cat argument \n", args
 		   
 		    char* command_args[] = {"bin/cat" , args ,  NULL,NULL ,NULL};
-		    int ret = syscall_execvpe("bin/cat", command_args, NULL);
+		     syscall_execvpe("bin/cat", command_args, NULL);
             }
             else if(pid > 0){
 		if(go_background == 1){
@@ -141,7 +127,7 @@ void runBinary(char *command, char *args, int bgprocess){
 		    //printf("Background");
 		    return;
 		}
-		int something = syscall_waitpid(pid, &status, 0);
+	 syscall_waitpid(pid, &status, 0);
 		//printf("Waited on child");
             
             }
@@ -154,14 +140,14 @@ void runBinary(char *command, char *args, int bgprocess){
             int pid = syscall_fork();
             if(pid == 0){
 		    char* command_args[] = {"bin/kill" , args, NULL };
-		    int ret = syscall_execvpe("bin/kill", command_args, NULL);
+		  syscall_execvpe("bin/kill", command_args, NULL);
             }
             else if(pid > 0){
 		if(go_background == 1){
 		    //printf("Background");
 		    return;
 		}
-		int something = syscall_waitpid(pid, &status, 0);
+		 syscall_waitpid(pid, &status, 0);
 		//printf("Waited on child");
             
             }
@@ -172,7 +158,7 @@ void runBinary(char *command, char *args, int bgprocess){
             int pid = syscall_fork();
             if(pid == 0){
 		    char* command_args[] = {"bin/ps" , NULL, NULL };
-		    int ret = syscall_execvpe("bin/ps", command_args, NULL);
+		     syscall_execvpe("bin/ps", command_args, NULL);
             }
             else if(pid > 0){
 		if(go_background == 1){
@@ -180,7 +166,7 @@ void runBinary(char *command, char *args, int bgprocess){
 		    //printf("Background");
 		    return;
 		}
-		int something = syscall_waitpid(pid, &status, 0);
+		syscall_waitpid(pid, &status, 0);
 		//printf("Waited on child");
             
             }
@@ -193,7 +179,7 @@ void runBinary(char *command, char *args, int bgprocess){
             int pid = syscall_fork();
             if(pid == 0){
 		    char* command_args[] = {"bin/sleep" , args, NULL };
-		    int ret = syscall_execvpe("bin/sleep", command_args, NULL);
+		     syscall_execvpe("bin/sleep", command_args, NULL);
             }
             else if(pid > 0){
 		if(go_background == 1){
@@ -201,7 +187,7 @@ void runBinary(char *command, char *args, int bgprocess){
 		    //printf("Background");
 		    return;
 		}
-		int something = syscall_waitpid(pid, &status, 0);
+		 syscall_waitpid(pid, &status, 0);
 		//printf("Waited on child");
             
             }
@@ -414,8 +400,8 @@ void runScript(char *script_path){
 	char temp[1024] = "\0";
 	int j = 0;
         char *generated_command;
-        char command_array[11][64];
-        int command_count = 0;
+        //char command_array[11][64];
+       // int command_count = 0;
         if(fd>0){
 	
 	while(size > 0){
@@ -594,7 +580,7 @@ void runScripts(char arguments[10][1024]){
 	int i = 0;
 	int line_number = 0;
 	int size = syscall_read(fd, bigBuffer, 1024); // read 1KB each time 
-	char temp[1024] = "\0";
+	char temp[1024];
 	int j = 0;
 	while(size > 0){
 		while(bigBuffer[i]!='\0' && bigBuffer[i] != '\n'){
@@ -611,7 +597,7 @@ void runScripts(char arguments[10][1024]){
 		if(bigBuffer[i] == '\n'){
 			if(line_number > 0) {
 				temp[j] = '\0';
-				char *generated_command = sanitize(temp);
+			//	char *generated_command = sanitize(temp);
 				//interpretCommand(generated_command);
 				//printf("Generated Command: %s\n", generated_command);
 				//printf("\n"); 
@@ -621,5 +607,5 @@ void runScripts(char arguments[10][1024]){
 			i++;
 		}
 	}
-
+	printf("%s", temp);
 }

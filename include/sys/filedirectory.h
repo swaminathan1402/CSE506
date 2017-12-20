@@ -2,7 +2,7 @@
 #define  _FILEDIRECTORY_H
 #include<sys/defs.h>
 
-typedef struct 
+typedef struct
 {
 char *filename;
 struct filedir* parent;
@@ -13,7 +13,7 @@ int child_count;
 uint64_t entry_pointer;
 uint64_t ref_count;
 uint64_t filesz;
-}__attribute__((packed))filedir;
+}__attribute__((packed)) filedir;
 
 filedir *fileDescriptor;
 filedir* currentfile;

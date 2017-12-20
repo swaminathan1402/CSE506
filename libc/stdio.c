@@ -205,10 +205,9 @@ void *memcopy(void *dst, void *src, size_t n )
     while(n--) {
 	*temp++ = *temp2++;
     }
-    return;
 }
 
-int scanf(const char *fmt, void* pointer){
+int scanf( char *fmt, void* pointer){
     char buffer[256];
 
     int type = fmt[1];

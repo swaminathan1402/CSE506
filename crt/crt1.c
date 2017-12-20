@@ -7,7 +7,7 @@ long* sp;
 void _start(void) {
  int argc = -7;
   char* argv[] = {"None"};
-  char* envp[] = {"None"};
+//  char* envp[] = {"None"};
 
 __asm__ __volatile__(
     "movq %%rsp, %%rcx;"
