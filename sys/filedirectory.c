@@ -208,7 +208,7 @@ int  setCurrentPath(char* buffer)
 	int index = search(buffer);	
 	if(index==-1)
 	{
-	kprintf("\nFile not present\n");
+	//kprintf("\nFile not present\n");
 	return -1;
 	}
 	 temp=(filedir*)fileDescriptor+index;

@@ -1,0 +1,40 @@
+===============================================
+To test background process
+
+1. type "<command> &"
+
+Then run "ps" to check for zombie processes
+In the next run, we kill all the zombies
+
+================================================
+To test Kill
+
+We have an idle task that does nothing but yield
+
+1. type "kill <pid>"
+
+The pid of idle task is 1.
+After killing, type "ps".
+
+
+================================================
+To test "cd"
+
+In order to change directory, kindly add a '/' at the end of the directory name
+
+for example, "cd bin/" or "cd lib/". Not "cd lib"
+
+After that enter "pwd" to confirm that the path has changed.
+We donot print any message when invalid path is entered. We however remain at the current path itself.
+
+================================================
+
+To run Scripts
+
+Our scripts are stored in folder "ascript/"
+There is file called "run.sh" inside it.
+
+Run, "./ascript/run.sh"
+
+
+===============================================
