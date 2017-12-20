@@ -140,7 +140,7 @@ Elf64_Ehdr *findElfByName(char *filename){
 
 	uint64_t start_addr = (uint64_t)&_binary_tarfs_start;
 	struct posix_header_ustar *file = (struct posix_header_ustar *)start_addr;
-	Elf64_Ehdr *desired_elf;
+	Elf64_Ehdr *desired_elf = NULL;
 	while((uint64_t)file < (uint64_t)&_binary_tarfs_end){
 		
 		int size_of_file = octal_to_decimal(file->size, 11);
@@ -169,7 +169,7 @@ char *findNameByElf(Elf64_Ehdr *elf_file){
 
 	uint64_t start_addr = (uint64_t)&_binary_tarfs_start;
 	struct posix_header_ustar *file = (struct posix_header_ustar *)start_addr;
-	char *filename;
+	char *filename = "sbush";
 	while((uint64_t)file < (uint64_t)&_binary_tarfs_end){
 		
 		int size_of_file = octal_to_decimal(file->size, 11);
