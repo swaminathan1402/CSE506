@@ -73,21 +73,21 @@ task* createChildTask();
 int exec(char * ,char** );
 
 void getprocessList();
-
+int checkProcessInReadyList(task*);
+int checkProcessInWaitList(task*);
 int kill_process(int);
 void temp_yield(int);
 void waiting_on_pid(int);
 void addtozombieList(task*);
-void addtowaitList( task*);
-void addtorunningList( task*);
+void addtoWaitList( task*);
+void addtoRunningList( task*);
 void removefromOtherList(task*);
 void removeFromRunningList(task *);
 void addtoReadyList(task *);
 void clean_zombies();
 void free(task *);
 void reap_zombie_process(task *);
-
-
-
 void addtoWaitList(task *);
+void removeFromReadyList(task *);
+void removeFromWaitList(task*);
 #endif

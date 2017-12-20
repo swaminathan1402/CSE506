@@ -205,6 +205,7 @@ void *memcopy(void *dst, void *src, size_t n )
     while(n--) {
 	*temp++ = *temp2++;
     }
+   return ;
 }
 
 int scanf( char *fmt, void* pointer){

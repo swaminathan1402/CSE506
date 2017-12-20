@@ -68,7 +68,7 @@ int get_argc(char* inp){
     return n_of_params;
 }
 
-
+/*
 char**  parse_args_from_str(char* inp, char** params){
     int len = strlen(inp);
     int n_of_params = 0;
@@ -94,4 +94,4 @@ char**  parse_args_from_str(char* inp, char** params){
     param[index][c] = '\0';
     return param;
 }
-
+*/

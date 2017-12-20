@@ -1,4 +1,4 @@
- #include <sys/task.h>
+#include <sys/task.h>
 #include <sys/kprintf.h>
 #include <sys/page.h>
 #include <sys/memory.h>
@@ -189,8 +189,6 @@ void free(task *zombie_process){
 							zpte = (PTE *)(uint64_t)((zpde + pde_index)->page_table_base_address << 12);
 							for(int pte_index = 0; pte_index < 512; pte_index++){
 								if((zpte + pte_index)->p == 1){
-									//uint64_t free_this_page = (uint64_t)((zpte + pte_index)->physical_address << 12);
-									//kprintf("Free this page %p\n", free_this_page);
 									//memset(free_this_page, 0, 4096);
 									//freelist *newpage = (freelist *)free_this_page;
 									//newpage->next = first_free_page;
@@ -399,7 +397,8 @@ task* createChildTask(){
 	uint64_t a = (uint64_t)get_free_page();
 	uint64_t b = (uint64_t)get_free_page();
         uint64_t *pointer_to_pte = (uint64_t *)get_free_page();
-
+	kprintf(" ",a,b ); 
+	
         childTask->pml4e = (PML4E *)pointer_to_pml4e;
         memset(childTask->pml4e, 0, 4096);
         childTask->pdpe = (PDPE *)pointer_to_pdpe;
@@ -497,6 +496,7 @@ void createTask(
 
 	uint64_t a = (uint64_t)get_free_page();
 	uint64_t b = (uint64_t)get_free_page();
+	kprintf("",a,b);
 	me->mm = get_mm_struct();
 	vm_area_struct *new_stack_vma = create_new_vma(me->regs.user_rsp-4096, me->regs.user_rsp, 8192, VMA_STACK_TYPE);
 	init_insert_vma(me->mm, new_stack_vma);
@@ -604,10 +604,10 @@ uint64_t load_arguments(uint64_t user_rsp)
 	memcpy(ptr+1, runningTask->arguments, argc * 64);
 	if(argc >0)
 	{
-		runningTask->regs.user_rsp= ptr;//user_rsp;
+		runningTask->regs.user_rsp=(uint64_t) ptr;//user_rsp;
 	}
 
-	return ptr;
+	return (uint64_t)ptr;
 }
 
 
