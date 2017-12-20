@@ -36,8 +36,11 @@ int syscall_ps(){
 }
 
 int main(){
-  int pid = syscall_ps();
+  //int pid = 
+  syscall_ps();
+  /*
   if(pid != 0)
   	syscall_write(0, "ps written\n",11);
+  */
   return 0;
 }

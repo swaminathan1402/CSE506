@@ -75,7 +75,6 @@ int getdents(int fd, char *buffer){
     return ret;
 }
 */
-/*
 int openDir (const char* file, int flags)
 {
 	long long int file1 =(long long int) file;
@@ -96,7 +95,6 @@ int openDir (const char* file, int flags)
 	return ret;
 
 }
-*/
 /*
 int getdents(int fd, char *buffer){
 
@@ -130,7 +128,6 @@ int readDir(int fd)
             }
 	return 1;
 }
-/*
 int closeDir(int fd)
 {
 	long long int fd1= (long long int)fd;
@@ -146,7 +143,6 @@ int closeDir(int fd)
 	);
 	return ret;
 }
-*/
 int main (int argc , char *argv[], char *envp[])
 {
 	/*
