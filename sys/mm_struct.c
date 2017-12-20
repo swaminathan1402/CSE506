@@ -2,6 +2,7 @@
 #include <sys/vm_area_struct.h>
 #include <sys/page.h>
 #include <sys/task.h>
+#include <sys/memory.h>
 /*
 struct mm_struct* get_mm_struct(){
     struct mm_struct* new_mm_struct = (struct mm_struct*)get_free_page();
@@ -36,7 +37,7 @@ void deepCopy_mm_structs(uint64_t child_process){
 	task *cp = (task *)child_process;
 	task *p = (task *)(cp->parent);
 
-	mm_struct *child = (cp->mm);
+	//mm_struct *child = (cp->mm);
 	mm_struct *parent = p->mm;
 
 	vm_area_struct *temp_parent = parent->head;
@@ -52,8 +53,8 @@ void deepCopy_mm_structs(uint64_t child_process){
 	while(index <= count/*temp_parent->next != parent->head*/){
 
 		uint64_t parent_vma_type = temp_parent->vma_type;
-		uint64_t parent_vma_start = temp_parent->vm_end;
-		uint64_t parent_vma_end = temp_parent->vm_start;
+		//uint64_t parent_vma_start = temp_parent->vm_end;
+		//uint64_t parent_vma_end = temp_parent->vm_start;
 		uint64_t parent_vma_max_size = temp_parent->max_size;
 	
 		if(parent_vma_type == VMA_STACK_TYPE) {
@@ -133,8 +134,8 @@ int unmap(uint64_t addr){
 	int index = 0;
 	int count = 0;
 	vm_area_struct *temp = runningTask->mm->head;
-	vm_area_struct *heap_vma;
-	vm_area_struct *interested_vma;
+	vm_area_struct *heap_vma = NULL;
+	//vm_area_struct *interested_vma= NULL;
 	while(temp->next != runningTask->mm->head){
 		count++;
 		temp = temp->next;
@@ -153,7 +154,7 @@ int unmap(uint64_t addr){
 	while(index <= count){
 		if(temp->vma_type == VMA_ANON_TYPE){
 			if( addr >= temp->vm_start && addr <= temp->vm_end){
-				interested_vma = temp;
+				//interested_vma = temp;
 				temp->vm_start = -1;
 				temp->vm_end = -1;
 				found = 1;
@@ -188,7 +189,7 @@ void print_all_vmas(struct mm_struct* input){
 }
 */
 void init_stack_vma(struct mm_struct* in_mm_struct){
-    int page_size = 4096;
+    //int page_size = 4096;
 /*    struct vm_area_struct* new_stack_vma = 
     init_vm_area_struct(STACK_REGION_END+page_size, 
         STACK_REGION_END, 
