@@ -60,7 +60,7 @@ void* syscall_mmap ( unsigned long addr, unsigned long len, unsigned long prot, 
 	return ret;
 }
 
-
+/*
 int getdents(int fd, char *buffer){
 
         long long int fd1= (long long int) fd;
@@ -79,7 +79,7 @@ int getdents(int fd, char *buffer){
         );
 	return ret;
 }
-
+*/
 //wrong
 int syscall_munmap( unsigned long addr, size_t len)
 {
