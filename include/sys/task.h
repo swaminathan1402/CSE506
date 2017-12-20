@@ -86,4 +86,8 @@ void addtoReadyList(task *);
 void clean_zombies();
 void free(task *);
 void reap_zombie_process(task *);
+
+
+
+void addtoWaitList(task *);
 #endif

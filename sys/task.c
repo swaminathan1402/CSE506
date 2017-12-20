@@ -8,7 +8,10 @@
 #include <sys/tarfs.h>
 #include <sys/elf64.h>
 #include<sys/mm_struct.h>
+#include<sys/string.h>
 void yield(){
+	kprintf("hello");
+	kprintf("hello");
 
 	/*
 		1. Populate rdi, rsi with me and next respectively.
@@ -147,7 +150,7 @@ void beIdle(){
 void remove_page(uint64_t rm_page){
 	//kprintf("removing this page %p\n", rm_page);
 
-	memset(rm_page, 0, 4096);
+	memset((void *)rm_page, 0, 4096);
 	freelist *newpage = (freelist *)rm_page;
 	newpage->next = first_free_page;
 	newpage->prev = first_free_page->prev;
@@ -186,7 +189,7 @@ void free(task *zombie_process){
 							zpte = (PTE *)(uint64_t)((zpde + pde_index)->page_table_base_address << 12);
 							for(int pte_index = 0; pte_index < 512; pte_index++){
 								if((zpte + pte_index)->p == 1){
-									uint64_t free_this_page = (uint64_t)((zpte + pte_index)->physical_address << 12);
+									//uint64_t free_this_page = (uint64_t)((zpte + pte_index)->physical_address << 12);
 									//kprintf("Free this page %p\n", free_this_page);
 									//memset(free_this_page, 0, 4096);
 									//freelist *newpage = (freelist *)free_this_page;
@@ -380,7 +383,7 @@ task* createChildTask(){
 	pid++;
 	task *childTask = (task *)get_free_page();
 	childTask->status = READY_PROCESS_STATUS;
-	childTask->regs.rip = NULL; 
+	childTask->regs.rip = (uint64_t)NULL; 
 	childTask->regs.cr3 = 0;
 	childTask->regs.rsp = (uint64_t)get_free_page() + 4096;  // create stack at the top of the page, so that it can grow downwards and not go to the previous page
 	childTask->regs.user_rsp = (uint64_t)get_free_user_page() + 4096;	

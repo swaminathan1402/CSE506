@@ -64,15 +64,16 @@ char** arguments;
 size_t count;
 char* filename; 
 int ret;
-int flags;
-int mode, waiting_pid;
+//int flags;
+int mode;
+int waiting_pid;
 int ps_pid, process_to_kill;
 off_t offset;
 unsigned int origin;
-unsigned long addr ;
-unsigned long len ;
-unsigned long prot;
-unsigned long flag;
+//uint64_t addr ;
+//unsigned long len ;
+//unsigned long prot;
+//unsigned long flag;
 //unsigned long off ;
 //size_t length;
 //int* filedes;
@@ -91,7 +92,7 @@ if(fd==0)
 terminal_read(fd, buf, count);
 else
 {
-ret =readfromFile(fd, buf, count);
+ret =readFromFile(fd, buf, count);
   __asm__ __volatile__(
 	"movq %0, %%rax;"
 	:
@@ -111,7 +112,7 @@ break;
 
 case 2:// sys_open
 filename = (char *)rdi; 
-flags = (int)rsi;
+//flags = (int)rsi;
 mode =(int)rdx;
 //kprintf("\n Opening:%s  Flags: %d , Mode: %d", filename, flags, mode);
 if(mode==0)
@@ -175,16 +176,18 @@ case 9: //sys_mmap
 break;
                                                                 
 case 11: //sys_munmap
- addr = (uint64_t)rdi;
+ //addr = (uint64_t)rdi;
  //length= (size_t)rsi;
- int status_1 = unmap(addr);
+ //int status_1 = unmap(addr);
  //kprintf("[Kernel] Unmap %p\n ", status_1);
+  /*
   __asm__ __volatile__(
 	"movq %0, %%rax;"
 	:
 	:"m"(status_1)
 	:
   );
+ */
 break;
 
 case 22: //sys_ps
@@ -241,7 +244,7 @@ break;
 
 case 61: // waitpid
   waiting_pid = (int )rdi;
-  waiting_on_pid(rdi);
+  waiting_on_pid(waiting_pid);
   break;
 
 case 78 ://sys_getdents

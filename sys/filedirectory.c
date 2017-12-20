@@ -35,7 +35,7 @@ filedir* create_file_entry(char *filename, int index, int filesz ,uint64_t file)
 	return temp;
 }
 
-int readfromFile(int index, char* buffer, int count )
+int readFromFile(int index, char* buffer, int count )
 {
 	int i ;
 	filedir* temp = (filedir*)fileDescriptor+index;
@@ -111,9 +111,9 @@ void create_File_Descriptor_Entry(char* filename, int index ,int filesz, filedir
 	//int i=0;
 	if(filesz==0)
 	{
-		new_file->parent = (filedir *) root;
-		new_file->root = (filedir*)root;
-		root->children[root->child_count] = new_file;
+		new_file->parent = (struct filedir *) root;
+		new_file->root = (struct filedir*)root;
+		root->children[root->child_count] = (struct filedir *)new_file;
 		root->child_count++;
 		/*
 		temp->type=1;
@@ -145,9 +145,9 @@ void create_File_Descriptor_Entry(char* filename, int index ,int filesz, filedir
 		char *parentName = extractParentFromFilename(filename);
 		filedir *temp_parent = findParent(parentName , index, root);	
 		
-		new_file->parent= temp_parent;
-		temp_parent->children[temp_parent->child_count++]= new_file;
-		new_file->root = root;
+		new_file->parent= (struct filedir*)temp_parent;
+		temp_parent->children[temp_parent->child_count++]= (struct filedir*)new_file;
+		new_file->root = (struct filedir*)root;
 		//kprintf("%s", temp_parent->filename);
 		/*
 		temp->type=2;
@@ -178,7 +178,7 @@ char* getCurrentPath(char* buffer ,int count)
 	return buffer; 
 }
 
-int  setCurrentPath(char* buffer)
+int setCurrentPath(char* buffer)
 {
 	
       filedir* temp;
@@ -188,7 +188,7 @@ int  setCurrentPath(char* buffer)
 		return -1;
 		else
 		{
-		temp =currentfile->parent;
+		temp =(filedir *)currentfile->parent;
 		memcpy(buffer,temp->filename,strlen(temp->filename) );
 		}
 
@@ -199,7 +199,7 @@ int  setCurrentPath(char* buffer)
 		return -1;
 		else 
 		{
-			temp= currentfile->root;
+			temp= (filedir *)currentfile->root;
 			memcpy(buffer, temp->filename ,strlen(temp->filename));
 		}
 	}
