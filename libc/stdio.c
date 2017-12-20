@@ -92,7 +92,7 @@ char volatile *itoa(int value, int base){
 }
 
 
-int printf(const char *fmt, ...){
+int printf(char *fmt, ...){
 
         va_list ap;
         int numberOfParams = 0;
@@ -205,7 +205,7 @@ void *memcopy(void *dst, void *src, size_t n )
     while(n--) {
 	*temp++ = *temp2++;
     }
-   return ;
+   return (void *)0;
 }
 
 int scanf( char *fmt, void* pointer){
