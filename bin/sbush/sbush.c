@@ -116,7 +116,7 @@ void runBinary(char *command, char *args, int bgprocess){
             if(pid == 0){
 		    //char* command_args[] = {"bin/cat" , "text_files/text.txt" , "text_files/text2.txt", NULL };
 		    //printf("%s the cat argument \n", args);
-		    //char *final_arg = sanitize(args);
+		    char *final_arg = sanitize(args);
 		    char* command_args[] = {"bin/cat" , final_arg,  NULL };
 		    int ret = syscall_execvpe("bin/cat", command_args, NULL);
             }
