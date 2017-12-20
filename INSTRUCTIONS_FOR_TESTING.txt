@@ -38,3 +38,10 @@ Run, "./ascript/run.sh"
 
 
 ===============================================
+
+To test "ls"
+
+Run "ls bin/" or "ls lib/" or "ls bin/ lib/" anything 
+NOT "ls bin lib"
+
+==============================================
