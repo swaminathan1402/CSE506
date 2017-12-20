@@ -95,7 +95,6 @@ int main (int argc, char *argv[], char *envp[])
 		char str[4096];
 		char *strin = str;
 		char* filename=argv[i+1];
-		printf("Oh my god, the filename is %s", filename);
 		int size;
 		int fd;
 		fd = syscall_open(filename, 0, 0);
