@@ -62,7 +62,7 @@ unsigned int fd;
 char* buf;
 char** arguments;
 size_t count;
-const char* filename; 
+char* filename; 
 int ret;
 int flags;
 int mode, waiting_pid;
@@ -116,7 +116,9 @@ mode =(int)rdx;
 //kprintf("\n Opening:%s  Flags: %d , Mode: %d", filename, flags, mode);
 if(mode==0)
 {
-kprintf("Searcing for : %s" ,filename); 
+//int len = strlen(filename);
+//filename[len] = '\0';
+kprintf("Searching for : %s" ,filename); 
 int fd =search(filename);
 kprintf("Fd: %d" ,fd); 
 if(fd!=-1)
