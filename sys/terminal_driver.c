@@ -3,7 +3,7 @@
 #include <sys/terminal_driver.h>
 #include <sys/defs.h>
 
-terminal_buffer_len = 0;
+int terminal_buffer_len = 0;
 volatile int done_flag=0;
 
 int terminal_read(int fd, void* buffer, uint64_t buffer_len){

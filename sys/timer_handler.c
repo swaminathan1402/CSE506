@@ -1,7 +1,7 @@
 #include<sys/kprintf.h>
 #include<sys/defs.h>
 #include<sys/pic.h>
-
+#include<sys/syscall.h>
 static int volatile sleep_timer = 0;
 void reduce_sleep_timer(){
     if(sleep_timer >  0){

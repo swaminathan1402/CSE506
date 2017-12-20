@@ -27,7 +27,7 @@ void changeCR3(PML4E *new_pml4e, PDPE *new_pdpe, PDE *new_pde, PTE *new_pte, int
 
 void reloadCR3()
 {
-uint64_t current_CR3;
+uint64_t current_CR3=0;
 __asm__ __volatile__(
 "movq %%cr3 ,%0; "
 "movq %1 , %%cr3; "
