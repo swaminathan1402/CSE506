@@ -572,7 +572,7 @@ uint64_t load_arguments(uint64_t user_rsp)
 	while(runningTask->arguments[argc]!= NULL) { //&& strcmp(runningTask->arguments[argc], "")!=0){
 	    argc++;
 	}
-	kprintf("Argc: %d", argc);
+	//kprintf("Argc: %d", argc);
 	//kprintf("args: %s", runningTask->arguments[0]);
 
 
@@ -618,7 +618,7 @@ void switch_to_ring_3()
 	}
 
 	if(runningTask->child && runningTask->child->status == ZOMBIE_PROCESS_STATUS){
-		kprintf("[Kernel]: removing its child junk %p\n", runningTask->child);
+		//kprintf("[Kernel]: removing its child junk %p\n", runningTask->child);
 		//free((uint64_t)runningTask->child);
 		reap_zombie_process(runningTask->child);
 	}
@@ -715,7 +715,7 @@ void addtoZombieList(task* temp )
 		new_zombie->next = zombieProcessList;
 		zombieProcessList = new_zombie;
 	}
-	kprintf("added zombie %s!\n", new_zombie->command);
+	//kprintf("added zombie %s!\n", new_zombie->command);
 }
 
 
@@ -957,7 +957,7 @@ int kill_process(int kpid){
 		
 		if(temp->child)
 			temp->child->parent = lastTask; // changing the child's parent to idleTask
-		kprintf("[Kernel][Kill] adding %d to zombie %d\n", temp->pid, kpid);
+		//kprintf("[Kernel][Kill] adding %d to zombie %d\n", temp->pid, kpid);
 		temp->status = KILLED_PROCESS_STATUS;
 		if(checkProcessInWaitList(temp)){
 			removeFromWaitList(temp);
@@ -1060,7 +1060,7 @@ void temp_yield(int exec_next){
 void reap_zombie_process(task *zombie_process){
 	// Removes the PCB itself
 	// look for that zombie in the zombie queue and remove it
-	kprintf("[Kernel] Process[PID: %d] is reaping Zombie Process[PID:%d]\n", runningTask->pid, zombie_process->pid);
+	//kprintf("[Kernel] Process[PID: %d] is reaping Zombie Process[PID:%d]\n", runningTask->pid, zombie_process->pid);
 
 	tasklist *zom = zombieProcessList;
 	while(zom->pid != zombie_process->pid){

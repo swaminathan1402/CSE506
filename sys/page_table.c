@@ -112,15 +112,15 @@ void idpaging(PTE* first_pte, uint64_t from, int size){
 
 
 void init_pd(PTE* first_pte, PML4E* first_pml4e, uint64_t from, int size){
-	kprintf("Initializing page table \n");
-	kprintf("Performing Kernel Identity mapping to first pte's 2 MB \n");
+	//kprintf("Initializing page table \n");
+	//kprintf("Performing Kernel Identity mapping to first pte's 2 MB \n");
 
 	idpaging(first_pte, from, size);
-	kprintf("Mapping from %p to %p\n", from+size, from+size+100*4096);
+	//kprintf("Mapping from %p to %p\n", from+size, from+size+100*4096);
 	idpaging(first_pte + 85, from+size, 100*4096);
 
-	kprintf("pointer to pml4e pdpe addr:%p\n pointer to first pte: %p\n", (first_pml4e+511)->page_directory_pointer_base_address, first_pte);
-	kprintf("pointer to pml4e:%p\n", first_pml4e);
+	//kprintf("pointer to pml4e pdpe addr:%p\n pointer to first pte: %p\n", (first_pml4e+511)->page_directory_pointer_base_address, first_pte);
+	//kprintf("pointer to pml4e:%p\n", first_pml4e);
 	//setMap(0xffffffff800b8000, 0xb8000);
 	setMap(0xb8000, 0xb8000, 0);
 	int i;
@@ -168,7 +168,7 @@ void deepCopyPageTable(uint64_t child){
 		if((parent_pml4e + pml4e_index)->p == 0){
 			continue;
 		} else{
-			kprintf("[Kernel] parent pml4e index %d\n", pml4e_index);
+			//kprintf("[Kernel] parent pml4e index %d\n", pml4e_index);
 			if((child_pml4e+ pml4e_index)->p == 0){
 				uint64_t *some_page = (uint64_t *)get_free_page();
 				memset(some_page, 0, 4096);

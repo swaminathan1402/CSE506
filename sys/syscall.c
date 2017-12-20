@@ -78,7 +78,7 @@ size_t length;
 int* filedes;
 int bytes_page;
 uint64_t allocated_page;
-int sleep_time;
+int sleep_time, child_process_id;
 switch (rax)
 {
 case 0: //Sys read 
@@ -118,9 +118,9 @@ if(mode==0)
 {
 //int len = strlen(filename);
 //filename[len] = '\0';
-kprintf("Searching for : %s" ,filename); 
+//kprintf("Searching for : %s" ,filename); 
 int fd =search(filename);
-kprintf("Fd: %d" ,fd); 
+//kprintf("Fd: %d" ,fd); 
 if(fd!=-1)
 {
 increase_ref_count(fd);
@@ -143,7 +143,7 @@ break;
 case 6:
 sleep_time = (uint64_t)rdi;
 set_sleep_timer(sleep_time);
-kprintf("\nsleep timer done\n");
+//kprintf("\nsleep timer done\n");
 break;
 
 case 8://sys_lseek 
@@ -178,7 +178,7 @@ case 11: //sys_munmap
  addr = (uint64_t)rdi;
  //length= (size_t)rsi;
  int status_1 = unmap(addr);
- kprintf("[Kernel] Unmap %p\n ", status_1);
+ //kprintf("[Kernel] Unmap %p\n ", status_1);
   __asm__ __volatile__(
 	"movq %0, %%rax;"
 	:
@@ -201,7 +201,7 @@ case 24: // sys_yield
 	:
     );
   if(runningTask->child){
-  	kprintf("[Kernel] Parent %d getting rid of %d\n", runningTask->pid, runningTask->child->pid);
+  	//kprintf("[Kernel] Parent %d getting rid of %d\n", runningTask->pid, runningTask->child->pid);
   }
   removeFromRunningList(runningTask);
   addtoReadyList(runningTask);
@@ -210,8 +210,8 @@ case 24: // sys_yield
   break;
 
 case 57:
-  kprintf("forking");
-  int child_process_id = fork();
+  //kprintf("forking");
+  child_process_id = fork();
   __asm__ __volatile__(
 	"movq %0, %%rax;"
 	:
@@ -293,9 +293,9 @@ case 123:  // ps
 
 case 124: //kill
   process_to_kill = (int *)rdi;
-  kprintf("[Kernel]: Killing %d\n", process_to_kill);
+  //kprintf("[Kernel]: Killing %d\n", process_to_kill);
   int status = kill_process(process_to_kill);
-  kprintf("[Kernel]: Kill Status %d\n", status);
+  //kprintf("[Kernel]: Kill Status %d\n", status);
   __asm__ __volatile__(
 	"movq %0, %%rax;"
 	:

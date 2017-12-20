@@ -322,7 +322,7 @@ int readDents(int index, char* buffer)
 		char *temp2 = (temp1->filename);
 		//*(buffer+bPos)=strlen(temp1->filename) +1;
 		bPos++;
-		kprintf("ls %s\n", temp2);
+		kprintf("%s\n", temp2);
 		
 
 	}
@@ -332,7 +332,7 @@ int readDents(int index, char* buffer)
 
 void print_File_Descriptor(filedir* root)
 {
-	kprintf("|Filename :%s , Type: %d Child count: %d|", root->filename, root->type, root->child_count);
+	//kprintf("|Filename :%s , Type: %d Child count: %d|", root->filename, root->type, root->child_count);
 	int child_count = root->child_count;
 	for(int i=0; i<child_count; i++){
 		print_File_Descriptor(root->children[i]);

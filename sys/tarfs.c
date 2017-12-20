@@ -82,7 +82,6 @@ void read_elf(Elf64_Ehdr *file ,int index){
 
 	setMap(runningTask->regs.user_rsp, runningTask->regs.user_rsp, 1);  // mapping the stacks as well
 	changeCR3((PML4E *)kernel_pml4e, (PDPE *)kernel_pdpe, (PDE *)kernel_pde, (PTE *)kernel_pte, 0);
-	kprintf("%p %p %p %p\n", pml4e, pdpe, pde, pte);
 
 }
 
@@ -94,7 +93,7 @@ void tarfs_read(){
 	fileDescriptor = (filedir *)get_free_pages(3);
 	currentPath= (char*)get_free_page();
 	currentfile= (filedir*)get_free_page();
-	kprintf("\n%p",fileDescriptor);
+	//kprintf("\n%p",fileDescriptor);
 	filedir* head = create_file_entry("root/", index, 0, 0);
 	
 	
@@ -217,5 +216,5 @@ void load_binary(Elf64_Ehdr *file, int index){
 		program_header = (Elf64_Phdr *)((uint64_t)program_header + file->e_phentsize); // program header entry size
 		count--;
 	}
-	kprintf("\n Binary Loaded \n");
+	//kprintf("\n Binary Loaded \n");
 }

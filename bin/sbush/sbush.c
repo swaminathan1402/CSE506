@@ -41,7 +41,7 @@ void runBinary(char *command, char *args, int bgprocess){
 	int status;
 	go_background = bgprocess;  //1
 	if(strcmp(command, "ls")==1){
-            printf("Command: %s\n", command);
+            //printf("Command: %s\n", command);
             if(strlen(args) == 0) {
                 args = NULL;
             }
@@ -63,9 +63,9 @@ void runBinary(char *command, char *args, int bgprocess){
 				}
 			}
 			hack[cnt] = '/';
-			hack[cnt+1] = '\0';
+			//hack[cnt+1] = '\0';
 			args = hack;
-			printf("%s\n", args);
+			printf("Directory: %s\n", args);
 
 		}
 		    char* command_args[] = {"bin/ls" , args ,NULL };
@@ -75,11 +75,11 @@ void runBinary(char *command, char *args, int bgprocess){
             else if(pid > 0){
 		if(go_background == 1){
 			yield();
-		    printf("Background");
+		    //printf("Background");
 		    return;
 		}
 		int something = syscall_waitpid(pid, &status, 0);
-		printf("Waited on child");
+		//printf("Waited on child");
 		
             
             }
@@ -98,11 +98,11 @@ void runBinary(char *command, char *args, int bgprocess){
             else if(pid > 0){
 		if(go_background == 1){
 			yield();
-		    printf("Background");
+		    //printf("Background");
 		    return;
 		}
 		int something = syscall_waitpid(pid, &status, 0);
-		printf("Waited on child");
+		//printf("Waited on child");
             
             }
 	
@@ -116,18 +116,18 @@ void runBinary(char *command, char *args, int bgprocess){
             if(pid == 0){
 		    //char* command_args[] = {"bin/cat" , "text_files/text.txt" , "text_files/text2.txt", NULL };
 		    //printf("%s the cat argument \n", args);
-		    //char *final_arg = sanitize(args);
+		    char *final_arg = sanitize(args);
 		    char* command_args[] = {"bin/cat" , final_arg,  NULL };
 		    int ret = syscall_execvpe("bin/cat", command_args, NULL);
             }
             else if(pid > 0){
 		if(go_background == 1){
 			yield();
-		    printf("Background");
+		    //printf("Background");
 		    return;
 		}
 		int something = syscall_waitpid(pid, &status, 0);
-		printf("Waited on child");
+		//printf("Waited on child");
             
             }
 	    
@@ -143,11 +143,11 @@ void runBinary(char *command, char *args, int bgprocess){
             }
             else if(pid > 0){
 		if(go_background == 1){
-		    printf("Background");
+		    //printf("Background");
 		    return;
 		}
 		int something = syscall_waitpid(pid, &status, 0);
-		printf("Waited on child");
+		//printf("Waited on child");
             
             }
 	
@@ -162,11 +162,11 @@ void runBinary(char *command, char *args, int bgprocess){
             else if(pid > 0){
 		if(go_background == 1){
 			yield();
-		    printf("Background");
+		    //printf("Background");
 		    return;
 		}
 		int something = syscall_waitpid(pid, &status, 0);
-		printf("Waited on child");
+		//printf("Waited on child");
             
             }
 	
@@ -183,11 +183,11 @@ void runBinary(char *command, char *args, int bgprocess){
             else if(pid > 0){
 		if(go_background == 1){
 			yield();
-		    printf("Background");
+		    //printf("Background");
 		    return;
 		}
 		int something = syscall_waitpid(pid, &status, 0);
-		printf("Waited on child");
+		//printf("Waited on child");
             
             }
 	
@@ -282,11 +282,11 @@ void interpretCommand(char *command){
 		j--;
 	}
 	if(strcmp(function, "cd") == 1) {
-		printf("Path: %s", arguments);
+		//printf("Path: %s", arguments);
 		int ret = syscall_chdir(arguments);  // TODO: implement syscall_chdir
 		if(ret != 0) {
-			char *error_msg = "sbush: cd: No such file or directory\n";
-			printf("%s", error_msg);
+			//char *error_msg = "sbush: cd: No such file or directory\n";
+			//printf("%s", error_msg);
 		}
 		return;
 	}
@@ -297,7 +297,7 @@ void interpretCommand(char *command){
 		return;
 	} 
 	if(function[0] == '.' && function[1] == '/'){
-	   printf("Run script\n"); 
+	   //printf("Run script\n"); 
 	   runScript(function);
 	}
 
@@ -382,16 +382,36 @@ char *sanitize(char *command){
 	return args;
  }
 
-/*
+
+
+
+
+
+
+
 void runScript(char *script_path){
-	char *filename = script_path;
+	char filename[64];
+	int index = 2;
+	while(script_path[index] != '\0'){
+	    if(script_path[index] == '\n'){
+	        break;
+	    }
+	    filename[index-2] = script_path[index];
+	    index++;
+	}
+	//printf("Filename: ", filename);
 	int fd = syscall_open(filename, 0, 0);
-	char bigBuffer[10240];
+	char bigBuffer[1024];
 	int i = 0;
 	int line_number = 0;
 	int size = syscall_read(fd, bigBuffer, 1024); // read 1KB each time 
 	char temp[1024] = "\0";
 	int j = 0;
+        char *generated_command;
+        char command_array[11][64];
+        int command_count = 0;
+        if(fd>0){
+	
 	while(size > 0){
             while(bigBuffer[i]!='\0' && bigBuffer[i] != '\n'){
                     if(line_number > 0){
@@ -399,25 +419,78 @@ void runScript(char *script_path){
                             j++;
                     }
                     i++;
+                    size--;
             }
             if(bigBuffer[i] == '\0'){
                     size = syscall_read(fd, bigBuffer, 1024);
                     i=0;
-            } 
+            }
             if(bigBuffer[i] == '\n'){
                     if(line_number > 0) {
                             temp[j] = '\0';
-                            char *generated_command = sanitize(temp);
-                            printf("Generated Command: %s\n", generated_command);
-                            printf("\n"); 
+                            generated_command = sanitize(temp);
+                            //printf("X: %s", generated_command);
+                            
+                            char* command = generated_command;
+                            char tempCommand[40] = "\0";
+                            char function[40] = "\0";
+                            char arguments[40] = "\0";
+                            strcpy(tempCommand, command);
+                            if(strlen(command) == 0){
+                                    return;
+                            }
+                            else if(strcmp(tempCommand, "exit") == 1){
+                                    run_status = 0;
+                                    printf("Goodbye!");
+                                    return;
+                            }
+                            int x=0;
+                            int y=0;
+                            while(command[x] != '\0' && command[x] != ' '){
+                                    function[x] = command[x];
+                                    x++;
+                            }
+                            function[x] = '\0';
+                            x+=1;
+                            while(command[x] != '\0'){
+                                    arguments[y] = command[x];
+                                    x++;
+                                    y++;
+                            }
+                            arguments[y] = '\0';
+                            while(arguments[y-1] == ' '){
+                                    arguments[y-1] = '\0';
+                                    y--;
+                            }
+                            //printf("function: %s", function); 
+                            runBinary(function, arguments, 0);
+                            
+                            //strcpy(command_array[command_count], generated_command);
+                            //command_count++;
+                            //printf("Generated Command: %s\n", generated_command);
+                            //printf("\n");
+                            //interpretCommand(generated_command);
                     }
                     j = 0;
                     line_number++;
                     i++;
             }
+            size--;
     }
+    }//printf("Generated Command: %s\n", generated_command);
 }
-*/
+
+
+
+
+
+
+
+
+/*
+
+This is a good one
+
 void runScript(char *script_path){
 	char filename[64];
 	int index = 2;
@@ -502,7 +575,7 @@ void runScript(char *script_path){
         runBinary(function, arguments, 0);
     }
 }
-
+*/
 
 
 
@@ -534,8 +607,8 @@ void runScripts(char arguments[10][1024]){
 				temp[j] = '\0';
 				char *generated_command = sanitize(temp);
 				//interpretCommand(generated_command);
-				printf("Generated Command: %s\n", generated_command);
-				printf("\n"); 
+				//printf("Generated Command: %s\n", generated_command);
+				//printf("\n"); 
 			}
 			j = 0;
 			line_number++;

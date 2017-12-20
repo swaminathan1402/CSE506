@@ -47,7 +47,7 @@ void clean_zombies(){
 
 
 int main(){
-	syscall_write(0,"sbush>",6);
+	//syscall_write(0,"sbush>",6);
 	while(1){
 		clean_zombies();
 		yield();

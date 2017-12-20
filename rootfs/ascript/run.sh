@@ -1,2 +1,3 @@
 #!sh
-ls
+ls lib/
+echo nirvik is awesome
