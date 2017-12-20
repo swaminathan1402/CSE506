@@ -116,6 +116,7 @@ mode =(int)rdx;
 //kprintf("\n Opening:%s  Flags: %d , Mode: %d", filename, flags, mode);
 if(mode==0)
 {
+kprintf("Searcing for : %s" ,filename); 
 int fd =search(filename);
 kprintf("Fd: %d" ,fd); 
 if(fd!=-1)

@@ -270,7 +270,7 @@ int exec(char *filename, char** arguments){
 
 	
 	int argc =0;
-	while(arguments[argc]!= NULL) {
+	while(arguments && arguments[argc]!= NULL) {
 	    argc++;
 	}
 	char args[4][64];

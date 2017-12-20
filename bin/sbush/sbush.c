@@ -48,6 +48,26 @@ void runBinary(char *command, char *args, int bgprocess){
             int pid = syscall_fork();
             if(pid == 0){
                 //if(arguments == NULL){
+		if(args == NULL){
+			char hack[60];
+			char buffer[60];
+			int cnt = 0;
+			char *dir = syscall_getcwd(buffer, 60);
+			for(int i=0; i<strlen(dir); i++){
+				if(dir[i] != '/'){
+					hack[cnt] = dir[i];
+					cnt++;
+				}
+				else {
+					break;
+				}
+			}
+			hack[cnt] = '/';
+			hack[cnt+1] = '\0';
+			args = hack;
+			printf("%s\n", args);
+
+		}
 		    char* command_args[] = {"bin/ls" , args ,NULL };
 		    int ret = syscall_execvpe("bin/ls", command_args, NULL);
                 //}
@@ -94,7 +114,9 @@ void runBinary(char *command, char *args, int bgprocess){
             }
             int pid = syscall_fork();
             if(pid == 0){
-		    char* command_args[] = {"bin/cat" , "text_files/text.txt" , "text_files/text2.txt", NULL };
+		    //char* command_args[] = {"bin/cat" , "text_files/text.txt" , "text_files/text2.txt", NULL };
+		    printf("%s the cat argument \n", args);
+		    char* command_args[] = {"bin/cat" , args,  NULL };
 		    int ret = syscall_execvpe("bin/cat", command_args, NULL);
             }
             else if(pid > 0){

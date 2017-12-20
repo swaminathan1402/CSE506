@@ -92,15 +92,16 @@ int main (int argc, char *argv[], char *envp[])
 {
 
 	for(int i=0; i<argc-1; i++){
-	char str[4096];
-	char *strin = str;
-	const char* filename=argv[i+1];
-	int size;
-	int fd;
-	fd = syscall_open(filename, 0, 0);
-	size=syscall_read(fd,strin, 4096);
-	syscall_write(1,strin, size);
-	syscall_close(fd);
+		char str[4096];
+		char *strin = str;
+		char* filename=argv[i+1];
+		printf("Oh my god, the filename is %s", filename);
+		int size;
+		int fd;
+		fd = syscall_open(filename, 0, 0);
+		size=syscall_read(fd,strin, 4096);
+		syscall_write(1,strin, size);
+		syscall_close(fd);
 	}
 	return 0;
 }
