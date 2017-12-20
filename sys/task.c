@@ -1,6 +1,6 @@
 #include <sys/task.h>
-#include <sys/kprintf.h>
 #include <sys/page.h>
+#include <sys/kprintf.h>
 #include <sys/memory.h>
 #include <sys/page_table.h>
 #include <sys/gdt.h>
@@ -290,7 +290,8 @@ int exec(char *filename, char** arguments){
 	}
 	*/
 	changeCR3((PML4E *)kernel_pml4e, (PDPE *)kernel_pdpe, (PDE *)kernel_pde, (PTE *)kernel_pte, 0);
-	free((uint64_t)runningTask);
+	//free((uint64_t)runningTask);
+	free((void *)runningTask);
 	runningTask->command = findNameByElf(the_elf);
 	runningTask->regs.rsp = (uint64_t)get_free_page() + 4096;  // create stack at the top of the page, so that it can grow downwards and not go to the previous page
 	runningTask->regs.user_rsp = (uint64_t)get_free_user_page() + 4096;
@@ -424,7 +425,7 @@ task* createChildTask(){
 	//Copy kernel stack of runningTask  on child and move rsp to align with parent's current rsp
 
 	uint64_t start_address = (parent_rsp >>12)<<12;  //aligning purpose
-	memcpy (childTask->regs.rsp - 4096 ,start_address  , 4096);
+	memcpy ((void *)(childTask->regs.rsp - 4096) ,(void *)start_address  , 4096);
 	
 	uint64_t offset =(start_address+4096 - parent_rsp);  
 	childTask->regs.rsp = childTask->regs.rsp- offset;
